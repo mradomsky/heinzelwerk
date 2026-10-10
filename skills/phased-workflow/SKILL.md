@@ -64,7 +64,7 @@ The proposer's `scope guess` is input, never the decision. Scope is product's ca
 **Not a proposal**: validator's needs-work feedback goes straight to the implementer (same task, not new work). Answers to questions follow the routing in team-modes.
 
 ## Budget
-Max 3 proposals per agent per run. Cap hit → leftovers go into your done note.
+Max 3 proposals per agent per run (contract-change proposals exempt, team-modes **Contract changes**). Cap hit → leftovers go into your done note.
 
 ## Done note (required on every task you finish)
 ```

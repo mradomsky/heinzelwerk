@@ -11,7 +11,7 @@ Scaffold the agentic documentation the dev team assumes:
 - **Issue tracker**: GitHub issues, one tracker per repo or one tickets repo per workspace
 - **Triage labels**: the five canonical triage roles
 - **Domain docs**: where `GLOSSARY.md` and ADRs live, and the consumer rules for reading them
-- **Team rules**: paths, checks, coding standards, contract
+- **Team rules**: paths, checks, coding standards, contracts
 - **Repo map** and **learnings**
 
 This is a prompt-driven skill, not a deterministic script. Explore, present what you found, confirm with the user, then write. Every file you write is a document an agent consumes: follow the `writing-for-agents` skill.
@@ -32,7 +32,7 @@ Summarise what's present and what's missing. Then take the sections in order: on
 
 **B — Triage labels.** Ask exactly one question: keep the default five (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`)? Recommended: yes. Only on no, collect overrides so existing labels are reused instead of duplicated.
 
-**C — Team rules** (per repo). Propose backend paths, frontend paths, shared paths, risk areas (see below), acceptance command (e2e / smoke tests if any exist), security checks (deterministic, never a model: a secret scan such as gitleaks installed as a pre-commit hook so it runs in every worktree, and a dependency audit such as `npm audit --audit-level=high` or osv-scanner in `checks`), checks (from scripts/CI, in their quiet/summary form: flags that print failures only), coding standards source, contract location. **Risk areas** are this project's, not a fixed list. Derive candidates from the code (security, money, persistence and migrations, data deletion, infra-as-code, public or cross-repo contracts, concurrency, personal data, external integrations, anything with past incidents in issues or docs), then ask the user for risks only they know. Each entry: path/glob or kind of change, plus why. Workspace: also propose each repo's role and the integration command if one exists (compose file, smoke script).
+**C — Team rules** (per repo). Propose backend paths, frontend paths, shared paths, risk areas (see below), acceptance command (e2e / smoke tests if any exist), security checks (deterministic, never a model: a secret scan such as gitleaks installed as a pre-commit hook so it runs in every worktree, and a dependency audit such as `npm audit --audit-level=high` or osv-scanner in `checks`), checks (from scripts/CI, in their quiet/summary form: flags that print failures only), coding standards source, contracts (API, infra outputs, shared types: paths and provider role for each). **Risk areas** are this project's, not a fixed list. Derive candidates from the code (security, money, persistence and migrations, data deletion, infra-as-code, public or cross-repo contracts, concurrency, personal data, external integrations, anything with past incidents in issues or docs), then ask the user for risks only they know. Each entry: path/glob or kind of change, plus why. Workspace: also propose each repo's role and the integration command if one exists (compose file, smoke script).
 
 **C2 — Infra** (only if Terraform/OpenTofu found). Propose infra paths and checks. Then the apply policy, recommended answers first:
 - Which environment dirs may agents auto-apply to? Recommend dev/sandbox only; never prod.

@@ -13,7 +13,7 @@ This repo is the **tickets repo** of a multi-repo workspace. Mode rules live in 
 
 ## Who calls whom
 
-- <repo A> → <repo B>: <HTTP / queue / shared package / MCP>, contract at <path>
+- <repo A> → <repo B> (provider): <HTTP / queue / shared package / MCP>, contract at <path>
 
 ## Cross-repo traps
 

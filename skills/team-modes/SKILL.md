@@ -18,12 +18,13 @@ Scope → product. Technical → lead. Discovered work → lead (as a proposed t
 - Messages vanish with the run. Anything a later run or a human needs goes on GitHub: ticket comment, PR body, or contract file.
 
 ## Contract changes
-Contracts: the paths under **Contracts** in `docs/agents/team.md` (older files: **API contract**), plus cross-repo interfaces in workspace mode. **Provider** = the role named there (shared types: the task's named owner; workspace: the provider repo's role); **consumers** = the roles whose code reads it.
-- **Backward compatible by default**: compatible = new optional inputs or new outputs only; never rename, remove, retype, or make something required. A new enum value in an output is breaking (exhaustive consumers fail). A compatible change needs no consumer work: update the contract file in the provider's own PR and put this line in the PR body: `contract: compatible — <what changed>`.
+Contracts: the paths under **Contracts** in `docs/agents/team.md` (older files: **API contract**), plus cross-repo interfaces in workspace mode. **Provider** = the role named there (shared types: the task's named owner; workspace: the role of the repo marked provider in `docs/agents/workspace.md` **Who calls whom**); **consumers** = the roles whose code reads it.
+- **Backward compatible by default**: compatible = every existing consumer still works unchanged: new optional inputs, a required input made optional, new outputs. Never rename, remove, retype, narrow, or make something required. A new enum value in an output is breaking (exhaustive consumers fail). A compatible change needs no consumer work: update the contract file in the provider's own PR and put this line in the PR body: `contract: compatible — <what changed>`.
 - **Breaking change your task doesn't already name** → propose it to lead **before coding** it (a proposed task naming the consumers it breaks). Hold the breaking part until lead answers; keep working on the rest of your task. Contract proposals don't count against the proposal budget. Accepted → that proposed task becomes the contract task; the breaking part goes there, not in your current PR. Lead decides:
   - consumer update in scope → lead accepts the contract task and adds the consumer task, blocked by it; consumer role not running → lead tells coordinator to spawn it;
   - scope unclear → product rules **in** (previous bullet) or **out** (next bullet);
   - out of scope → product picks: drop the breaking part (stay compatible), or keep a compatible shim and file a `needs-triage` issue for the consumer update. Lead tells the proposer and rejects the proposed task; the compatible version goes in the proposer's current PR.
+- **Consumer needs a contract change mid-task** (missing endpoint, field, or output) → propose it to lead (owner hint = provider; budget-exempt). Lead accepts it as the contract task and makes your task blocked-by it. Keep working on what doesn't depend on it; once its PR is open, `git fetch origin && git rebase origin/<contract-branch>` in your worktree.
 - Never break a consumer that has no task in this run.
 
 ## 1. Same in both modes

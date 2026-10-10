@@ -24,7 +24,7 @@ Contracts: the paths under **Contracts** in `docs/agents/team.md` (older files: 
   - consumer update in scope → lead accepts the contract task and adds the consumer task, blocked by it; consumer role not running → lead tells coordinator to spawn it;
   - scope unclear → product rules **in** (previous bullet) or **out** (next bullet);
   - out of scope → product picks: drop the breaking part (stay compatible), or keep a compatible shim and file a `needs-triage` issue for the consumer update. Lead tells the proposer and rejects the proposed task; the compatible version goes in the proposer's current PR.
-- **Consumer needs a contract change mid-task** (missing endpoint, field, or output) → propose it to lead (owner hint = provider; budget-exempt). Lead accepts it as the contract task and makes your task blocked-by it. Keep working on what doesn't depend on it; once its PR is open, `git fetch origin && git rebase origin/<contract-branch>` in your worktree.
+- **Consumer needs a contract change mid-task** (missing endpoint, field, or output) → propose it to lead (owner hint = provider; budget-exempt). Lead accepts it as the contract task and makes your task blocked-by it. Keep working on what doesn't depend on it; once its PR is open, `git fetch origin && git rebase origin/<contract-branch>` in your worktree. Provider: when the contract PR opens, message the consumer task's owner (lead if it isn't running).
 - Never break a consumer that has no task in this run.
 
 ## 1. Same in both modes
@@ -38,7 +38,7 @@ Contracts: the paths under **Contracts** in `docs/agents/team.md` (older files: 
 - **Branch name**: `<type>/<ticket-number>-<topic>`, type from conventional commits (`feat`, `fix`, `docs`, `test`, `refactor`, `chore`). Example: `feat/19-anomaly-webhook`.
 - **Commits**: conventional, reference ticket, keep Claude Code's `Co-Authored-By` trailer (retro uses it to tell agent commits from human fixes). `feat: add anomaly webhook (#19)` / `(owner/repo#19)` in workspace mode.
 - **Every message to a teammate starts with** `[<repo>@<branch>]`. Coordinator and lead ignore messages without it.
-- **Stay current with main.** Before moving a task to under review, and whenever validator reports a conflict or a merged PR touched your files: `git fetch origin && git rebase origin/main` in your worktree.
+- **Stay current with main.** Before moving a task to under review, and whenever validator reports a conflict or a merged PR touched your files: `git fetch origin && git rebase origin/main` in your worktree. Task blocked-by a contract task whose PR isn't merged: rebase onto `origin/<contract-branch>` instead.
   Resolve conflicts **by intent**: read the other side's PR and ticket, keep both behaviours unless the specs say otherwise, never drop the other side's change silently. Can't tell what the other side intended → ask lead. Run all checks after resolving. Push your own branch with `--force-with-lease` only; plain `--force` is blocked.
 - Worktrees are left in place after PR. Lead lists them in the final report; human prunes after merge.
 

@@ -1,0 +1,11 @@
+{
+  "name": "heinzelwerk",
+  "owner": { "name": "Maksym Radomsky" },
+  "plugins": [
+    {
+      "name": "heinzelwerk",
+      "source": "./",
+      "description": "Autonomous, spec-driven dev team for Claude Code agent teams."
+    }
+  ]
+}

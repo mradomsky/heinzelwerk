@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# heinzelwerk Terraform apply gate. Deterministic: decides from the saved plan + policy, nothing else.
+# Usage: tf-gate check|apply <terraform-dir> <saved-plan-file>
+# Policy: docs/agents/infra-policy.json (repo root). Needs: terraform (or TF_BIN), jq.
+set -euo pipefail
+mode=${1:?check|apply}; dir=${2:?terraform dir}; plan=${3:?saved plan file}
+root=$(git rev-parse --show-toplevel); policy="$root/docs/agents/infra-policy.json"
+tf=${TF_BIN:-terraform}
+[ -f "$policy" ] || { echo "GATE FAIL: no $policy"; exit 1; }
+rel=$(realpath --relative-to="$root" "$dir")
+json=$("$tf" -chdir="$dir" show -json "$plan")
+
+reasons=()
+# 1. environment allowlist (glob match on dir relative to repo root)
+allowed=no
+while IFS= read -r g; do [[ -n $g && $rel == $g ]] && allowed=yes; done < <(jq -r '.auto_apply_dirs[]?' "$policy")
+[ $allowed = yes ] || reasons+=("dir '$rel' not in auto_apply_dirs")
+
+changes=$(jq -c '[.resource_changes[]? | select(.change.actions != ["no-op"] and .change.actions != ["read"])
+  | {a: .address, t: .type, x: .change.actions}]' <<<"$json")
+# 2. change-count limit
+max=$(jq -r '.max_changes // 20' "$policy"); n=$(jq length <<<"$changes")
+(( n <= max )) || reasons+=("$n changes > max_changes $max")
+# 3. deletes / replacements only for allowed types
+while IFS= read -r a; do [ -n "$a" ] && reasons+=("delete/replace: $a"); done < <(jq -r --slurpfile p "$policy" '
+  .[] | select(.x | index("delete")) | select(.t as $t | ($p[0].allowed_delete_types // []) | index($t) | not) | .a' <<<"$changes")
+# 4. protected types (glob patterns, e.g. aws_iam_*)
+while IFS= read -r pat; do
+  [ -z "$pat" ] && continue
+  while IFS= read -r line; do t=${line%% *}; [[ $t == $pat ]] && reasons+=("protected type $pat: ${line#* }"); done < <(jq -r '.[] | "\(.t) \(.a)"' <<<"$changes")
+done < <(jq -r '.protected_types[]?' "$policy")
+
+echo "PLAN $rel: $(jq -r '[.[].x|join("+")] | group_by(.) | map("\(.[0])=\(length)") | join(" ")' <<<"$changes") (total $n)"
+jq -r '.[] | "  \(.x|join("+")) \(.a)"' <<<"$changes"
+if (( ${#reasons[@]} )); then printf 'GATE FAIL\n'; printf '  - %s\n' "${reasons[@]}"; exit 2; fi
+echo "GATE PASS"
+[ "$mode" = apply ] && "$tf" -chdir="$dir" apply -input=false "$plan"
+exit 0

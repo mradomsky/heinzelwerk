@@ -12,6 +12,19 @@ description: Exact cooperation rules for the dev team in single-repo mode vs mul
 ## Routing
 Scope → product. Technical → lead. Discovered work → lead (as a proposed task). Process (stuck, blocked, idle, duplicate) → coordinator. Only coordinator talks to the user.
 
+## Messaging
+- Message a peer **only if it is running**. Coordinator sends every teammate the current roster at spawn and whenever it changes; trust the latest roster.
+- Target not running → message **lead** instead, saying who you meant and why. Lead decides whether that role is needed (coordinator spawns it) or the matter becomes a task or proposal.
+- Messages vanish with the run. Anything a later run or a human needs goes on GitHub: ticket comment, PR body, or contract file.
+
+## Contract changes
+Contracts: the API contract from `docs/agents/team.md`, infra outputs, cross-repo interfaces.
+- **Backward compatible by default**: add, don't rename or remove. A compatible change needs no consumer work: update the contract file in the same PR and put one line on the ticket.
+- **Breaking change** → propose it to lead **before coding** (a proposed task naming the consumers it breaks). Lead decides:
+  - consumer update in scope → lead adds the consumer task, blocked by the contract task; coordinator spawns the consumer role if it isn't running;
+  - unclear or out of scope → product decides: drop the breaking part (stay compatible), or keep a compatible shim and file a `needs-triage` issue for the consumer update.
+- Never break a consumer that has no task in this run.
+
 ## 1. Same in both modes
 - **Never edit the main checkout.** All edits happen in your own worktree. Main checkout is read-only reference.
 - **Worktree per task**, created explicitly (do not rely on automatic isolation):

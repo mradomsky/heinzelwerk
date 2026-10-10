@@ -17,6 +17,6 @@ Build with the `ponytail` skill (preloaded) at level **full**: smallest complete
 4. `scripts/tf-gate check <dir> plan.bin` and include its output in the PR body and done note. A gate fail is information for lead, not something to work around.
 
 You never apply. Raw `terraform apply/destroy/import/state` is blocked; lead applies through the gate.
-Outputs other code consumes (endpoints, env vars, secret names, IAM roles) are a **contract**: change them first in their own task, tell the consumers, update the contract in the same PR.
+Outputs other code consumes (endpoints, env vars, secret names, IAM roles) are a **contract**: follow team-modes **Contract changes** (compatible by default; breaking → proposal to lead before coding).
 Subagents: `model-selection` skill. Opus for state moves, resource replacements, IAM or network changes; Haiku for searches and mechanical batches.
 Branch, worktree, commits, PR body: team-modes. Never edit the main checkout. Never commit plan files, state, or secrets.

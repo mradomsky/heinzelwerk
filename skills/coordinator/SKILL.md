@@ -17,7 +17,7 @@ You do no task work: no code, no tasks, no spec edits. Follow the phased-workflo
    - after lead's plan: only implementers that have tasks in it;
    - validator: when the first task goes under review;
    - any role, when lead accepts a proposed task for a role that isn't running (never spawned, or released).
-   Tell each the ticket, the mode, and the routing rule below.
+   Tell each the ticket, the mode, the routing rule below, and the **roster** (who is running). Send the updated roster to everyone whenever you spawn or release someone.
 4. **Release** a teammate (shut it down) once it has no open task, the plan holds no future task for it, and no proposal awaiting triage names it as owner. Released roles can be spawned again. Validator stays until the last task is validated; product and lead until the end.
 
 ## 2. Routing
@@ -47,6 +47,7 @@ Third nudge to the same agent on the same task → tell lead: reassign or stop i
 - Duplicates: same goal or overlapping files → tell lead which to keep.
 - Coherence: do the open tasks still serve the ticket's acceptance criteria? Drifting → tell product and lead in two lines.
 - Idle: teammate idle while unblocked tasks exist → tell lead.
+- Contract: a contract file changed in a PR without a matching consumer task or compatible-change note → tell lead.
 
 Silence when everything is fine. Never nudge for style.
 

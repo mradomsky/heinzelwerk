@@ -13,14 +13,14 @@ description: Exact cooperation rules for the dev team in single-repo mode vs mul
 Scope → product. Technical → lead. Discovered work → lead (as a proposed task). Process (stuck, blocked, idle, duplicate) → coordinator. Only coordinator talks to the user.
 
 ## Messaging
-- Message a peer **only if it is running**. Coordinator sends every teammate the current roster at spawn and whenever it changes; trust the latest roster.
+- Message a peer **only if it is running**. Coordinator sends you the roster at spawn; implementers also get an update whenever it changes. Trust the latest roster.
 - Target not running → message **lead** instead, saying who you meant and why. Lead decides whether that role is needed (coordinator spawns it) or the matter becomes a task or proposal.
 - Messages vanish with the run. Anything a later run or a human needs goes on GitHub: ticket comment, PR body, or contract file.
 
 ## Contract changes
-Contracts: the API contract from `docs/agents/team.md`, infra outputs, cross-repo interfaces.
-- **Backward compatible by default**: add, don't rename or remove. A compatible change needs no consumer work: update the contract file in the same PR and put one line on the ticket.
-- **Breaking change** → propose it to lead **before coding** (a proposed task naming the consumers it breaks). Lead decides:
+Contracts: the API contract from `docs/agents/team.md`, infra outputs, cross-repo interfaces. **Provider** = the role that owns the file defining the contract (paths in `team.md`, repo table in workspace mode); **consumers** = the roles whose code reads it.
+- **Backward compatible by default**: compatible = new optional inputs or new outputs only; never rename, remove, retype, or make something required. A compatible change needs no consumer work: update the contract file in the provider's own PR and put this line in the PR body: `contract: compatible — <what changed>`.
+- **Breaking change** → propose it to lead **before coding** it (a proposed task naming the consumers it breaks). Hold the breaking part until lead answers; keep working on the rest of your task. This proposal doesn't count against the proposal budget. Lead decides:
   - consumer update in scope → lead adds the consumer task, blocked by the contract task; coordinator spawns the consumer role if it isn't running;
   - unclear or out of scope → product decides: drop the breaking part (stay compatible), or keep a compatible shim and file a `needs-triage` issue for the consumer update.
 - Never break a consumer that has no task in this run.
@@ -46,7 +46,7 @@ Contracts: the API contract from `docs/agents/team.md`, infra outputs, cross-rep
 | Tickets | issues of this repo, refs `#N` |
 | Ownership | by path, from `docs/agents/team.md` (backend, frontend, infra, shared paths). Never edit outside your paths. Shared paths (types, config) → only the task's named owner touches them |
 | Parallel work | two tasks may touch the same repo, never the same file. Lead checks file overlap when seeding; overlap → make one task block the other |
-| Contract | location from `docs/agents/team.md`. Contract change = own backend task, lands in a PR first; frontend task blocked-by it and branches from the contract branch: `worktree add ... -b <branch> origin/<contract-branch>` |
+| Contract | location from `docs/agents/team.md`. Compatible change: in the provider's own PR (see **Contract changes**). Breaking change: own task for the provider role, lands in a PR first; consumer tasks blocked-by it and branch from the contract branch: `worktree add ... -b <branch> origin/<contract-branch>` |
 | PR body | `Closes #N` on the PR that completes the ticket, `Refs #N` on the others |
 | Checks | from `docs/agents/team.md` |
 | Validator | checks out PR branch in its own worktree, runs checks, walks criteria |

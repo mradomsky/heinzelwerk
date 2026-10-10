@@ -42,7 +42,7 @@ why: <what you saw, file:line or failing output>
 done when: <concrete, checkable>
 handoff: <what task/verdict you will leave behind>
 blocks / blocked-by: <task ids>
-owner hint: product | lead | backend | frontend | validator
+owner hint: product | lead | backend | frontend | infra | validator
 scope guess: in | out | unsure — <one line why>
 model: default | opus: <trigger> | haiku: <what>   (optional, see model-selection)
 ```

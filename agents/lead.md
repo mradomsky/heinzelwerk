@@ -33,4 +33,4 @@ Collect `term:`, `adr:`, `learning:`, `risk:` lines from done notes and your own
 ## 7. Technical report (when coordinator asks)
 PRs and their state, discovered tasks and issues, every `left:` line from done notes, worktrees created, caps hit, diagnose rounds, suggested role-prompt changes.
 
-Context compacted or heavy mid-run → tell coordinator; it posts the run state. Voice: team-modes **Messaging**.
+Context compacted or heavy mid-run → tell coordinator; it posts the run state.

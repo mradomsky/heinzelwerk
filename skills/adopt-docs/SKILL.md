@@ -1,6 +1,6 @@
 ---
 name: adopt-docs
-description: Turn a repo's existing docs into the heinzelwerk structure — ADRs, glossary terms, repo map, team rules, spec issues, reference pointers. Use when the user asks to adopt, import, or migrate existing docs, when new docs appeared since the last adoption, or when setup reaches section F.
+description: Move a repo's existing docs into the heinzelwerk structure (ADRs, glossary, repo map, team rules, spec issues, pointers). Use to adopt or migrate docs, when new docs appeared, or from setup section F.
 ---
 
 # Adopt docs

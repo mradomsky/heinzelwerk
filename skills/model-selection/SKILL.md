@@ -1,6 +1,6 @@
 ---
 name: model-selection
-description: Choose which model tier to spend on a piece of work — the most capable model versus a cheaper, faster one — so quality holds where it matters and cost falls where it does not. Load this before launching subagents or a workflow, before a review or research sweep, when a task is large and repetitive, or whenever you are about to spend a strong model on volume. Applies to your own reasoning effort as much as to delegated agents.
+description: Which model tier and effort to spend on a piece of work. Load before launching subagents, a review or research sweep, or any large repetitive task.
 ---
 
 # Which model, and why

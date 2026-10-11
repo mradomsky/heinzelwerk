@@ -1,6 +1,6 @@
 ---
 name: team-modes
-description: Exact cooperation rules for the dev team in single-repo mode vs multi-repo workspace mode — where tickets live, routing, messaging, worktrees, branches, ownership, contracts, PR order, validation. Use at the start of every team run and whenever creating a branch, worktree, task, or PR.
+description: Team rules per mode (single repo vs workspace): routing, messaging, voice, worktrees, branches, ownership, contracts, PR order, validation. Use at run start and whenever creating a branch, worktree, task, or PR.
 user-invocable: false
 ---
 # Team modes
@@ -24,7 +24,7 @@ Only coordinator talks to the user.
 - Message a peer **only if it is running**: before messaging, read the `members` array in `~/.claude/teams/<team>/config.json` (the team dir is `session-` plus the first eight characters of the lead's session id; `ls ~/.claude/teams/` shows it). Coordinator, product, and lead always run. Replying to a message you received is always allowed. A message to a stopped teammate revives it with stale context; only coordinator spawns.
 - Target not running → message **lead** instead, saying who you meant and why. Lead decides whether that role is needed (coordinator spawns it) or the matter becomes a task or proposal.
 - Messages vanish with the run. Anything a later run or a human needs goes on GitHub: ticket comment, PR body, or contract file.
-- **Voice** (lead, backend, frontend) in teammate messages and done notes: answer first, no greeting or recap, short words, drop articles when the sentence still reads, keep every not/never/no/only, payload (paths, commands, numbers, errors) exact. Ticket comments, PRs, code, and docs: normal prose.
+- **Voice** in teammate messages and done notes: answer first, no greeting or recap, short words, drop articles when the sentence still reads, keep every not/never/no/only, payload (paths, commands, numbers, errors) exact. Ticket comments, PRs, code, and docs: normal prose.
 
 ## Contract changes
 Contracts: the paths under **Contracts** in `docs/agents/heinzelwerk/team.md`, plus cross-repo interfaces in workspace mode. **Provider** = the role named there (shared types: the task's named owner; workspace: the role of the repo marked provider in `docs/agents/heinzelwerk/workspace.md` **Who calls whom**); **consumers** = the roles whose code reads it.

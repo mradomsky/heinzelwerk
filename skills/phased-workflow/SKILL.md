@@ -1,6 +1,6 @@
 ---
 name: phased-workflow
-description: Rules for heinzelwerk agents on how work is typed, handed off, tracked on GitHub, validated, and finished. Use whenever creating, claiming, or completing a task in an agent team run.
+description: How heinzelwerk tasks are typed, handed off, tracked on GitHub, validated, and finished, plus the shared implementer rules. Use whenever creating, claiming, or completing a task in a team run.
 user-invocable: false
 ---
 # Phased workflow
@@ -34,6 +34,13 @@ The task list has three states: pending, in progress, completed. A task's title 
 - **Proposal** = `[proposed] #N <what>` (pending; owner hint and the fields below in its details). Only lead acts on it: accept = create the open task (owner role in the title, blockers as dependencies, seams in details) and delete the proposal; reject = delete it with a one-line reason to the proposer. Nobody claims a proposal.
 - **Abandoned** (cannot finish, needs a human): done note says `abandoned: <why>`, task completed, one-line reason on the ticket, lead told.
 - "Under review" elsewhere means a pending or in-progress validate task exists for the PR; "needs work" means a fix task exists.
+
+## Implementers (backend, frontend, infra)
+- **Before coding**: the docs the `## Docs` section names; frontend also `docs/agents/heinzelwerk/design.md`, infra also `docs/agents/heinzelwerk/infra-policy.json`.
+- **Smallest complete change**: reuse what the codebase has, then the standard library, then an installed dependency. No abstraction, option, config, or "for later" code nobody asked for. Finish every part the change touches: callers, tests, fixtures. Keep validation at trust boundaries, error handling, security, and accessibility. A shortcut with a known limit gets a code comment `shortcut: <limit>, <when to upgrade>`.
+- **Interfaces**: deep modules, small interfaces.
+- **Subagents**: Opus when the root cause is still unknown after two failed passes, or when you change shared code whose callers you can't see from the edit site; Haiku for call-site searches and mechanical batches. Your role prompt may add triggers. State both in `escalations:`.
+- **Done**: branch, worktree, commits, PR body per team-modes. PR open → done note into the task's details, complete the task, create `#N validate <role>: <what>`. A fix task from validator → same branch, same loop.
 
 ## Discovering work (branching)
 Found something while working? Don't silently fix it, don't drop it. **Propose** it:

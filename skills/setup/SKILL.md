@@ -14,15 +14,15 @@ Scaffold the agentic documentation the dev team assumes:
 - **Team rules**: paths, checks, coding standards, contracts
 - **Repo map** and **learnings**
 
-This is a prompt-driven skill, not a deterministic script. Explore, present what you found, confirm with the user, then write. Every file you write is a document an agent consumes: follow the `writing-for-agents` skill.
+This is a prompt-driven skill, not a deterministic script. Explore, present what you found, confirm with the user, then write. Every file you write is a document an agent consumes: follow the `heinzelwerk:writing-for-agents` skill.
 
 ## 1. Explore
 
 Read whatever exists; don't assume.
 
-- **Mode**: cwd is a git repo → single mode. Not a repo but child dirs with `.git` → workspace mode (see `team-modes` skill §0).
+- **Mode**: cwd is a git repo → single mode. Not a repo but child dirs with `.git` → workspace mode (see `heinzelwerk:team-modes` skill §0).
 - Per repo: `git remote -v`, `CLAUDE.md` / `AGENTS.md` (existing `## Agent skills (heinzelwerk)` block?), `GLOSSARY.md`, `GLOSSARY-MAP.md`, `CONTEXT.md` (older name for the glossary), `docs/adr/`, `docs/agents/`, `CODING_STANDARDS.md`, `CONTRIBUTING.md`, existing design docs, build/test/lint scripts, CI config, `gh label list`.
-- Map each repo (or each top-level area in single mode) with parallel Haiku Explore subagents (effort low; `model-selection`). Each returns, max 15 lines: purpose, entry points, how to build/test/run, patterns to follow, traps, and in workspace mode what it calls / is called by.
+- Map each repo (or each top-level area in single mode) with parallel Haiku Explore subagents (effort low; `heinzelwerk:model-selection`). Each returns, max 15 lines: purpose, entry points, how to build/test/run, patterns to follow, traps, and in workspace mode what it calls / is called by.
 
 ## 2. Present findings and ask
 
@@ -47,9 +47,9 @@ Summarise what's present and what's missing. Then take the sections in order: on
 
 **D — Domain docs.** Default single-context: `GLOSSARY.md` + `docs/adr/` at repo root. Workspace: one context per repo plus `GLOSSARY-MAP.md` and workspace-wide ADRs in the tickets repo. A legacy `CONTEXT.md` → offer to rename it to `GLOSSARY.md`.
 
-**E — Seed the domain model (optional).** Recommend yes when no glossary exists. Run a short session with the `grilling` and `domain-modeling` skills: propose 5–15 candidate terms found in code and docs, let the user resolve them, write only resolved terms. Offer ADRs only for decisions the user confirms and that meet all three ADR criteria. Never write a term or ADR the user didn't confirm.
+**E — Seed the domain model (optional).** Recommend yes when no glossary exists. Run a short session with the `heinzelwerk:grilling` and `heinzelwerk:domain-modeling` skills: propose 5–15 candidate terms found in code and docs, let the user resolve them, write only resolved terms. Offer ADRs only for decisions the user confirms and that meet all three ADR criteria. Never write a term or ADR the user didn't confirm.
 
-**F — Existing docs.** If exploration found docs outside the agent structure, recommend adopting them now: run the `adopt-docs` skill on this setup's branch, after section E. It can be rerun later whenever new docs appear.
+**F — Existing docs.** If exploration found docs outside the agent structure, recommend adopting them now: run the `heinzelwerk:adopt-docs` skill on this setup's branch, after section E. It can be rerun later whenever new docs appear.
 
 ## 3. Confirm
 
@@ -90,7 +90,7 @@ The block:
 - `docs/agents/heinzelwerk/workspace.md` from [workspace.md](workspace.md)
 - `docs/agents/heinzelwerk/learnings.md` from [learnings.md](learnings.md) (only here; other repos point at it)
 - `GLOSSARY-MAP.md` if section E ran
-- `CLAUDE.workspace.md`: an `## Agent skills (heinzelwerk)` block pointing at `docs/agents/heinzelwerk/workspace.md`, `GLOSSARY-MAP.md`, and the learnings file, plus one line: "Workspace mode: follow the `team-modes` skill."
+- `CLAUDE.workspace.md`: an `## Agent skills (heinzelwerk)` block pointing at `docs/agents/heinzelwerk/workspace.md`, `GLOSSARY-MAP.md`, and the learnings file, plus one line: "Workspace mode: follow the `heinzelwerk:team-modes` skill."
 
 Then tell the user to create, in the unversioned workspace folder, a `CLAUDE.md` containing only `@<tickets-repo-dir>/CLAUDE.workspace.md`. Do not create it yourself.
 

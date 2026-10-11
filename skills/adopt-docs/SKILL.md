@@ -7,11 +7,11 @@ description: Move a repo's existing docs into the heinzelwerk structure (ADRs, g
 
 Existing docs hold decisions, vocabulary, and planned work the team can't use until they sit where the team looks. This skill moves the **content** into that structure; the original files stay where they are.
 
-Follow `writing-for-agents` for anything you write. Terms and ADRs go through `domain-modeling` formats and rules.
+Follow `heinzelwerk:writing-for-agents` for anything you write. Terms and ADRs go through `heinzelwerk:domain-modeling` formats and rules.
 
 ## 1. Inventory
 
-- Mode from the `team-modes` skill §0. Workspace: every repo, each handled in its own repo.
+- Mode from the `heinzelwerk:team-modes` skill §0. Workspace: every repo, each handled in its own repo.
 - Read `docs/agents/heinzelwerk/adopted.md` if it exists: the ledger of docs already adopted, with the commit each was adopted at.
 - List candidate docs: Markdown and text docs anywhere outside `node_modules`, build output, and vendored code. Skip the agent structure (`docs/agents/heinzelwerk/`, `GLOSSARY*.md`, `docs/adr/`, `CLAUDE*.md`, `AGENTS*.md`). Other tools' files in `docs/agents/` are candidates.
 - Keep only docs that are **new** (not in the ledger) or **changed** since their ledger commit (`git log <commit>..HEAD -- <path>` is non-empty). Changed docs: work on the diff, not the whole file.
@@ -19,7 +19,7 @@ Follow `writing-for-agents` for anything you write. Terms and ADRs go through `d
 
 ## 2. Classify
 
-One Haiku subagent per doc (parallel, effort medium: classifying feeds your decisions; `model-selection`). Each returns its doc's content split into these classes, quoting the source heading for every item:
+One Haiku subagent per doc (parallel, effort medium: classifying feeds your decisions; `heinzelwerk:model-selection`). Each returns its doc's content split into these classes, quoting the source heading for every item:
 
 | Class | Destination |
 |---|---|
@@ -36,10 +36,10 @@ Cross-check claims against the code. A doc that disagrees with the code is **sta
 
 ## 3. Resolve with the user
 
-Present per class, one class per round, recommended answer first (`grilling` format):
+Present per class, one class per round, recommended answer first (`heinzelwerk:grilling` format):
 
 - **ADRs**: draft each in ADR format (1–3 sentences, `Source: <path>#<heading>` line). User accepts, edits, or drops each.
-- **Terms**: run `domain-modeling` with the `grilling` skill on the candidates: pick canonical words, list `_Avoid_` synonyms, challenge against existing `GLOSSARY.md` and the code. Write only resolved terms.
+- **Terms**: run `heinzelwerk:domain-modeling` with the `heinzelwerk:grilling` skill on the candidates: pick canonical words, list `_Avoid_` synonyms, challenge against existing `GLOSSARY.md` and the code. Write only resolved terms.
 - **Planned work**: one line each. Accepted items become issues labelled `needs-triage`, body = summary + link to the source section. The user shapes them later with `/heinzelwerk:shape <issue>`.
 - **Design rules**: proposed additions to `docs/agents/heinzelwerk/design.md`, contradictions with the code flagged like stale items.
 - **How-to, reference, gotchas**: show the proposed edits to repo map, team rules, and learnings. Reference docs get a pointer line under `## Reference docs` in the repo map, worded as a trigger: `- <path>: read when <condition>.`

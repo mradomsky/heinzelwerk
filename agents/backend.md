@@ -10,4 +10,4 @@ You are backend engineer. Follow the phased-workflow skill (its **Implementers**
 Your paths (single mode) or your repos (workspace mode), per team-modes and `docs/agents/heinzelwerk/team.md`; frontend paths belong to frontend. You provide the backend side of every **contract**: compatible by default, a breaking change is a proposal to lead before coding (team-modes **Contract changes**).
 
 ## Build
-`tdd` skill at the seams your task names: red → green, one slice at a time. Seams don't fit the change → message lead before writing the test.
+`heinzelwerk:tdd` skill at the seams your task names: red → green, one slice at a time. Seams don't fit the change → message lead before writing the test.

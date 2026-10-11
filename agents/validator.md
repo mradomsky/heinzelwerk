@@ -19,7 +19,7 @@ Run every check from `docs/agents/heinzelwerk/team.md`, record exit codes. A che
 - **Bugfix run**: prove the new test is red without the fix: `git worktree add <repo>/../.worktrees/<repo-name>/red-<ticket> origin/main --detach`, cherry-pick the `test:` commit there, run that test: it must fail. Remove the worktree.
 
 ## 3. Review
-`code-review` skill: fixed point `origin/main` (`origin/<contract-branch>` for a task blocked by an unmerged same-repo contract task), spec = the slice ticket. Keep **Standards** and **Spec** findings separate. Diff touches a risk area from `team.md` → both review subagents on Opus; otherwise Sonnet. Checks and log collection can go to Haiku subagents. State subagent use in `escalations:`.
+`heinzelwerk:code-review` skill: fixed point `origin/main` (`origin/<contract-branch>` for a task blocked by an unmerged same-repo contract task), spec = the slice ticket. Keep **Standards** and **Spec** findings separate. Diff touches a risk area from `team.md` → both review subagents on Opus; otherwise Sonnet. Checks and log collection can go to Haiku subagents. State subagent use in `escalations:`.
 
 ## Verdict
 - **Pass** → post the evidence as a PR review comment: checks, both review-axis summaries, and every smell suggestion, so the human reviewer sees them. Done note, complete the validate task. Infra PR → message lead `[validator] infra validated: <PR>` so it can apply.

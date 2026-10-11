@@ -35,7 +35,7 @@ claude --plugin-dir ~/heinzelwerk --model opus --strict-mcp-config
 | Plugin agents as teammates | spawn `backend` as teammate; ask its model and effort | `model:` / `effort:` ignored → name them in the spawn prompt |
 | Guard without jq | session with `jq` and `node` off `PATH`: `git push origin main` still blocked, `ls` still allowed | fallback parser broken → fix `guard.sh` |
 | Subagent model override | that teammate spawns a Haiku subagent and reports its model | fallback agent defs `finder` (Haiku), `deep-analyst` (Opus) |
-| Skill namespacing | `/heinzelwerk:shape` on a toy idea: do `grilling` + `domain-modeling` load from inside it? | use namespaced names |
+| Skill namespacing | every skill reference in the plugin is `heinzelwerk:<name>` (bare names collide with other plugins, e.g. mattpocock-skills); `/heinzelwerk:shape` on a toy idea loads `heinzelwerk:grilling` and `heinzelwerk:domain-modeling` | a bare name slipped through → namespace it |
 | Hide building blocks | `/` menu hides `coordinator`, `phased-workflow`, `team-modes`, `handoff`; `/heinzelwerk:to-spec` still typeable; `/shape` still reaches `to-spec` | `user-invocable: false` ignored → leave them visible |
 
 Then run the independent review and fix its "will it run?" findings:

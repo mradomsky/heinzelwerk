@@ -1,6 +1,6 @@
 # Workspace
 
-This repo is the **tickets repo** of a multi-repo workspace. Mode rules live in the `team-modes` skill.
+This repo is the **tickets repo** of a multi-repo workspace. Mode rules live in the `heinzelwerk:team-modes` skill.
 
 - **Tickets**: <owner/name>
 - **Integration** (validator runs it across all touched repos on the shared branch name; omit if none): <e.g. `docker compose up -d && npm run smoke`>

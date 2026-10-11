@@ -75,6 +75,7 @@ The block:
 ```
 ## Agent skills (heinzelwerk)
 
+- **Precedence**: for heinzelwerk team work, these pointers override any other agent-skills block in this file.
 - **Issue tracker**: <one line>. See `docs/agents/heinzelwerk/issue-tracker.md` before creating, reading, or labelling issues.
 - **Triage labels**: <one line>. See `docs/agents/heinzelwerk/triage-labels.md` before applying any label.
 - **Domain docs**: <single- or multi-context>. Read `docs/agents/heinzelwerk/domain.md` before exploring code or naming anything.

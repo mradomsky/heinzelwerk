@@ -11,7 +11,7 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
 
 1. Call the Skill tool with `writing-for-agents` for the writing style guide.
 
-2. **Scope.** Default: everything since the last retro (newest file in `docs/agents/retros/`; workspace: in the tickets repo). The user may give a date or ticket list instead. Read the last retro's actions: did each one happen, and did it help?
+2. **Scope.** Default: everything since the last retro (newest file in `docs/agents/heinzelwerk/retros/`; workspace: in the tickets repo). The user may give a date or ticket list instead. Read the last retro's actions: did each one happen, and did it help?
 
 3. **Gather primary sources** for runs in scope:
    - Final reports (posted by coordinator): `gh search issues "heinzelwerk-metrics in:comments" --repo <tickets repo>`, then read each report and its metrics block.
@@ -58,7 +58,7 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
 5. **Present** findings to the user in order of severity, wins last; architecture candidates as their own group with the report path. Each: evidence, proposed change, where it goes. The user picks which to act on.
 
 6. **Write**, for the picked findings only:
-   - Retro record: `docs/agents/retros/<YYYY-MM-DD>.md` (workspace: tickets repo): metrics table summed over runs in scope, wins, problems, actions with owner, architecture candidates filed, shortcut ledger summary (count, no-trigger count, new since last retro), and the follow-up on last retro's actions. Max 60 lines.
+   - Retro record: `docs/agents/heinzelwerk/retros/<YYYY-MM-DD>.md` (workspace: tickets repo): metrics table summed over runs in scope, wins, problems, actions with owner, architecture candidates filed, shortcut ledger summary (count, no-trigger count, new since last retro), and the follow-up on last retro's actions. Max 60 lines.
    - **Environment actions**: doc changes (pointers, learnings prune and consolidate, team rules, coding standards) on a fresh branch from main `docs/retro-<YYYY-MM-DD>`, one PR with the retro record. Code changes (a new check, a hook, a CI job) become issues labelled `ready-for-agent` or `ready-for-human`, never edited here.
    - **Architecture candidates**: every **Strong** and **Worth exploring** candidate becomes an issue labelled `needs-triage` and `heinzelwerk-survey` (title in `codebase-design` vocabulary; body: problem, solution, benefits, files, strength), whether or not the user picked it now. Dedup against open issues; comment on an existing one instead. List them in the retro record.
    - **Team actions**: issues in the heinzelwerk plugin repo (`repository` in its `plugin.json`): `gh issue create -R <owner/repo>`, title `<role or skill>: <change>`, body = evidence + proposed wording.

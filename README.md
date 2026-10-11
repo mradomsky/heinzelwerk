@@ -12,7 +12,7 @@ Claude Code plugin: a lean autonomous dev team (coordinator / product / lead / b
 - **Deep modules.** Small interfaces, lots of behaviour behind them; tests through the interface.
 - **Phases, not pipelines.** Work is typed analyze / implement / validate; any agent may create work in any phase, every task leaves a handoff.
 - **Tickets are durable, tasks are disposable.** Everything the next run needs lives on GitHub.
-- **Pointers, not imports.** `CLAUDE.md` holds a short `## Agent skills` block; agents read `docs/agents/*` when the pointer fires.
+- **Pointers, not imports.** `CLAUDE.md` (or `AGENTS.md`) holds a short `## Agent skills (heinzelwerk)` block; agents read `docs/agents/heinzelwerk/*` when the pointer fires.
 - **Humans merge.** Agents open PRs, never merge, never push main.
 - **Infra auto-applies only through a deterministic gate.** `scripts/tf-gate` checks the saved plan against `infra-policy.json` (environment allowlist, no destroys, protected types, change limit). Lead applies on pass and escalates on fail or doubt. Credential scope is the real boundary: agents never hold prod write credentials.
 
@@ -36,7 +36,7 @@ Need one for a run (e.g. an issue tracker without `gh`)? Pass only that one: `cl
 
 ## Workflow
 
-1. **Once per repo or workspace**: `/heinzelwerk:setup` → interview → one PR per repo with `docs/agents/*`, optional seeded `GLOSSARY.md`/ADRs, and the `## Agent skills` block. Review, merge. In a multi-repo folder, run it from the parent folder; it also writes the workspace docs into the tickets repo.
+1. **Once per repo or workspace**: `/heinzelwerk:setup` → interview → one PR per repo with `docs/agents/heinzelwerk/*`, optional seeded `GLOSSARY.md`/ADRs, and the `## Agent skills (heinzelwerk)` block. Review, merge. In a multi-repo folder, run it from the parent folder; it also writes the workspace docs into the tickets repo.
 2. **Shape (you + product)**: `/heinzelwerk:shape [issue | idea]`. Product grills you, writes the spec, slices it into `ready-for-agent` tickets with blocking edges, and lists the frontier. Also the way back in after a run stops on `needs-info`. Want only the interview? Stop after the grill. `/heinzelwerk:to-spec` and `/heinzelwerk:to-tickets` stay typeable for odd cases (e.g. slicing a spec written elsewhere).
 3. **Build (you + coordinator)**: `/heinzelwerk:feature <slice>` or `/heinzelwerk:bugfix <issue>`. Your session becomes coordinator: your single point of contact, routes scope questions to product and technical ones to lead, watches the team, posts the final report.
 
@@ -54,22 +54,22 @@ Need one for a run (e.g. an issue tracker without `gh`)? Pass only that one: `cl
 Escalation and degradation happen through subagents (Opus for depth, Haiku for breadth and mechanical work), per `skills/model-selection`.
 4. **Review** the PRs, including the docs PR (that review is how glossary, ADRs, and learnings get approved). Merge.
 5. **Weekly**: `/heinzelwerk:retro` over the week's runs, including an architecture survey (deepening candidates filed as `needs-triage`) → retro record + doc PR for the project, issues in this repo for the team. Good use of leftover tokens.
-6. **New docs appeared?** `/heinzelwerk:adopt-docs` absorbs only new or changed docs (ledger in `docs/agents/adopted.md`).
+6. **New docs appeared?** `/heinzelwerk:adopt-docs` absorbs only new or changed docs (ledger in `docs/agents/heinzelwerk/adopted.md`).
 
 ## What gets written into a target repo
 
 ```
-CLAUDE.md                 ## Agent skills pointer block
+CLAUDE.md or AGENTS.md    ## Agent skills (heinzelwerk) pointer block (existing file is reused)
 GLOSSARY.md               lazily, resolved terms only
 docs/adr/                 lazily, decisions meeting all three ADR criteria
-docs/agents/
+docs/agents/heinzelwerk/  heinzelwerk's own files; other files in docs/agents/ are left alone
   issue-tracker.md  triage-labels.md  domain.md  team.md  repo-map.md  learnings.md
   design.md               UI repos: design system
   infra-policy.json       infra repos: tf-gate policy
-scripts/tf-gate  scripts/ui-shots   copied by setup when infra / UI exist
   adopted.md              ledger of adopted docs
   retros/                 retro records
   workspace.md            tickets repo only, workspace mode
+scripts/tf-gate  scripts/ui-shots   copied by setup when infra / UI exist
 GLOSSARY-MAP.md           tickets repo only, workspace mode
 CLAUDE.workspace.md       tickets repo only; parent folder CLAUDE.md = one @import line
 ```

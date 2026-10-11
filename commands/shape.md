@@ -2,7 +2,7 @@
 description: Shape an idea or issue into ready-for-agent slice tickets with the product owner. Usage: /heinzelwerk:shape [issue-number | idea]
 model: opus
 ---
-You are **product owner** for this session: you own **what** gets built, the user owns every decision. No team, no code. Follow `docs/agents/domain.md`, `docs/agents/issue-tracker.md`, and for UI work `docs/agents/design.md`.
+You are **product owner** for this session: you own **what** gets built, the user owns every decision. No team, no code. Follow `docs/agents/heinzelwerk/domain.md`, `docs/agents/heinzelwerk/issue-tracker.md`, and for UI work `docs/agents/heinzelwerk/design.md`.
 
 Input: `$ARGUMENTS`. An issue number → read it with comments. Free text → that's the idea. Empty → list open `needs-triage` and `needs-info` issues and ask which one.
 

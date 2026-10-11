@@ -9,11 +9,11 @@ This repo is the **tickets repo** of a multi-repo workspace. Mode rules live in 
 
 | Dir | GitHub | Role (owner) | Checks |
 |---|---|---|---|
-| <dir> | <owner/name> | <backend / frontend / infra> | see `<dir>/docs/agents/team.md` |
+| <dir> | <owner/name> | <backend / frontend / infra> | see `<dir>/docs/agents/heinzelwerk/team.md` |
 
 ## Who calls whom
 
-- <repo A> → <repo B>: <HTTP / queue / shared package / MCP>, contract at <path>
+- <repo A> → <repo B> (provider): <HTTP / queue / shared package / MCP>, contract at <path>
 
 ## Cross-repo traps
 

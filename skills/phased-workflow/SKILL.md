@@ -42,7 +42,7 @@ why: <what you saw, file:line or failing output>
 done when: <concrete, checkable>
 handoff: <what task/verdict you will leave behind>
 blocks / blocked-by: <task ids>
-owner hint: product | lead | backend | frontend | validator
+owner hint: product | lead | backend | frontend | infra | validator
 scope guess: in | out | unsure — <one line why>
 model: default | opus: <trigger> | haiku: <what>   (optional, see model-selection)
 ```
@@ -64,7 +64,7 @@ The proposer's `scope guess` is input, never the decision. Scope is product's ca
 **Not a proposal**: validator's needs-work feedback goes straight to the implementer (same task, not new work). Answers to questions follow the routing in team-modes.
 
 ## Budget
-Max 3 proposals per agent per run. Cap hit → leftovers go into your done note.
+Max 3 proposals per agent per run (contract-change proposals exempt, team-modes **Contract changes**). Cap hit → leftovers go into your done note.
 
 ## Done note (required on every task you finish)
 ```
@@ -80,7 +80,7 @@ risk: <optional: area that deserves an Opus review but isn't in team.md's risk a
 ```
 
 ## Docs
-Before starting, follow the `## Agent skills` pointers in CLAUDE.md: domain docs, team rules, learnings. Name things with `GLOSSARY.md` vocabulary; flag ADR conflicts explicitly.
+Before starting, follow the `## Agent skills (heinzelwerk)` pointers in CLAUDE.md (or AGENTS.md): domain docs, team rules, learnings. Name things with `GLOSSARY.md` vocabulary; flag ADR conflicts explicitly.
 `GLOSSARY.md`, `docs/adr/`, and learnings change only through lead's docs PR at the end of a run. Your job is to leave candidates in your done note (`term:`, `adr:`, `learning:`, `risk:`).
 
 ## Token discipline

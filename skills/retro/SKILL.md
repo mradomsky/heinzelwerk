@@ -9,7 +9,7 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
 
 ## Steps
 
-1. Call the Skill tool with `writing-for-agents` for the writing style guide.
+1. Call the Skill tool with `heinzelwerk:writing-for-agents` for the writing style guide.
 
 2. **Scope.** Default: everything since the last retro (newest file in `docs/agents/heinzelwerk/retros/`; workspace: in the tickets repo). The user may give a date or ticket list instead. Read the last retro's actions: did each one happen, and did it help?
 
@@ -21,7 +21,7 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
    - Docs PRs: what the human accepted, edited, or dropped from glossary, ADR, and learnings candidates.
    - Session logs on this machine, when the user points at them or a finding needs detail.
    - Token usage: ask the user once; never estimate.
-   - Shortcut debt: run the `ponytail-debt` skill; compare with the ledger in the last retro record.
+   - Shortcut debt: run the `heinzelwerk:ponytail-debt` skill; compare with the ledger in the last retro record.
 
 4. **Look for candidates for improvement** in these categories.
 
@@ -44,7 +44,7 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
 - **Spec gate**: did product pass slices that later failed on spec, or block runnable ones? _Use when_ validator's Spec axis found gaps product should have caught.
 - **Validator**: did merged PRs need human fixes the validator should have caught? Classify each: mechanical → a check (environment category), judgement → a coding-standards rule. _Use when_ human edits exist on validator-passed PRs.
 - **Coordinator**: count nudges that changed what an agent did versus noise; were escalations to the user necessary, or answerable by product or lead? _Use when_ nudges or escalations appear in metrics.
-- **Model choice**: did Opus escalations find what Sonnet missed? Did Haiku subagents produce work that later failed? Did a Sonnet review let something through in an area that should be a risk area? → propose adding it to `team.md`. Judge with the `model-selection` anti-patterns. _Use when_ escalations appear in metrics or human edits cluster in one role.
+- **Model choice**: did Opus escalations find what Sonnet missed? Did Haiku subagents produce work that later failed? Did a Sonnet review let something through in an area that should be a risk area? → propose adding it to `team.md`. Judge with the `heinzelwerk:model-selection` anti-patterns. _Use when_ escalations appear in metrics or human edits cluster in one role.
 - **Acceptance**: did slice acceptance fail on things per-PR validation passed? Did you find integration issues after merge it missed? _Use when_ `acceptance` appears in metrics.
 - **UI**: did you have to fix visual or UX issues after merge? Missing design rules → propose additions to `design.md`; screenshots missing or useless → tighten the frontend step. _Use when_ human edits touch UI code.
 - **Infra**: gate fails and lead escalations: real catches or policy too strict? Any auto-apply you had to undo? Propose policy changes (`infra-policy.json`) with evidence: widen only what proved safe. Infra PRs closed unmerged that carry a `heinzelwerk: applied` comment are unreverted dev drift → `ready-for-agent` issue. _Use when_ `infra_applies` appears in metrics.
@@ -53,18 +53,18 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
 - **Docs flow**: are glossary terms, ADRs, and learnings landing, or piling up as dropped candidates? Is the learnings file near its cap with stale lines? _Use when_ docs PRs were edited heavily or skipped.
 - **Wins**: what worked well enough to protect? Name it, so a later change doesn't break it.
 
-4b. **Architecture survey.** Run the `improve-codebase-architecture` skill's explore and report steps (not its grilling loop yet). Direction: the code that changed since the last retro, weighted by the friction step 4 found (modules with many review rounds, human edits, diagnose rounds, or repeated proposals). Haiku subagents walk the code (`model-selection`); judging candidates stays with you. Never change code here.
+4b. **Architecture survey.** Run the `heinzelwerk:improve-codebase-architecture` skill's explore and report steps (not its grilling loop yet). Direction: the code that changed since the last retro, weighted by the friction step 4 found (modules with many review rounds, human edits, diagnose rounds, or repeated proposals). Haiku subagents walk the code (`heinzelwerk:model-selection`); judging candidates stays with you. Never change code here.
 
 5. **Present** findings to the user in order of severity, wins last; architecture candidates as their own group with the report path. Each: evidence, proposed change, where it goes. The user picks which to act on.
 
 6. **Write**, for the picked findings only:
    - Retro record: `docs/agents/heinzelwerk/retros/<YYYY-MM-DD>.md` (workspace: tickets repo): metrics table summed over runs in scope, wins, problems, actions with owner, architecture candidates filed, shortcut ledger summary (count, no-trigger count, new since last retro), and the follow-up on last retro's actions. Max 60 lines.
    - **Environment actions**: doc changes (pointers, learnings prune and consolidate, team rules, coding standards) on a fresh branch from main `docs/retro-<YYYY-MM-DD>`, one PR with the retro record. Code changes (a new check, a hook, a CI job) become issues labelled `ready-for-agent` or `ready-for-human`, never edited here.
-   - **Architecture candidates**: every **Strong** and **Worth exploring** candidate becomes an issue labelled `needs-triage` and `heinzelwerk-survey` (`gh label create heinzelwerk-survey -f` first; title in `codebase-design` vocabulary; body: problem, solution, benefits, files, strength), whether or not the user picked it now. Dedup against open issues; comment on an existing one instead. List them in the retro record.
+   - **Architecture candidates**: every **Strong** and **Worth exploring** candidate becomes an issue labelled `needs-triage` and `heinzelwerk-survey` (`gh label create heinzelwerk-survey -f` first; title in `heinzelwerk:codebase-design` vocabulary; body: problem, solution, benefits, files, strength), whether or not the user picked it now. Dedup against open issues; comment on an existing one instead. List them in the retro record.
    - **Team actions**: issues in the plugin repo: `gh issue create -R mradomsky/heinzelwerk`, title `<role or skill>: <change>`, body = evidence + proposed wording.
    - Do not merge.
 
-7. **Explore one candidate** (optional): ask which architecture candidate to explore now. Picked → the `improve-codebase-architecture` grilling loop. Otherwise the user shapes it later with `/heinzelwerk:shape <issue>`.
+7. **Explore one candidate** (optional): ask which architecture candidate to explore now. Picked → the `heinzelwerk:improve-codebase-architecture` grilling loop. Otherwise the user shapes it later with `/heinzelwerk:shape <issue>`.
 
 ## Reference
 
@@ -83,4 +83,4 @@ You have access to several files in the repo:
 - `CLAUDE.md`/`AGENTS.md`: these files are pushed to the context window of any agent working in this repo. They should be used incredibly sparingly, usually only for **navigation pointers** to other files.
 - `CODING_STANDARDS.md`: this file is read during review, not implementation. Add **navigation pointers** to docs folders if the standards file gets more than 1,000 lines long.
 - Docs: use docs as references files, pointed to by other files. Look for existing docs before writing new ones.
-- Skills: use skills for docs (since their description goes into the agent's context window), or for user-invoked commands. Follow the advice in the `writing-for-agents` skill.
+- Skills: use skills for docs (since their description goes into the agent's context window), or for user-invoked commands. Follow the advice in the `heinzelwerk:writing-for-agents` skill.

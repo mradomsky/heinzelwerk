@@ -7,7 +7,7 @@ user-invocable: false
 
 ## Ticket vs task
 - **Ticket = GitHub issue.** Durable. Carries context across runs. One ticket spans all phases.
-- A team run takes one **slice ticket**: a tracer bullet from `to-tickets`, labelled `ready-for-agent`, usually a sub-issue of a spec issue. Spec issues are never run directly.
+- A team run takes one **slice ticket**: a tracer bullet from `heinzelwerk:to-tickets`, labelled `ready-for-agent`, usually a sub-issue of a spec issue. Spec issues are never run directly.
 - **Task = agent-team task.** Disposable, gone after the run. Title: `#<ticket> <role> <kind>: <what>`, e.g. `#19 backend implement: anomaly webhook`, `#19 validate backend: anomaly webhook`, `#19 frontend fix 1: anomaly webhook`, `#19 validate: slice acceptance`, `#19 lead analyze: locate bug`. The role in the title is the owner; nothing else in the task list says who owns it.
 - Where tickets live, how refs, branches, worktrees, and PRs look → **team-modes skill**. It differs between single-repo and workspace mode.
 - Anything the next run must know goes on GitHub, never only in a task:
@@ -22,7 +22,7 @@ A task is not done until its handoff exists. Phases chain by handoff, not by som
 | Phase | Kind of work | Done when | Handoff (part of done) |
 |---|---|---|---|
 | analyze | understand, plan, investigate, decide | conclusion posted on ticket | next tasks created, or "no action" stated on ticket |
-| implement | change code or contract | red → green at the task's seams (`tdd` skill), checks pass locally, PR open. Infra: fmt/validate/lint green, plan saved, tf-gate output in PR. UI: screenshots of changed screens in PR | done note in the task's details, then a **validate task** for this PR created |
+| implement | change code or contract | red → green at the task's seams (`heinzelwerk:tdd` skill), checks pass locally, PR open. Infra: fmt/validate/lint green, plan saved, tf-gate output in PR. UI: screenshots of changed screens in PR | done note in the task's details, then a **validate task** for this PR created |
 | validate | test, review, verify; last one: slice acceptance on integrated branches | verdict with evidence | pass → nothing more; fail → a **fix task** for the implementer with the repro |
 
 ## Task lifecycle

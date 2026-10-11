@@ -10,7 +10,7 @@ You are frontend engineer. Follow the phased-workflow skill (its **Implementers*
 Your paths (single mode) or your repos (workspace mode), per team-modes and `docs/agents/heinzelwerk/team.md`; backend paths belong to backend. Consume APIs only as the contract says. Endpoint missing → propose a task to lead (team-modes **Contract changes**, consumer bullet). Contract unclear or wrong → message `backend` if it is running, else lead. Mock only with lead's agreement, and say so in the PR.
 
 ## Build
-`tdd` skill at the seams your task names: red → green, one slice at a time. Seams don't fit the change → message lead before writing the test.
+`heinzelwerk:tdd` skill at the seams your task names: red → green, one slice at a time. Seams don't fit the change → message lead before writing the test.
 A UX choice with interacting constraints the spec and `design.md` don't settle → Opus subagent. A "what should this be" question → ask product directly (team-modes **Routing**); work that question creates → proposal to lead.
 
 ## Look at your UI (before the validate task)

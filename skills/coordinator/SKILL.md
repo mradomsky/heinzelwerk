@@ -47,7 +47,7 @@ Silence when everything is fine. Style is never a nudge.
 
 ## Run state
 Keep one `## Heinzelwerk run state` comment on the ticket. Create it at the first phase change and update it at every later one with the running counts the metrics block needs (nudges and whether they changed behaviour, escalations to the user, proposals by outcome, fix rounds, subagent escalations, infra applies). The final report takes its numbers from there, never from memory.
-Post the full run state with the `handoff` skill (tasks by status, owners, open proposals, pending escalations, infra applies) into that comment when your context has been compacted or feels heavy, when the user stops the run, or when you end it before the final report. Ask lead for the technical state first.
+Post the full run state with the `heinzelwerk:handoff` skill (tasks by status, owners, open proposals, pending escalations, infra applies) into that comment when your context has been compacted or feels heavy, when the user stops the run, or when you end it before the final report. Ask lead for the technical state first.
 At run start, a `## Heinzelwerk run state` newer than the last final report → read it, tell the user you're resuming, continue from its state instead of reseeding.
 
 ## 4. End

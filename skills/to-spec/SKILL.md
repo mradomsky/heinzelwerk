@@ -17,7 +17,7 @@ The issue tracker and triage label vocabulary should have been provided to you. 
 
 Check with the user that these seams match their expectations.
 
-3. Write the spec using the template below, then publish it to the project issue tracker. _(heinzelwerk: a spec issue is never run directly, so it gets no triage label; `to-tickets` labels the slices `ready-for-agent`.)_
+3. Write the spec using the template below, then publish it to the project issue tracker. _(heinzelwerk: a spec issue is never run directly, so it gets no triage label; `heinzelwerk:to-tickets` labels the slices `ready-for-agent`.)_
 
 <spec-template>
 

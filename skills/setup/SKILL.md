@@ -57,10 +57,10 @@ Show drafts of the `## Agent skills` block (below) and every `docs/agents/*.md` 
 
 ## 4. Write
 
-Per repo, on a fresh branch from main `docs/agent-setup`:
+Per repo, on a fresh branch from main `docs/heinzelwerk-setup`:
 
-- `docs/agents/issue-tracker.md` from [issue-tracker-github.md](issue-tracker-github.md)
-- `docs/agents/triage-labels.md` from [triage-labels.md](triage-labels.md); create missing labels with `gh label create`
+- `docs/agents/heinzelwerk/issue-tracker.md` from [issue-tracker-github.md](issue-tracker-github.md)
+- `docs/agents/heinzelwerk/triage-labels.md` from [triage-labels.md](triage-labels.md); create missing labels with `gh label create`
 - `docs/agents/domain.md` from [domain.md](domain.md)
 - `docs/agents/team.md` from [team.md](team.md)
 - UI found: `docs/agents/design.md` (C3) and `scripts/ui-shots` copied from [scripts/ui-shots](scripts/ui-shots) (executable)

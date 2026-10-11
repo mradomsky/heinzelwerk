@@ -4,7 +4,7 @@ How heinzelwerk agents work in this repo. Mode rules (single repo vs workspace) 
 
 - **Backend paths**: <e.g. services/>
 - **Frontend paths**: <e.g. command-interface/>
-- **Acceptance** (validator runs it on the integrated slice; omit if none): <e.g. `npm run e2e -- --reporter=dot`, a smoke script>
+- **E2E** (validator runs it on the integrated slice; omit if none): <e.g. `npm run e2e -- --reporter=dot`, a smoke script>
 - **UI preview**: <start command with port, e.g. `npm run dev -- --port $PORT`> · base URL <http://localhost:$PORT> · screenshots via `npx playwright screenshot` · publish via `scripts/ui-shots`
 - **Infra paths**: <e.g. infra/> (environment dirs under it, e.g. infra/envs/dev)
 - **Infra checks**: <e.g. `terraform fmt -check -recursive`, `tflint`>

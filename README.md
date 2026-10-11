@@ -24,12 +24,20 @@ claude --plugin-dir /path/to/heinzelwerk         # try locally
 /plugin install heinzelwerk
 ```
 
-Enable agent teams in `~/.claude/settings.json`: `{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" } }`
+Enable agent teams and the shared task list in `~/.claude/settings.json`:
 
-Start team runs **without MCP servers**: every teammate otherwise loads every connected server's tool definitions on every turn.
+```json
+{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1", "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1" } }
+```
+
+Runs are interactive: a headless `-p` session cannot spawn teammates. Keep the default in-process teammate mode: split panes ignore the agents' `effort` and `disallowedTools`. The guard hook and `tf-gate` need `jq`; on Windows the hook needs Git Bash; the tracker needs `gh`.
+
+Start every shaping or run session with `--model opus`: a command's `model:` covers only its first turn, and shape, feature, bugfix, and retro span many.
+
+Start team runs **without MCP servers**: every teammate otherwise loads every connected server's tool definitions on every turn. `--strict-mcp-config` empties the lead's set; teammates load MCP servers from project and user config regardless, so remove or disable servers there for the run (`claude mcp list` / `claude mcp remove`) and check `/mcp` inside a teammate once.
 
 ```sh
-claude --model opus --strict-mcp-config   # coordinator on Opus; no MCP servers in this session
+claude --model opus --strict-mcp-config   # coordinator on Opus; no MCP servers in the lead session
 ```
 
 Need one for a run (e.g. an issue tracker without `gh`)? Pass only that one: `claude --strict-mcp-config --mcp-config ./mcp-run.json`.
@@ -39,6 +47,9 @@ Need one for a run (e.g. an issue tracker without `gh`)? Pass only that one: `cl
 1. **Once per repo or workspace**: `/heinzelwerk:setup` → interview → one PR per repo with `docs/agents/heinzelwerk/*`, optional seeded `GLOSSARY.md`/ADRs, and the `## Agent skills (heinzelwerk)` block. Review, merge. In a multi-repo folder, run it from the parent folder; it also writes the workspace docs into the tickets repo.
 2. **Shape (you + product)**: `/heinzelwerk:shape [issue | idea]`. Product grills you, writes the spec, slices it into `ready-for-agent` tickets with blocking edges, and lists the frontier. Also the way back in after a run stops on `needs-info`. Want only the interview? Stop after the grill. `/heinzelwerk:to-spec` and `/heinzelwerk:to-tickets` stay typeable for odd cases (e.g. slicing a spec written elsewhere).
 3. **Build (you + coordinator)**: `/heinzelwerk:feature <slice>` or `/heinzelwerk:bugfix <issue>`. Your session becomes coordinator: your single point of contact, routes scope questions to product and technical ones to lead, watches the team, posts the final report.
+4. **Review** the PRs, including the docs PR (that review is how glossary, ADRs, and learnings get approved). Merge.
+5. **Weekly**: `/heinzelwerk:retro` over the week's runs, including an architecture survey (deepening candidates filed as `needs-triage`) → retro record + doc PR for the project, issues in this repo for the team. Good use of leftover tokens.
+6. **New docs appeared?** `/heinzelwerk:adopt-docs` absorbs only new or changed docs (ledger in `docs/agents/heinzelwerk/adopted.md`).
 
 ## Roles
 
@@ -46,15 +57,12 @@ Need one for a run (e.g. an issue tracker without `gh`)? Pass only that one: `cl
 |---|---|---|---|
 | coordinator | process: your channel, lifecycle, observation, final report | main session of a run (`skills/coordinator`) | Opus |
 | product | what: shaping, spec gate, scope answers, acceptance verdict | main session of `/shape`; teammate in runs | Opus in `/shape`, Sonnet in runs |
-| lead | how: tasks, seams, technical triage, diagnose, docs PR | teammate | Opus |
+| lead | how: tasks, seams, technical triage, diagnose, infra apply through the gate, docs PR | teammate | Opus |
 | backend / frontend | building, test-first | teammates | Sonnet |
 | infra | Terraform: plan, never apply | teammate | Sonnet |
 | validator | checks + two-axis review | teammate | Sonnet; Opus review on the project's risk areas |
 
-Escalation and degradation happen through subagents (Opus for depth, Haiku for breadth and mechanical work), per `skills/model-selection`.
-4. **Review** the PRs, including the docs PR (that review is how glossary, ADRs, and learnings get approved). Merge.
-5. **Weekly**: `/heinzelwerk:retro` over the week's runs, including an architecture survey (deepening candidates filed as `needs-triage`) → retro record + doc PR for the project, issues in this repo for the team. Good use of leftover tokens.
-6. **New docs appeared?** `/heinzelwerk:adopt-docs` absorbs only new or changed docs (ledger in `docs/agents/heinzelwerk/adopted.md`).
+Main-session roles (coordinator, product in `/shape`) run on the session model: start it with `--model opus`. Escalation and degradation happen through subagents (Opus for depth, Haiku for breadth and mechanical work). Each role's triggers are in its prompt; the reasoning is in `skills/model-selection`.
 
 ## What gets written into a target repo
 
@@ -85,23 +93,22 @@ User-invoked (you type them; they orchestrate and never call each other):
 Model-invoked (reusable discipline, agents reach for them):
 - `skills/coordinator` — main-session role in runs
 - `skills/to-spec`, `skills/to-tickets` — driven by `/shape`, also runnable directly
-- `skills/phased-workflow` — phases, handoffs, tickets, done notes, docs candidates
-- `skills/team-modes` — single-repo vs workspace cooperation rules
+- `skills/phased-workflow` — phases, task lifecycle, handoffs, tickets, done notes, docs candidates
+- `skills/team-modes` — routing, messaging, voice, single-repo vs workspace cooperation rules
 - `skills/adopt-docs` — existing docs → ADRs, glossary, repo map, issues; also runnable directly
 - `skills/diagnosing-bugs` — red loop → minimise → hypothesise → instrument → fix, used by `/bugfix`
 - `skills/handoff` — run state to the ticket when context gets heavy or a run stops
 - `skills/improve-codebase-architecture` — deepening opportunities; run weekly by retro, or directly for an ad-hoc survey
 - `skills/prototype` — throwaway UI variations / logic walkthroughs, used by `/shape`
-- `skills/model-selection` — which tier for which work; heinzelwerk role table and escalation triggers
-- `skills/ponytail` — smallest-complete-change discipline, preloaded into backend, frontend, infra
+- `skills/model-selection` — which tier for which work, and why; the roles' triggers live in `agents/*`
+- `skills/ponytail`, `skills/caveman` — smallest-complete-change discipline and terse voice for direct use; the team's versions are inlined in `agents/*` and `team-modes`
 - `skills/ponytail-debt` — `shortcut:` ledger, used by retro
-- `skills/caveman` — terse voice, preloaded into lead, backend, frontend
 - `skills/tdd`, `skills/code-review`, `skills/codebase-design`, `skills/domain-modeling`, `skills/grilling`, `skills/writing-for-agents`
 
 Other:
 - `agents/` — roles, usable as subagents or teammates
-- `hooks/` — `guard.sh` blocks push/merge to main, plain `--force`, `--no-verify`, adding secret/state files, raw `terraform apply/destroy/import/state`, `-auto-approve`
-- `docs/test-run-plan.md` — staged plan for the first runs
+- `hooks/` — `guard.sh` blocks pushing or checking out main, `gh pr merge`, plain `--force`, `--no-verify`, adding secret/state files, raw `terraform apply/destroy/import/state`, `-auto-approve`. A tripwire: the secret defence is the gitleaks pre-commit hook setup recommends
+- `docs/test-run-plan.md` — staged plan for the first runs; `docs/reviews/` — review records
 - `prompts/` — loose prompts, staging area before `skills/` or `commands/` (e.g. `review-plugin.md`: independent review of this plugin)
 
 ## License

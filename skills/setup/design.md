@@ -11,7 +11,7 @@ What the UI must look and behave like. Frontend builds against it; validator rev
 - <component>: <where it lives, when to use it, when not to>
 
 ## Layout and style rules
-- <e.g. LCARS frame for every screen; panels never scroll horizontally>
+- <e.g. every screen sits in the app shell; panels never scroll horizontally>
 
 ## Interaction
 - <e.g. loading, empty, and error states on every data view; destructive actions confirm>

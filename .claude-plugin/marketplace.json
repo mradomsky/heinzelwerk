@@ -4,7 +4,7 @@
   "plugins": [
     {
       "name": "heinzelwerk",
-      "source": "./",
+      "source": ".",
       "description": "Autonomous, spec-driven dev team for Claude Code agent teams."
     }
   ]

@@ -1,10 +1,10 @@
 ---
 name: handoff
 description: Compact the current conversation into a handoff document for another agent to pick up.
-argument-hint: "What will the next session be used for?"
+user-invocable: false
 ---
 
-_(heinzelwerk: model-invocable so coordinator can call it. In a team run, post the document as a comment on the ticket starting with `## Heinzelwerk handoff` instead of the temp directory, and include run state: tasks by status, owners, open proposals, pending escalations, infra applies.)_
+_(heinzelwerk: model-invocable so coordinator can call it. In a team run, post the document as a comment on the ticket starting with `## Heinzelwerk run state` instead of the temp directory, and include run state: tasks by status, owners, open proposals, pending escalations, infra applies.)_
 
 Write a handoff document summarising the current conversation so a fresh agent can continue the work. Save to the temporary directory of the user's OS (`$TMPDIR`, else `/tmp`; `%TEMP%` on Windows) - not the current workspace.
 

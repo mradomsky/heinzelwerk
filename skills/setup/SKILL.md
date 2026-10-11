@@ -53,11 +53,11 @@ Summarise what's present and what's missing. Then take the sections in order: on
 
 ## 3. Confirm
 
-Show drafts of the `## Agent skills` block (below) and every `docs/agents/heinzelwerk/*.md` file. Let the user edit before writing.
+Show drafts of the `## Agent skills` block (below) and every file under `docs/agents/heinzelwerk/`. Let the user edit before writing.
 
 ## 4. Write
 
-Per repo, on a fresh branch from main `docs/heinzelwerk-setup`. Repo set up with the old flat layout (heinzelwerk files directly in `docs/agents/`) → `git mv` them into `docs/agents/heinzelwerk/` first and update the `## Agent skills` block; never touch other files in `docs/agents/`.
+Per repo, on a fresh branch from main `docs/heinzelwerk-setup`:
 
 - `docs/agents/heinzelwerk/issue-tracker.md` from [issue-tracker-github.md](issue-tracker-github.md)
 - `docs/agents/heinzelwerk/triage-labels.md` from [triage-labels.md](triage-labels.md); create missing labels with `gh label create`

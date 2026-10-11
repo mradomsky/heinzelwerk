@@ -62,7 +62,7 @@ Escalation and degradation happen through subagents (Opus for depth, Haiku for b
 CLAUDE.md or AGENTS.md    ## Agent skills (heinzelwerk) pointer block (existing file is reused)
 GLOSSARY.md               lazily, resolved terms only
 docs/adr/                 lazily, decisions meeting all three ADR criteria
-docs/agents/heinzelwerk/   heinzelwerk's own files; other files in docs/agents/ are left alone
+docs/agents/heinzelwerk/  heinzelwerk's own files; other files in docs/agents/ are left alone
   issue-tracker.md  triage-labels.md  domain.md  team.md  repo-map.md  learnings.md
   design.md               UI repos: design system
   infra-policy.json       infra repos: tf-gate policy

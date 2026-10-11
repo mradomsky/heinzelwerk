@@ -1,6 +1,6 @@
 ---
 name: model-selection
-description: Choose which model tier to spend on a piece of work — the most capable model (Fable 5 / Opus) versus a cheaper, faster one — so quality holds where it matters and cost falls where it does not. Load this before launching subagents or a workflow, before a review or research sweep, when a task is large and repetitive, or whenever you are about to spend a strong model on volume. Applies to your own reasoning effort as much as to delegated agents.
+description: Choose which model tier to spend on a piece of work — the most capable model versus a cheaper, faster one — so quality holds where it matters and cost falls where it does not. Load this before launching subagents or a workflow, before a review or research sweep, when a task is large and repetitive, or whenever you are about to spend a strong model on volume. Applies to your own reasoning effort as much as to delegated agents.
 ---
 
 # Which model, and why
@@ -62,6 +62,6 @@ A teammate's model is fixed when it is spawned. **Escalate or degrade through su
 | validator | Sonnet | high | the diff touches a **risk area** listed in `docs/agents/team.md`: run both code-review axes on Opus | running checks, collecting failing output |
 | `/heinzelwerk:shape` | Opus | high | — | finder sweeps during grilling |
 
-**Haiku effort scales with the subtask**: low for searches and pure mechanical edits; medium for batches that need local judgement (migrating call sites with small variations); high for a summarising or classifying pass whose output feeds a decision. Haiku never gets a task with no verifier after it.
+**Haiku effort scales with the subtask**: low for searches and pure mechanical edits; medium for batches that need local judgement (migrating call sites with small variations); high for a summarising or classifying pass whose output feeds a decision.
 
 **Who decides**: lead may preset an escalation in the task (`model:` field). The owner escalates on its own when a trigger above fires. Either way, state the choice: `escalations:` line in the done note.

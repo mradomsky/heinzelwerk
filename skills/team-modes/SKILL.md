@@ -18,7 +18,7 @@ Scope → product. Technical → lead. Discovered work → lead (as a proposed t
 - Messages vanish with the run. Anything a later run or a human needs goes on GitHub: ticket comment, PR body, or contract file.
 
 ## Contract changes
-Contracts: the paths under **Contracts** in `docs/agents/team.md` (older files: **API contract**), plus cross-repo interfaces in workspace mode. **Provider** = the role named there (shared types: the task's named owner; workspace: the role of the repo marked provider in `docs/agents/workspace.md` **Who calls whom**); **consumers** = the roles whose code reads it.
+Contracts: the paths under **Contracts** in `docs/agents/heinzelwerk/team.md` (older files: **API contract**), plus cross-repo interfaces in workspace mode. **Provider** = the role named there (shared types: the task's named owner; workspace: the role of the repo marked provider in `docs/agents/heinzelwerk/workspace.md` **Who calls whom**); **consumers** = the roles whose code reads it.
 - **Backward compatible by default**: compatible = every existing consumer still works unchanged: new optional inputs, a required input made optional, new outputs. Never rename, remove, retype, narrow, or make something required. A new enum value in an output is breaking (exhaustive consumers fail). A compatible change needs no consumer work: update the contract file in the provider's own PR and put this line in the PR body: `contract: compatible — <what changed>`.
 - **Breaking change your task doesn't already name** → propose it to lead **before coding** it (a proposed task naming the consumers it breaks). Hold the breaking part until lead answers; keep working on the rest of your task. Contract proposals don't count against the proposal budget. Accepted → that proposed task becomes the contract task; the breaking part goes there, not in your current PR. Lead decides:
   - consumer update in scope → lead accepts the contract task and adds the consumer task, blocked by it; consumer role not running → lead tells coordinator to spawn it;
@@ -46,24 +46,24 @@ Contracts: the paths under **Contracts** in `docs/agents/team.md` (older files: 
 | Topic | Rule |
 |---|---|
 | Tickets | issues of this repo, refs `#N` |
-| Ownership | by path, from `docs/agents/team.md` (backend, frontend, infra, shared paths). Never edit outside your paths. Shared paths (types, config) → only the task's named owner touches them |
+| Ownership | by path, from `docs/agents/heinzelwerk/team.md` (backend, frontend, infra, shared paths). Never edit outside your paths. Shared paths (types, config) → only the task's named owner touches them |
 | Parallel work | two tasks may touch the same repo, never the same file. Lead checks file overlap when seeding; overlap → make one task block the other |
-| Contract | paths from **Contracts** in `docs/agents/team.md`. Contract change a consumer task depends on (compatible or breaking): own task for the provider role, lands in a PR first; consumer tasks blocked-by it and branch from the contract branch: `worktree add ... -b <branch> origin/<contract-branch>`. Compatible change no consumer task needs: in the provider's own PR (see **Contract changes**) |
+| Contract | paths from **Contracts** in `docs/agents/heinzelwerk/team.md`. Contract change a consumer task depends on (compatible or breaking): own task for the provider role, lands in a PR first; consumer tasks blocked-by it and branch from the contract branch: `worktree add ... -b <branch> origin/<contract-branch>`. Compatible change no consumer task needs: in the provider's own PR (see **Contract changes**) |
 | PR body | `Closes #N` on the PR that completes the ticket, `Refs #N` on the others |
-| Checks | from `docs/agents/team.md` |
+| Checks | from `docs/agents/heinzelwerk/team.md` |
 | Validator | checks out PR branch in its own worktree, runs checks, walks criteria |
 
 ## 3. Workspace mode
 | Topic | Rule |
 |---|---|
-| Tickets | only in the tickets repo named in its `docs/agents/workspace.md`. Refs always `owner/repo#N`, also in commits |
-| Ownership | by repo, from the repo table in `docs/agents/workspace.md` (role column). Inside a repo, that repo's own `docs/agents/team.md` applies as in single mode |
+| Tickets | only in the tickets repo named in its `docs/agents/heinzelwerk/workspace.md`. Refs always `owner/repo#N`, also in commits |
+| Ownership | by repo, from the repo table in `docs/agents/heinzelwerk/workspace.md` (role column). Inside a repo, that repo's own `docs/agents/heinzelwerk/team.md` applies as in single mode |
 | Same feature, several repos | **same branch name in every touched repo**. That name is the feature's key; lead writes it in the plan |
-| Task granularity | one task per repo. A task never edits two repos |
+| Task granularity | one task per repo. A task never edits two repos. Contract tasks are always cross-repo here |
 | Cross-repo contract | change a consumer task depends on: provider repo's task first (it owns the contract); consumer tasks blocked-by it; consumer PR body: `Depends on owner/provider-repo#<PR>`. Compatible change no consumer task needs: provider PR with the `contract: compatible` line (see **Contract changes**) |
 | PR body | `Refs owner/tickets-repo#N` on all PRs; `Closes owner/tickets-repo#N` only on the last PR lead names |
 | Checks | each repo's own `checks:`, run inside that repo's worktree |
-| Integration | if `docs/agents/workspace.md` defines one, validator creates worktrees of the shared branch name in every touched repo (main for untouched ones) and runs it from there |
+| Integration | if `docs/agents/heinzelwerk/workspace.md` defines one, validator creates worktrees of the shared branch name in every touched repo (main for untouched ones) and runs it from there |
 | Learnings, `GLOSSARY-MAP.md`, workspace-wide ADRs | only in tickets repo. Per-repo `GLOSSARY.md` and ADRs stay in their repo |
 | Repo not in workspace map | do not touch. Tell lead |
 

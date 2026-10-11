@@ -59,7 +59,7 @@ A teammate's model is fixed when it is spawned. **Escalate or degrade through su
 | product | Sonnet | medium | a scope call has consequences across repos or contradicts an ADR | locating spec, glossary, ADR passages |
 | backend / frontend | Sonnet | medium | root cause still unknown after two failed passes; changing shared code whose callers you can't see from the edit site; frontend: a UX decision with interacting constraints the spec and design.md don't settle | call-site searches, mechanical batches (renames, wide-refactor migrations), boilerplate |
 | infra | Sonnet | medium | state moves, resource replacements, IAM or network changes | provider-doc lookups, mechanical batches |
-| validator | Sonnet | high | the diff touches a **risk area** listed in `docs/agents/team.md`: run both code-review axes on Opus | running checks, collecting failing output |
+| validator | Sonnet | high | the diff touches a **risk area** listed in `docs/agents/heinzelwerk/team.md`: run both code-review axes on Opus | running checks, collecting failing output |
 | `/heinzelwerk:shape` | Opus | high | — | finder sweeps during grilling |
 
 **Haiku effort scales with the subtask**: low for searches and pure mechanical edits; medium for batches that need local judgement (migrating call sites with small variations); high for a summarising or classifying pass whose output feeds a decision.

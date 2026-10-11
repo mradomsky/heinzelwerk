@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Set up a repo, or a folder of repos, for the dev team — issue tracker, triage labels, domain docs (glossary, ADRs), team rules, repo map, learnings, and the CLAUDE.md pointer block. Run once per repo or workspace before any team run.
+description: Set up a repo, or a folder of repos, for the dev team — issue tracker, triage labels, domain docs (glossary, ADRs), team rules, repo map, learnings, and the CLAUDE.md (or AGENTS.md) pointer block. Run once per repo or workspace before any team run.
 disable-model-invocation: true
 ---
 
@@ -42,7 +42,7 @@ Summarise what's present and what's missing. Then take the sections in order: on
 - Post-merge apply for higher environments: CI job if they have one (recommend), else lead applies through the gate in the next run where policy allows.
 
 **C3 — Frontend design and preview** (only if a UI exists). Propose:
-- `docs/agents/design.md` from [design.md](design.md): extract tokens, components, and style rules from the code, theme files, and existing style docs; ask the user for rules only they know.
+- `docs/agents/heinzelwerk/design.md` from [design.md](design.md): extract tokens, components, and style rules from the code, theme files, and existing style docs; ask the user for rules only they know.
 - UI preview: the command that starts the app for screenshots (dev server with a port argument, or a static build + preview) and the base URL; Playwright as the screenshot tool (`npx playwright screenshot`, no MCP needed). Record both in `team.md`.
 
 **D — Domain docs.** Default single-context: `GLOSSARY.md` + `docs/adr/` at repo root. Workspace: one context per repo plus `GLOSSARY-MAP.md` and workspace-wide ADRs in the tickets repo. A legacy `CONTEXT.md` → offer to rename it to `GLOSSARY.md`.
@@ -53,19 +53,19 @@ Summarise what's present and what's missing. Then take the sections in order: on
 
 ## 3. Confirm
 
-Show drafts of the `## Agent skills` block (below) and every `docs/agents/*.md` file. Let the user edit before writing.
+Show drafts of the `## Agent skills` block (below) and every `docs/agents/heinzelwerk/*.md` file. Let the user edit before writing.
 
 ## 4. Write
 
-Per repo, on a fresh branch from main `docs/heinzelwerk-setup`:
+Per repo, on a fresh branch from main `docs/heinzelwerk-setup`. Repo set up with the old flat layout (heinzelwerk files directly in `docs/agents/`) → `git mv` them into `docs/agents/heinzelwerk/` first and update the `## Agent skills` block; never touch other files in `docs/agents/`.
 
 - `docs/agents/heinzelwerk/issue-tracker.md` from [issue-tracker-github.md](issue-tracker-github.md)
 - `docs/agents/heinzelwerk/triage-labels.md` from [triage-labels.md](triage-labels.md); create missing labels with `gh label create`
-- `docs/agents/domain.md` from [domain.md](domain.md)
-- `docs/agents/team.md` from [team.md](team.md)
-- UI found: `docs/agents/design.md` (C3) and `scripts/ui-shots` copied from [scripts/ui-shots](scripts/ui-shots) (executable)
-- infra found: `docs/agents/infra-policy.json` from [infra-policy.json](infra-policy.json) with the answers from C2, and `scripts/tf-gate` copied from [scripts/tf-gate](scripts/tf-gate) (executable; needs `jq`)
-- `docs/agents/repo-map.md`: from the exploration, max 120 lines, facts only
+- `docs/agents/heinzelwerk/domain.md` from [domain.md](domain.md)
+- `docs/agents/heinzelwerk/team.md` from [team.md](team.md)
+- UI found: `docs/agents/heinzelwerk/design.md` (C3) and `scripts/ui-shots` copied from [scripts/ui-shots](scripts/ui-shots) (executable)
+- infra found: `docs/agents/heinzelwerk/infra-policy.json` from [infra-policy.json](infra-policy.json) with the answers from C2, and `scripts/tf-gate` copied from [scripts/tf-gate](scripts/tf-gate) (executable; needs `jq`)
+- `docs/agents/heinzelwerk/repo-map.md`: from the exploration, max 120 lines, facts only
 - `GLOSSARY.md` / `docs/adr/` only if section E produced resolved content (lazy otherwise)
 
 **Pick the file to edit**: if `CLAUDE.md` exists, edit it; else if `AGENTS.md` exists, edit it; if neither exists, ask the user which one to create. Never create one when the other exists. If an `## Agent skills` block exists, update it in place. Don't overwrite user edits to surrounding sections.
@@ -75,28 +75,28 @@ The block:
 ```
 ## Agent skills
 
-- **Issue tracker**: <one line>. See `docs/agents/issue-tracker.md` before creating, reading, or labelling issues.
-- **Triage labels**: <one line>. See `docs/agents/triage-labels.md` before applying any label.
-- **Domain docs**: <single- or multi-context>. Read `docs/agents/domain.md` before exploring code or naming anything.
-- **Team rules**: read `docs/agents/team.md` before any team task.
-- **Repo map**: see `docs/agents/repo-map.md` when locating code.
-- **Design system** (UI repos): read `docs/agents/design.md` before building or reviewing any UI.
+- **Issue tracker**: <one line>. See `docs/agents/heinzelwerk/issue-tracker.md` before creating, reading, or labelling issues.
+- **Triage labels**: <one line>. See `docs/agents/heinzelwerk/triage-labels.md` before applying any label.
+- **Domain docs**: <single- or multi-context>. Read `docs/agents/heinzelwerk/domain.md` before exploring code or naming anything.
+- **Team rules**: read `docs/agents/heinzelwerk/team.md` before any team task.
+- **Repo map**: see `docs/agents/heinzelwerk/repo-map.md` when locating code.
+- **Design system** (UI repos): read `docs/agents/heinzelwerk/design.md` before building or reviewing any UI.
 - **Learnings**: read `<path to learnings.md>` before starting any task.
 ```
 
 **Workspace mode, additionally**, in the tickets repo on the same branch:
 
-- `docs/agents/workspace.md` from [workspace.md](workspace.md)
-- `docs/agents/learnings.md` from [learnings.md](learnings.md) (only here; other repos point at it)
+- `docs/agents/heinzelwerk/workspace.md` from [workspace.md](workspace.md)
+- `docs/agents/heinzelwerk/learnings.md` from [learnings.md](learnings.md) (only here; other repos point at it)
 - `GLOSSARY-MAP.md` if section E ran
-- `CLAUDE.workspace.md`: an `## Agent skills` block pointing at `docs/agents/workspace.md`, `GLOSSARY-MAP.md`, and the learnings file, plus one line: "Workspace mode: follow the `team-modes` skill."
+- `CLAUDE.workspace.md`: an `## Agent skills` block pointing at `docs/agents/heinzelwerk/workspace.md`, `GLOSSARY-MAP.md`, and the learnings file, plus one line: "Workspace mode: follow the `team-modes` skill."
 
 Then tell the user to create, in the unversioned workspace folder, a `CLAUDE.md` containing only `@<tickets-repo-dir>/CLAUDE.workspace.md`. Do not create it yourself.
 
-Single mode: `docs/agents/learnings.md` from [learnings.md](learnings.md) in the repo itself.
+Single mode: `docs/agents/heinzelwerk/learnings.md` from [learnings.md](learnings.md) in the repo itself.
 
 Commit `docs: set up agent docs`, open one PR per repo. Do not merge.
 
 ## 5. Done
 
-Tell the user which PRs are open, that `/heinzelwerk:adopt-docs` absorbs docs added later and `/heinzelwerk:retro` reviews runs (weekly works well), and the next step: review and merge them, then shape work with `/heinzelwerk:shape`, and run `/heinzelwerk:feature <ticket>` on a `ready-for-agent` ticket. The `docs/agents/*.md` files can be edited directly later; re-run setup only to add a repo or start over.
+Tell the user which PRs are open, that `/heinzelwerk:adopt-docs` absorbs docs added later and `/heinzelwerk:retro` reviews runs (weekly works well), and the next step: review and merge them, then shape work with `/heinzelwerk:shape`, and run `/heinzelwerk:feature <ticket>` on a `ready-for-agent` ticket. The `docs/agents/heinzelwerk/*.md` files can be edited directly later; re-run setup only to add a repo or start over.

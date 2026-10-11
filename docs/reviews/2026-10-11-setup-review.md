@@ -2,6 +2,12 @@
 
 Status: all findings below were applied the same day, except D2 (merge lead into the main session), which waits for Run 1 measurements.
 
+## Round 2 (independent re-review, same day)
+
+Applied, blocking or wrong-flow only: `TaskUpdate` cannot rename a task, so the title-tag lifecycle became **one validate task per PR** and **one fix task per round** (native states only); command `model:` covers one turn, so sessions start with `--model opus`; `effort`/`disallowedTools` apply in-process only; hook `onFailure: block` and a Git Bash prerequisite; roster protocol replaced by reading the team `config.json`; MCP note corrected (teammates load servers from project/user config); lead signals `plan posted`; coordinator triggers lead's diagnose and docs PR; validator messages lead on infra pass, acceptance conflicts, and third fix rounds; bugfix phases travel in spawn prompts, red-on-main uses a detached worktree plus cherry-pick, `needs-info` is product's alone, abandoned tasks defined, bugfix requires `ready-for-agent`; frontend scope questions go to product; unanswered escalation, teammate failure, flaky check, and compaction counts have rules; guard normalises quoting and whitespace, allows any `git -c/-C/--opt` prefix, blocks `+main`, `--mirror`, `--all`, `-n` on commit, `gh api …/merge`, worktrees on main, `checkout -B main`, judges `git add` arguments one by one, and no longer flags `main-*` branches or `.tfvars`.
+
+Deferred (improvements): disclose team-modes §2/§3 per mode; move shared implementer rules into phased-workflow; drop the `codebase-design` and model-selection pointers from implementer context; trim long skill descriptions; delete no-op sentences; Apache change notice inside `skills/caveman/SKILL.md`; clarify the provenance of `skills/model-selection`.
+
 Scope: every file in the plugin. Method: read all, walked one `/feature` and one `/bugfix` run end to end, checked every cross-reference (skill names, doc paths, labels, section refs), tested `hooks/guard.sh` against 28 realistic commands, and verified the Claude Code features the plugin assumes against code.claude.com (fetched 2026-10-11). Upstream skills (tdd, code-review, codebase-design, domain-modeling, grilling, prototype, writing-for-agents, caveman, ponytail) are reviewed only where heinzelwerk adapts or depends on them.
 
 Severity: **P** = will not run as written · **C** = contradiction or gap · **D** = design and responsibility split · **K** = communication framework · **L** = language, prompting, token cost.

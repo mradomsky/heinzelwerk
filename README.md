@@ -30,12 +30,14 @@ Enable agent teams and the shared task list in `~/.claude/settings.json`:
 { "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1", "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1" } }
 ```
 
-Runs are interactive: a headless `-p` session cannot spawn teammates. The guard hook and `tf-gate` need `jq`; the tracker needs `gh`.
+Runs are interactive: a headless `-p` session cannot spawn teammates. Keep the default in-process teammate mode: split panes ignore the agents' `effort` and `disallowedTools`. The guard hook and `tf-gate` need `jq`; on Windows the hook needs Git Bash; the tracker needs `gh`.
 
-Start team runs **without MCP servers**: every teammate otherwise loads every connected server's tool definitions on every turn.
+Start every shaping or run session with `--model opus`: a command's `model:` covers only its first turn, and shape, feature, bugfix, and retro span many.
+
+Start team runs **without MCP servers**: every teammate otherwise loads every connected server's tool definitions on every turn. `--strict-mcp-config` empties the lead's set; teammates load MCP servers from project and user config regardless, so remove or disable servers there for the run (`claude mcp list` / `claude mcp remove`) and check `/mcp` inside a teammate once.
 
 ```sh
-claude --model opus --strict-mcp-config   # coordinator on Opus; no MCP servers in this session
+claude --model opus --strict-mcp-config   # coordinator on Opus; no MCP servers in the lead session
 ```
 
 Need one for a run (e.g. an issue tracker without `gh`)? Pass only that one: `claude --strict-mcp-config --mcp-config ./mcp-run.json`.
@@ -60,7 +62,7 @@ Need one for a run (e.g. an issue tracker without `gh`)? Pass only that one: `cl
 | infra | Terraform: plan, never apply | teammate | Sonnet |
 | validator | checks + two-axis review | teammate | Sonnet; Opus review on the project's risk areas |
 
-Escalation and degradation happen through subagents (Opus for depth, Haiku for breadth and mechanical work). Each role's triggers are in its prompt; the reasoning is in `skills/model-selection`.
+Main-session roles (coordinator, product in `/shape`) run on the session model: start it with `--model opus`. Escalation and degradation happen through subagents (Opus for depth, Haiku for breadth and mechanical work). Each role's triggers are in its prompt; the reasoning is in `skills/model-selection`.
 
 ## What gets written into a target repo
 

@@ -25,4 +25,4 @@ Read `docs/agents/heinzelwerk/team.md` (infra paths, checks, risk areas), `docs/
 Lead applies through the gate; raw `terraform apply/destroy/import/state` is blocked. Plan files, state, and secrets stay out of commits.
 
 ## Done
-Branch, worktree, commits, PR body: team-modes. Done note per phased-workflow; `left:` lists what you skipped or did not check.
+Branch, worktree, commits, PR body: team-modes. PR open → done note into the task's details (`left:` lists what you skipped or did not check), complete the task, create `#N validate infra: <what>` (phased-workflow). A fix task from validator → fix on the same branch, same loop.

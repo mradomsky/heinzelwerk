@@ -27,9 +27,11 @@ claude --plugin-dir ~/heinzelwerk --model opus --strict-mcp-config
 |---|---|---|
 | Plugin loads | `/agents` lists the roles, `/help` lists `/heinzelwerk:*` | fix layout / manifest |
 | Marketplace install | `/plugin marketplace add mradomsky/heinzelwerk`, `/plugin install heinzelwerk` | fix `marketplace.json` (`source` path) |
-| No MCP | `/mcp` is empty | find the right flag |
+| No MCP | `/mcp` is empty in the lead; spawn one teammate and ask it to list its MCP tools: none | find the right flag; else remove servers from user/project config for runs |
+| Windows hook shell | `bash --version` works from the terminal that runs `claude`; ask Claude to run `git push origin main`: blocked | install Git Bash |
 | Guard hook | ask Claude to run `git push origin main`, `terraform apply x`, `git push --force origin x` | fix `hooks.json` / `${CLAUDE_PLUGIN_ROOT}` |
-| Task tags | team of 2: one creates `[proposed] #1 test` (pending), the other retags it `[review]` and sets in progress; both see the same list | tags lost or list not shared → rethink the `phased-workflow` lifecycle |
+| Task chain | team of 2: one creates `#1 backend implement: test`, claims it, writes a done note into its details, completes it, creates `#1 validate backend: test`; the other claims that, reads the first task's details, completes it. Both see the same list; `TaskGet` returns the details | list not shared or details lost → rethink the `phased-workflow` lifecycle |
+| Team config | a teammate reads `~/.claude/teams/<team>/config.json` and names the members | unreadable → coordinator sends a roster in each spawn prompt |
 | Plugin agents as teammates | spawn `backend` as teammate; ask its model and effort | `model:` / `effort:` ignored → name them in the spawn prompt |
 | Guard fails closed | session with `jq` off `PATH`: every Bash call is blocked with the jq message | guard passes → fix `guard.sh` |
 | Subagent model override | that teammate spawns a Haiku subagent and reports its model | fallback agent defs `finder` (Haiku), `deep-analyst` (Opus) |

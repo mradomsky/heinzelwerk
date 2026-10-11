@@ -18,6 +18,7 @@ Pass → one comment on the ticket: "Spec gate passed", plus Given/When/Then for
 Fail → `gh issue edit --remove-label ready-for-agent --add-label needs-info`, comment numbered questions each with your recommended answer, tell coordinator to end the run.
 
 ## During the run
+You are the only role that applies `needs-info`: lead reports a bug that can't be reproduced, or an owner that can't get a red test → relabel, comment the questions with your recommended answers, tell coordinator.
 Answer scope questions from the ticket, spec, glossary, and ADRs; name the source. Nothing there settles it → one question to coordinator with your recommended answer. Every answer that changes or sharpens scope → comment on the ticket.
 
 ## Scope decisions on proposals (when lead asks)

@@ -21,7 +21,7 @@ This is a prompt-driven skill, not a deterministic script. Explore, present what
 Read whatever exists; don't assume.
 
 - **Mode**: cwd is a git repo → single mode. Not a repo but child dirs with `.git` → workspace mode (see `team-modes` skill §0).
-- Per repo: `git remote -v`, `CLAUDE.md` / `AGENTS.md` (existing `## Agent skills` block?), `GLOSSARY.md`, `GLOSSARY-MAP.md`, `CONTEXT.md` (older name for the glossary), `docs/adr/`, `docs/agents/`, `CODING_STANDARDS.md`, `CONTRIBUTING.md`, existing design docs, build/test/lint scripts, CI config, `gh label list`.
+- Per repo: `git remote -v`, `CLAUDE.md` / `AGENTS.md` (existing `## Agent skills (heinzelwerk)` block?), `GLOSSARY.md`, `GLOSSARY-MAP.md`, `CONTEXT.md` (older name for the glossary), `docs/adr/`, `docs/agents/`, `CODING_STANDARDS.md`, `CONTRIBUTING.md`, existing design docs, build/test/lint scripts, CI config, `gh label list`.
 - Map each repo (or each top-level area in single mode) with parallel Haiku Explore subagents (effort low; `model-selection`). Each returns, max 15 lines: purpose, entry points, how to build/test/run, patterns to follow, traps, and in workspace mode what it calls / is called by.
 
 ## 2. Present findings and ask
@@ -53,7 +53,7 @@ Summarise what's present and what's missing. Then take the sections in order: on
 
 ## 3. Confirm
 
-Show drafts of the `## Agent skills` block (below) and every file under `docs/agents/heinzelwerk/`. Let the user edit before writing.
+Show drafts of the `## Agent skills (heinzelwerk)` block (below) and every file under `docs/agents/heinzelwerk/`. Let the user edit before writing.
 
 ## 4. Write
 
@@ -68,12 +68,12 @@ Per repo, on a fresh branch from main `docs/heinzelwerk-setup`:
 - `docs/agents/heinzelwerk/repo-map.md`: from the exploration, max 120 lines, facts only
 - `GLOSSARY.md` / `docs/adr/` only if section E produced resolved content (lazy otherwise)
 
-**Pick the file to edit**: if `CLAUDE.md` exists, edit it; else if `AGENTS.md` exists, edit it; if neither exists, ask the user which one to create. Never create one when the other exists. If an `## Agent skills` block exists, update it in place. Don't overwrite user edits to surrounding sections.
+**Pick the file to edit**: if `CLAUDE.md` exists, edit it; else if `AGENTS.md` exists, edit it; if neither exists, ask the user which one to create. Never create one when the other exists. If an `## Agent skills (heinzelwerk)` block exists, update it in place. Never edit another tool's block (e.g. a plain `## Agent skills`); add heinzelwerk's own below it. Don't overwrite user edits to surrounding sections.
 
 The block:
 
 ```
-## Agent skills
+## Agent skills (heinzelwerk)
 
 - **Issue tracker**: <one line>. See `docs/agents/heinzelwerk/issue-tracker.md` before creating, reading, or labelling issues.
 - **Triage labels**: <one line>. See `docs/agents/heinzelwerk/triage-labels.md` before applying any label.
@@ -89,7 +89,7 @@ The block:
 - `docs/agents/heinzelwerk/workspace.md` from [workspace.md](workspace.md)
 - `docs/agents/heinzelwerk/learnings.md` from [learnings.md](learnings.md) (only here; other repos point at it)
 - `GLOSSARY-MAP.md` if section E ran
-- `CLAUDE.workspace.md`: an `## Agent skills` block pointing at `docs/agents/heinzelwerk/workspace.md`, `GLOSSARY-MAP.md`, and the learnings file, plus one line: "Workspace mode: follow the `team-modes` skill."
+- `CLAUDE.workspace.md`: an `## Agent skills (heinzelwerk)` block pointing at `docs/agents/heinzelwerk/workspace.md`, `GLOSSARY-MAP.md`, and the learnings file, plus one line: "Workspace mode: follow the `team-modes` skill."
 
 Then tell the user to create, in the unversioned workspace folder, a `CLAUDE.md` containing only `@<tickets-repo-dir>/CLAUDE.workspace.md`. Do not create it yourself.
 

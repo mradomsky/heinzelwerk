@@ -80,7 +80,7 @@ risk: <optional: area that deserves an Opus review but isn't in team.md's risk a
 ```
 
 ## Docs
-Before starting, follow the `## Agent skills` pointers in CLAUDE.md (or AGENTS.md): domain docs, team rules, learnings. Name things with `GLOSSARY.md` vocabulary; flag ADR conflicts explicitly.
+Before starting, follow the `## Agent skills (heinzelwerk)` pointers in CLAUDE.md (or AGENTS.md): domain docs, team rules, learnings. Name things with `GLOSSARY.md` vocabulary; flag ADR conflicts explicitly.
 `GLOSSARY.md`, `docs/adr/`, and learnings change only through lead's docs PR at the end of a run. Your job is to leave candidates in your done note (`term:`, `adr:`, `learning:`, `risk:`).
 
 ## Token discipline

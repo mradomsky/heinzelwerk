@@ -50,38 +50,16 @@ Contracts: the paths under **Contracts** in `docs/agents/heinzelwerk/team.md`, p
   Resolve conflicts **by intent**: read the other side's PR and ticket, keep both behaviours unless the specs say otherwise, never drop the other side's change silently. Can't tell what the other side intended → ask lead. Run all checks after resolving. Push your own branch with `--force-with-lease` only; plain `--force` is blocked.
 - Worktrees are left in place after PR. Lead lists them in the final report; human prunes after merge.
 
-## 2. Single mode
-| Topic | Rule |
-|---|---|
-| Tickets | issues of this repo, refs `#N` |
-| Ownership | by path, from `docs/agents/heinzelwerk/team.md` (backend, frontend, infra, shared paths). Never edit outside your paths. Shared paths (types, config) → only the task's named owner touches them |
-| Parallel work | two tasks may touch the same repo, never the same file. Lead checks file overlap when seeding; overlap → make one task block the other |
-| Contract | paths from **Contracts** in `docs/agents/heinzelwerk/team.md`. Contract change a consumer task depends on (compatible or breaking): own task for the provider role, lands in a PR first; consumer tasks blocked-by it and branch from the contract branch: `worktree add ... -b <branch> origin/<contract-branch>`. Compatible change no consumer task needs: in the provider's own PR (see **Contract changes**) |
-| PR body | `Closes #N` on the PR that completes the ticket, `Refs #N` on the others |
-| Checks | from `docs/agents/heinzelwerk/team.md` |
-| Validator | checks out PR branch in its own worktree, runs checks, walks criteria |
+## 2. Mode rules
+Read the file for your mode once, at run start, and keep to it: [single.md](single.md) (tickets, ownership by path, parallel work, contract branches, PR bodies, checks, validator) or [workspace.md](workspace.md) (tickets repo, ownership by repo, shared branch name, one task per repo, cross-repo contracts, PR bodies, per-repo checks, integration, docs placement).
 
-## 3. Workspace mode
-| Topic | Rule |
-|---|---|
-| Tickets | only in the tickets repo named in its `docs/agents/heinzelwerk/workspace.md`. Refs always `owner/repo#N`, also in commits |
-| Ownership | by repo, from the repo table in `docs/agents/heinzelwerk/workspace.md` (role column). Inside a repo, that repo's own `docs/agents/heinzelwerk/team.md` applies as in single mode |
-| Same feature, several repos | **same branch name in every touched repo**. That name is the feature's key; lead writes it in the plan |
-| Task granularity | one task per repo. A task never edits two repos. Contract tasks are always cross-repo here |
-| Cross-repo contract | change a consumer task depends on: provider repo's task first (it owns the contract); consumer tasks blocked-by it; consumer PR body: `Depends on owner/provider-repo#<PR>`. Compatible change no consumer task needs: provider PR with the `contract: compatible` line (see **Contract changes**) |
-| PR body | `Refs owner/tickets-repo#N` on all PRs; `Closes owner/tickets-repo#N` only on the last PR lead names |
-| Checks | each repo's own `checks:`, run inside that repo's worktree |
-| Integration | if `docs/agents/heinzelwerk/workspace.md` defines one, validator creates worktrees of the shared branch name in every touched repo (main for untouched ones) and runs it from there |
-| Learnings, `GLOSSARY-MAP.md`, workspace-wide ADRs | only in tickets repo. Per-repo `GLOSSARY.md` and ADRs stay in their repo |
-| Repo not in workspace map | do not touch. Tell lead |
-
-## 4. Lead's plan comment (both modes)
+## 3. Lead's plan comment (both modes)
 For every task:
 ```
 #<task> phase | owner | repo | branch | worktree path | blocked-by
 ```
 In workspace mode also: shared branch name, PR order, which PR closes the ticket.
 
-## 5. Validator checklist per mode
+## 4. Validator checklist per mode
 - Single: own worktree on PR branch → checks → task done-when → criteria → diff review.
 - Workspace: per repo as single, then integration (if defined) across all touched repos on the shared branch name. Fail → needs work to the owner of the repo where the failure originates; unclear → lead.

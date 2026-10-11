@@ -5,6 +5,8 @@ description: >
   caveman mode, be brief, less tokens. Stays on until stop caveman or normal mode.
 ---
 
+_Modified from [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) (Apache-2.0): CLI-only text removed. See THIRD_PARTY_NOTICES.md._
+
 # caveman
 
 Respond terse like smart caveman. All technical substance stay. Only fluff die.

@@ -8,7 +8,9 @@ Applied, blocking or wrong-flow only: `TaskUpdate` cannot rename a task, so the 
 
 Also applied later the same day: shared implementer rules moved into phased-workflow `## Implementers`; `codebase-design` and model-selection pointers dropped from implementer prompts; skill descriptions trimmed to about 30 words; no-op sentences removed (command-level "everyone follows", voice role list, `argument-hint` on the hidden handoff skill).
 
-Deferred (improvements): disclose team-modes §2/§3 per mode; Apache change notice inside `skills/caveman/SKILL.md`; clarify the provenance of `skills/model-selection`.
+Also: team-modes §2/§3 disclosed as `single.md` / `workspace.md` behind one pointer; Apache change notice added inside `skills/caveman/SKILL.md`.
+
+Deferred: clarify the provenance of `skills/model-selection` (original or copied; needs the author).
 
 Scope: every file in the plugin. Method: read all, walked one `/feature` and one `/bugfix` run end to end, checked every cross-reference (skill names, doc paths, labels, section refs), tested `hooks/guard.sh` against 28 realistic commands, and verified the Claude Code features the plugin assumes against code.claude.com (fetched 2026-10-11). Upstream skills (tdd, code-review, codebase-design, domain-modeling, grilling, prototype, writing-for-agents, caveman, ponytail) are reviewed only where heinzelwerk adapts or depends on them.
 

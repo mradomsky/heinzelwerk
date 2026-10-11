@@ -4,8 +4,8 @@ heinzelwerk includes material from the projects below. Each keeps its own licens
 
 | Project | License | Files in this repo | Modified? |
 |---|---|---|---|
-| [mattpocock/skills](https://github.com/mattpocock/skills) | MIT | `skills/tdd`, `skills/code-review`, `skills/codebase-design`, `skills/domain-modeling`, `skills/grilling`, `skills/to-spec`, `skills/to-tickets`, `skills/prototype`, `skills/diagnosing-bugs`, `skills/handoff`, `skills/improve-codebase-architecture`, `skills/writing-for-agents`, core of `skills/retro`, templates in `skills/setup/` (`issue-tracker-github.md`, `triage-labels.md`, `domain.md`); `skills/setup/SKILL.md` adapted from `setup-matt-pocock-skills` | Small adaptations, each marked inline as `_(heinzelwerk …)_` |
-| [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | Apache-2.0 | `skills/caveman` | No |
+| [mattpocock/skills](https://github.com/mattpocock/skills) | MIT | `skills/tdd`, `skills/code-review`, `skills/codebase-design`, `skills/domain-modeling`, `skills/grilling`, `skills/to-spec`, `skills/to-tickets`, `skills/prototype`, `skills/diagnosing-bugs`, `skills/handoff`, `skills/improve-codebase-architecture`, `skills/writing-for-agents`, core of `skills/retro`, templates in `skills/setup/` (`issue-tracker-github.md`, `triage-labels.md`, `domain.md`); `skills/setup/SKILL.md` adapted from `setup-matt-pocock-skills` | Small adaptations marked inline as `_(heinzelwerk …)_`; upstream-only branches removed (local-file tickets in `to-tickets`, PR-triage section in `issue-tracker-github.md`) |
+| [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | Apache-2.0 | `skills/caveman` | Yes: CLI-only text removed (mode aliases, hook status, `/caveman-compress`) |
 | [dietrichgebert/ponytail](https://github.com/dietrichgebert/ponytail) | MIT | `skills/ponytail`, `skills/ponytail-debt` | No |
 
 Ideas (no code or text) are also drawn from [Ido-Levi/Hephaestus](https://github.com/Ido-Levi/Hephaestus) (AGPL-3.0): phases, guardian (now part of coordinator), validation loop, diagnose step.

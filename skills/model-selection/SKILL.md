@@ -50,18 +50,10 @@ When you pick a tier for non-obvious work, say which and why in one clause — "
 
 ## Heinzelwerk
 
-A teammate's model is fixed when it is spawned. **Escalate or degrade through subagents**, never by asking for a different teammate.
-
-| Role | Base model | Effort | Escalate to an Opus subagent when | Haiku subagents for |
-|---|---|---|---|---|
-| coordinator | Opus (main session) | medium | — | — |
-| lead | Opus | high | — (lead is already Opus; infra apply decisions stay with lead, gate first) | finder sweeps while planning |
-| product | Sonnet | medium | a scope call has consequences across repos or contradicts an ADR | locating spec, glossary, ADR passages |
-| backend / frontend | Sonnet | medium | root cause still unknown after two failed passes; changing shared code whose callers you can't see from the edit site; frontend: a UX decision with interacting constraints the spec and design.md don't settle | call-site searches, mechanical batches (renames, wide-refactor migrations), boilerplate |
-| infra | Sonnet | medium | state moves, resource replacements, IAM or network changes | provider-doc lookups, mechanical batches |
-| validator | Sonnet | high | the diff touches a **risk area** listed in `docs/agents/heinzelwerk/team.md`: run both code-review axes on Opus | running checks, collecting failing output |
-| `/heinzelwerk:shape` | Opus | high | — | finder sweeps during grilling |
+A teammate's model and effort are fixed in its agent definition. **Escalate or degrade through subagents**, never by asking for a different teammate. Each role's Opus triggers and Haiku uses live in its own prompt; `/heinzelwerk:shape` and `/heinzelwerk:retro` run on Opus and send finder sweeps to Haiku.
 
 **Haiku effort scales with the subtask**: low for searches and pure mechanical edits; medium for batches that need local judgement (migrating call sites with small variations); high for a summarising or classifying pass whose output feeds a decision.
 
-**Who decides**: lead may preset an escalation in the task (`model:` field). The owner escalates on its own when a trigger above fires. Either way, state the choice: `escalations:` line in the done note.
+**Who decides**: lead may preset an escalation in the task (`model:` field). The owner escalates on its own when a trigger in its prompt fires. Either way, state the choice: `escalations:` line in the done note.
+
+**Accepted trade-off**: on diffs outside the risk areas in `docs/agents/heinzelwerk/team.md`, Sonnet reviews what Sonnet built, the generate-and-grade anti-pattern above; the human's PR review is the last line of defence there. Risk areas get Opus review, and retro adds areas where Sonnet let something through.

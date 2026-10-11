@@ -12,7 +12,7 @@ Goal: prove heinzelwerk end to end, from interactive single-repo runs to a multi
 
 1. Repo `mradomsky/heinzelwerk` exists (private), cloned at `~/heinzelwerk`.
 2. Laptop: Claude Code ≥ 2.1.32, `gh auth status` OK, `jq`, Node, `npx playwright install chromium`, gitleaks.
-3. `~/.claude/settings.json`: `{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" } }`.
+3. `~/.claude/settings.json`: `{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1", "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1" } }`.
 4. Note the usage meter (token baseline).
 
 Every session below starts the same way:
@@ -29,11 +29,12 @@ claude --plugin-dir ~/heinzelwerk --model opus --strict-mcp-config
 | Marketplace install | `/plugin marketplace add mradomsky/heinzelwerk`, `/plugin install heinzelwerk` | fix `marketplace.json` (`source` path) |
 | No MCP | `/mcp` is empty | find the right flag |
 | Guard hook | ask Claude to run `git push origin main`, `terraform apply x`, `git push --force origin x` | fix `hooks.json` / `${CLAUDE_PLUGIN_ROOT}` |
-| Task states | team of 2: one creates `[proposed] test`, the other moves it to under review | no custom states → title prefixes `[proposed]`, `[review]`, `[needs-work]` in `phased-workflow` |
-| Plugin agents as teammates | spawn `backend` as teammate; ask its model and whether caveman is active | `skills:` / `model:` ignored → move into prompt text |
+| Task tags | team of 2: one creates `[proposed] #1 test` (pending), the other retags it `[review]` and sets in progress; both see the same list | tags lost or list not shared → rethink the `phased-workflow` lifecycle |
+| Plugin agents as teammates | spawn `backend` as teammate; ask its model and effort | `model:` / `effort:` ignored → name them in the spawn prompt |
+| Guard fails closed | session with `jq` off `PATH`: every Bash call is blocked with the jq message | guard passes → fix `guard.sh` |
 | Subagent model override | that teammate spawns a Haiku subagent and reports its model | fallback agent defs `finder` (Haiku), `deep-analyst` (Opus) |
 | Skill namespacing | `/heinzelwerk:shape` on a toy idea: do `grilling` + `domain-modeling` load from inside it? | use namespaced names |
-| Hide building blocks | find a frontmatter flag that hides `to-spec` / `to-tickets` from the slash menu while keeping them callable by `/shape` | leave them visible |
+| Hide building blocks | `/` menu hides `coordinator`, `phased-workflow`, `team-modes`, `handoff`; `/heinzelwerk:to-spec` still typeable; `/shape` still reaches `to-spec` | `user-invocable: false` ignored → leave them visible |
 
 Then run the independent review and fix its "will it run?" findings:
 

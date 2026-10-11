@@ -1,6 +1,7 @@
 ---
 name: phased-workflow
 description: Rules for heinzelwerk agents on how work is typed, handed off, tracked on GitHub, validated, and finished. Use whenever creating, claiming, or completing a task in an agent team run.
+user-invocable: false
 ---
 # Phased workflow
 
@@ -24,12 +25,25 @@ A task is not done until its handoff exists. Phases chain by handoff, not by som
 | implement | change code or contract | red → green at the task's seams (`tdd` skill), checks pass locally, PR open. Infra: fmt/validate/lint green, plan saved, tf-gate output in PR. UI: screenshots of changed screens in PR | task moved to under review (= validate request) |
 | validate | test, review, verify; last one: slice acceptance on integrated branches | verdict with evidence | pass → done; fail → needs work back to implementer with repro |
 
+Validation of an implement task rides on that task's status (under review); the only validate **task** is slice acceptance.
+
 ## Task lifecycle
 `proposed → open → in progress → under review → (needs work → in progress)* → done`
-- **Proposed** = discovered work awaiting triage. Only lead moves a task from proposed to open (or rejects it). Nobody starts a proposed task.
+The task list has three native states (pending, in progress, completed); the rest is a title tag:
+
+| Status | Task list | Title |
+|---|---|---|
+| proposed | pending | `[proposed] #N <title>` |
+| open | pending | `#N <title>` |
+| in progress | in progress | `#N <title>` |
+| under review | in progress | `[review] #N <title>` |
+| needs work | in progress | `[needs-work] #N <title>` |
+| done | completed | |
+
+- **Proposed** = discovered work awaiting triage. Only lead moves it to open (drops the tag, sets owner and blockers) or rejects it. Nobody starts a proposed task.
 - Lead's seeded tasks start at open.
-- Implementer never closes own task. Under review → validator decides.
-- Needs work → fix in same branch, back to under review. Max 3 rounds, then message lead.
+- Implementer claims (in progress) and finishes with the `[review]` tag. Only validator completes a task or sends it back with `[needs-work]`; the implementer swaps the tag back to `[review]` when fixed.
+- Needs work → fix in the same branch, back to under review. Max 3 rounds, then message lead.
 
 ## Discovering work (branching)
 Found something while working? Don't silently fix it, don't drop it. **Propose** it:
@@ -71,7 +85,7 @@ Max 3 proposals per agent per run (contract-change proposals exempt, team-modes 
 did: <what changed, files>
 evidence: <command + result summary, or PR link>
 handoff: <task id / verdict created>
-left: <anything not done, discoveries not filed>
+left: <anything not done, discoveries not filed; lead collects these into the technical report>
 term: <optional: domain concept that is missing from or contradicts GLOSSARY.md>
 adr: <optional: decision you made that is hard to reverse, surprising, and a real trade-off>
 learning: <optional: one line worth remembering next run: warning | discovery | codebase>

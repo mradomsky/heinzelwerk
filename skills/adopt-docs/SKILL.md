@@ -13,7 +13,7 @@ Follow `writing-for-agents` for anything you write. Terms and ADRs go through `d
 
 - Mode from the `team-modes` skill §0. Workspace: every repo, each handled in its own repo.
 - Read `docs/agents/adopted.md` if it exists: the ledger of docs already adopted, with the commit each was adopted at.
-- List candidate docs: Markdown and text docs anywhere outside `node_modules`, build output, and vendored code. Skip the agent structure itself (`docs/agents/`, `GLOSSARY*.md`, `docs/adr/`, `CLAUDE*.md`).
+- List candidate docs: Markdown and text docs anywhere outside `node_modules`, build output, and vendored code. Skip the agent structure itself (`docs/agents/`, `GLOSSARY*.md`, `docs/adr/`, `CLAUDE*.md`, `AGENTS*.md`).
 - Keep only docs that are **new** (not in the ledger) or **changed** since their ledger commit (`git log <commit>..HEAD -- <path>` is non-empty). Changed docs: work on the diff, not the whole file.
 - Nothing left → tell the user, stop.
 

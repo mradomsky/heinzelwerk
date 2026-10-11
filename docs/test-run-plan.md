@@ -11,7 +11,7 @@ Goal: prove heinzelwerk end to end, from interactive single-repo runs to a multi
 ## Phase 0 — Prerequisites (~30 min)
 
 1. Repo `mradomsky/heinzelwerk` exists (private), cloned at `~/heinzelwerk`.
-2. Laptop: Claude Code ≥ 2.1.32, `gh auth status` OK, `jq`, Node, `npx playwright install chromium`, gitleaks.
+2. Laptop: Claude Code ≥ 2.1.32, `gh auth status` OK, Node, `npx playwright install chromium`, gitleaks; `jq` only for infra repos (`tf-gate`).
 3. `~/.claude/settings.json`: `{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1", "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1" } }`.
 4. Note the usage meter (token baseline).
 
@@ -33,7 +33,7 @@ claude --plugin-dir ~/heinzelwerk --model opus --strict-mcp-config
 | Task chain | team of 2: one creates `#1 backend implement: test`, claims it, writes a done note into its details, completes it, creates `#1 validate backend: test`; the other claims that, reads the first task's details, completes it. Both see the same list; `TaskGet` returns the details | list not shared or details lost → rethink the `phased-workflow` lifecycle |
 | Team config | a teammate reads `~/.claude/teams/<team>/config.json` and names the members | unreadable → coordinator sends a roster in each spawn prompt |
 | Plugin agents as teammates | spawn `backend` as teammate; ask its model and effort | `model:` / `effort:` ignored → name them in the spawn prompt |
-| Guard fails closed | session with `jq` off `PATH`: every Bash call is blocked with the jq message | guard passes → fix `guard.sh` |
+| Guard without jq | session with `jq` and `node` off `PATH`: `git push origin main` still blocked, `ls` still allowed | fallback parser broken → fix `guard.sh` |
 | Subagent model override | that teammate spawns a Haiku subagent and reports its model | fallback agent defs `finder` (Haiku), `deep-analyst` (Opus) |
 | Skill namespacing | `/heinzelwerk:shape` on a toy idea: do `grilling` + `domain-modeling` load from inside it? | use namespaced names |
 | Hide building blocks | `/` menu hides `coordinator`, `phased-workflow`, `team-modes`, `handoff`; `/heinzelwerk:to-spec` still typeable; `/shape` still reaches `to-spec` | `user-invocable: false` ignored → leave them visible |

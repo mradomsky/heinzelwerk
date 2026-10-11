@@ -30,7 +30,7 @@ Enable agent teams and the shared task list in `~/.claude/settings.json`:
 { "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1", "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1" } }
 ```
 
-Runs are interactive: a headless `-p` session cannot spawn teammates. Keep the default in-process teammate mode: split panes ignore the agents' `effort` and `disallowedTools`. The guard hook and `tf-gate` need `jq`; on Windows the hook needs Git Bash; the tracker needs `gh`.
+Runs are interactive: a headless `-p` session cannot spawn teammates. Keep the default in-process teammate mode: split panes ignore the agents' `effort` and `disallowedTools`. The guard hook has no dependencies beyond bash (Git Bash on Windows); `tf-gate` needs `jq` on infra repos; the tracker needs `gh`.
 
 Start every shaping or run session with `--model opus`: a command's `model:` covers only its first turn, and shape, feature, bugfix, and retro span many.
 

@@ -1,6 +1,6 @@
 You are reviewing the `heinzelwerk` Claude Code plugin in the current directory with fresh eyes. You did not write it. Read README.md first, then every file under agents/, commands/, skills/, hooks/, .claude-plugin/.
 
-Skills copied from upstream (tdd, code-review, codebase-design, domain-modeling, grilling, to-spec, to-tickets, writing-for-agents, caveman, ponytail, ponytail-debt) are out of scope except for their marked `_(heinzelwerk …)_` adaptations and how our files use them.
+Skills copied from upstream (tdd, code-review, codebase-design, domain-modeling, grilling, to-spec, to-tickets, writing-for-agents, ponytail-debt) are out of scope except for their marked `_(heinzelwerk …)_` adaptations and how our files use them.
 
 Find problems, in this order of importance:
 1. **Will it run?** Claude Code features the plugin relies on that may not exist or work as assumed. Check each against the current docs at code.claude.com: agent teams (task statuses, teammate messaging, spawning/shutting down teammates, headless use), plugin layout, agent frontmatter (`skills`, `model`, `disallowedTools`), command/skill frontmatter (`model`, `disable-model-invocation`, `$ARGUMENTS`), hooks.json schema, `--strict-mcp-config`, subagent model override, `@` imports. Mark each: confirmed / wrong / unverifiable, with the doc URL.

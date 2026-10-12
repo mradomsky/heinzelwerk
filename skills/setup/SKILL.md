@@ -69,7 +69,7 @@ Per repo, on a fresh branch from main `docs/heinzelwerk-setup`:
 - `docs/agents/heinzelwerk/repo-map.md`: from the exploration, max 120 lines, facts only
 - `GLOSSARY.md` / `docs/adr/` only if section E produced resolved content (lazy otherwise)
 
-**Pick the file to edit**: if `CLAUDE.md` exists, edit it; else if `AGENTS.md` exists, edit it; if neither exists, ask the user which one to create. If an `## Agent skills (heinzelwerk)` block exists, update it in place. Never edit another tool's block (e.g. a plain `## Agent skills`); add heinzelwerk's own below it. Don't overwrite user edits to surrounding sections.
+**Pick the file to edit**: always `CLAUDE.md`; Claude Code ignores `AGENTS.md` whenever any `CLAUDE.md` exists in the folder or above it. Only `AGENTS.md` exists → create `CLAUDE.md` with `@AGENTS.md` as its first line, then the block. If an `## Agent skills (heinzelwerk)` block exists, update it in place. Never edit another tool's block (e.g. a plain `## Agent skills`); add heinzelwerk's own below it. Don't overwrite user edits to surrounding sections.
 
 The block:
 

@@ -12,7 +12,7 @@ Claude Code plugin: a lean autonomous dev team (coordinator / product / tech-lea
 - **Deep modules.** Small interfaces, lots of behaviour behind them; tests through the interface.
 - **Phases, not pipelines.** Work is typed analyze / implement / validate; any agent may create work in any phase, every task leaves a handoff.
 - **Tickets are durable, tasks are disposable.** Everything the next run needs lives on GitHub.
-- **Pointers, not imports.** `CLAUDE.md` (or `AGENTS.md`) holds a short `## Agent skills (heinzelwerk)` block; agents read `docs/agents/heinzelwerk/*` when the pointer fires.
+- **Pointers, not imports.** `CLAUDE.md` holds a short `## Agent skills (heinzelwerk)` block; agents read `docs/agents/heinzelwerk/*` when the pointer fires.
 - **Humans merge, unless a deterministic gate allows it.** Agents open PRs and never push main. `scripts/merge-gate` merges a validated PR only when `merge-policy.json` on main allows it: off by default, every changed file on the path allowlist, under a size limit, CI green, no unchecked human item in the PR body. Turn it on per repo once a few runs show you no longer edit before merging; never on a repo whose `main` deploys to production unless you accept that.
 - **Infra auto-applies only through a deterministic gate.** `scripts/tf-gate` checks the saved plan against `infra-policy.json` (environment allowlist, no destroys, protected types, change limit). Tech-lead applies on pass and escalates on fail or doubt. Credential scope is the real boundary: agents never hold prod write credentials.
 
@@ -36,7 +36,10 @@ Start every shaping or run session with `--model opus`: a command's `model:` cov
 
 Start team runs **without MCP servers**: every teammate otherwise loads every connected server's tool definitions on every turn. `--strict-mcp-config` empties the main session's set; teammates load MCP servers from project and user config regardless, so remove or disable servers there for the run (`claude mcp list` / `claude mcp remove`) and check `/mcp` inside a teammate once.
 
+Start runs **from the folder that contains the repo** (e.g. `~/work`, not `~/work/stagehopper`). Task worktrees live in `<that folder>/.worktrees/`, and Claude Code edits without permission prompts only inside the folder it was started from.
+
 ```sh
+cd ~/work
 claude --model opus --strict-mcp-config   # coordinator on Opus; no MCP servers in the main session
 ```
 
@@ -67,7 +70,7 @@ Main-session roles (coordinator, product in `/shape`) run on the session model: 
 ## What gets written into a target repo
 
 ```
-CLAUDE.md or AGENTS.md    ## Agent skills (heinzelwerk) pointer block (existing file is reused)
+CLAUDE.md                 ## Agent skills (heinzelwerk) pointer block (existing file is reused; AGENTS.md-only repos get one that imports it)
 GLOSSARY.md               lazily, resolved terms only
 docs/adr/                 lazily, decisions meeting all three ADR criteria
 docs/agents/heinzelwerk/  heinzelwerk's own files; other files in docs/agents/ are left alone
@@ -103,7 +106,6 @@ Model-invoked (reusable discipline, agents reach for them):
 - `skills/improve-codebase-architecture` — deepening opportunities; run weekly by retro, or directly for an ad-hoc survey
 - `skills/prototype` — throwaway UI variations / logic walkthroughs, used by `/shape`
 - `skills/model-selection` — which tier for which work, and why; the roles' triggers live in `agents/*`
-- `skills/ponytail`, `skills/caveman` — smallest-complete-change discipline and terse voice for direct use; the team's versions are inlined in `agents/*` and `team-modes`
 - `skills/ponytail-debt` — `shortcut:` ledger, used by retro
 - `skills/tdd`, `skills/code-review`, `skills/codebase-design`, `skills/domain-modeling`, `skills/grilling`, `skills/writing-for-agents`
 
@@ -115,4 +117,4 @@ Other:
 
 ## License
 
-heinzelwerk is MIT (`LICENSE`). Skills copied from mattpocock/skills (MIT), JuliusBrussee/caveman (Apache-2.0), and dietrichgebert/ponytail (MIT) keep their own licenses; which files, what was adapted, and the full texts are in `THIRD_PARTY_NOTICES.md`. Some ideas come from Hephaestus (AGPL-3.0); no code or text copied.
+heinzelwerk is MIT (`LICENSE`). Skills copied from mattpocock/skills (MIT) and dietrichgebert/ponytail (MIT) keep their own licenses; which files, what was adapted, and the full texts are in `THIRD_PARTY_NOTICES.md`. Some ideas come from Hephaestus (AGPL-3.0); no code or text copied.

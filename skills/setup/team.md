@@ -22,4 +22,4 @@ How heinzelwerk agents work in this repo. Mode rules (single repo vs workspace) 
   - API: <e.g. docs/api-contract.md> = single source of truth backend ↔ frontend · provider backend
   - Infra outputs: <e.g. infra/**/outputs.tf> · provider infra
   - Shared types: <e.g. packages/types/> · provider = the task's named owner
-- Worktree per task, no direct commits to main, PR only, agents never merge.
+- Worktree per task, no direct commits to main, PR only, agents never merge except through `scripts/merge-gate`.

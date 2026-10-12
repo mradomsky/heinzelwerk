@@ -42,7 +42,8 @@ Contracts: the paths under **Contracts** in `docs/agents/heinzelwerk/team.md`, p
 - **Worktree per task**, created explicitly (do not rely on automatic isolation):
   ```sh
   git -C <repo> fetch origin
-  git -C <repo> worktree add <repo>/../.worktrees/<repo-name>/<branch> -b <branch> origin/main
+  grep -qxF .claude/worktrees/ <repo>/.git/info/exclude || echo .claude/worktrees/ >> <repo>/.git/info/exclude
+  git -C <repo> worktree add <repo>/.claude/worktrees/heinzelwerk/<branch> -b <branch> origin/main
   ```
   Work only inside that path. One task = one branch = one worktree = one PR.
 - **Branch name**: `<type>/<ticket-number>-<topic>`, type from conventional commits (`feat`, `fix`, `docs`, `test`, `refactor`, `chore`). Example: `feat/19-anomaly-webhook`.

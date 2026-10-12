@@ -36,10 +36,10 @@ Start every shaping or run session with `--model opus`: a command's `model:` cov
 
 Start team runs **without MCP servers**: every teammate otherwise loads every connected server's tool definitions on every turn. `--strict-mcp-config` empties the main session's set; teammates load MCP servers from project and user config regardless, so remove or disable servers there for the run (`claude mcp list` / `claude mcp remove`) and check `/mcp` inside a teammate once.
 
-Start runs **from the folder that contains the repo** (e.g. `~/work`, not `~/work/stagehopper`). Task worktrees live in `<that folder>/.worktrees/`, and Claude Code edits without permission prompts only inside the folder it was started from.
+Start runs from the repo (single mode) or from the folder that contains the repos (workspace mode). Task worktrees live inside each repo at `.claude/worktrees/heinzelwerk/<branch>` (git-ignored through `.git/info/exclude`, next to Claude Code's own worktrees), so they are always inside the folder Claude Code was started from and edits don't prompt.
 
 ```sh
-cd ~/work
+cd ~/work/stagehopper    # or ~/work for a workspace run
 claude --model opus --strict-mcp-config   # coordinator on Opus; no MCP servers in the main session
 ```
 

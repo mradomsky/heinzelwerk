@@ -37,6 +37,15 @@ claude --plugin-dir ~/heinzelwerk --model opus --strict-mcp-config
 | Subagent model override | that teammate spawns a Haiku subagent and reports its model | fallback agent defs `finder` (Haiku), `deep-analyst` (Opus) |
 | Skill namespacing | every skill reference in the plugin is `heinzelwerk:<name>` (bare names collide with other plugins, e.g. mattpocock-skills); `/heinzelwerk:shape` on a toy idea loads `heinzelwerk:grilling` and `heinzelwerk:domain-modeling` | a bare name slipped through → namespace it |
 | Hide building blocks | `/` menu hides `coordinator`, `phased-workflow`, `team-modes`, `handoff`; `/heinzelwerk:to-spec` still typeable; `/shape` still reaches `to-spec` | `user-invocable: false` ignored → leave them visible |
+| Frontmatter parses | headless: ask for every `heinzelwerk:` skill and command; `coordinator` and `team-modes` must be listed. A `: ` inside an unquoted `description` silently drops a skill | quote the value |
+
+### Status 2026-10-12 (v0.24.0, Claude Code 2.1.296, Windows)
+
+- **Verified headless**: plugin loads via `--plugin-dir` (6 agents, skills, 3 commands); guard hook runs under Git Bash and blocks push main / `--force` / raw `terraform apply`, allows `ls` and a commit message mentioning `-n --no-verify`; guard fallback without `jq`/`node` (19 scripted cases); subagent `model: haiku` override (reported `claude-haiku-5-5`); no bare skill references.
+- **Found and fixed**: unquoted `: ` in six descriptions made `coordinator` and `team-modes` invisible to the model; quoted (v0.24.1). Run #179's coordinator never had its skill.
+- **Seen in run #179**: task chain with done notes and a validate task works; team config `members` lists teammates while they run and drops them after shutdown.
+- **Check during run 1**: teammate spawned as `heinzelwerk:frontend` shows Sonnet/its effort; `/mcp` empty in a teammate; `/` menu hides building blocks.
+- **Not checked**: marketplace install (runs use `--plugin-dir`).
 
 Then run the independent review and fix its "will it run?" findings:
 

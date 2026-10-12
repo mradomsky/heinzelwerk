@@ -4,5 +4,6 @@
   "deny_paths": [],
   "max_changed_lines": 200,
   "require_checks": true,
+  "require_validation": true,
   "merge_method": "squash"
 }

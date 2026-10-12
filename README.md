@@ -13,7 +13,7 @@ Claude Code plugin: a lean autonomous dev team (coordinator / product / tech-lea
 - **Phases, not pipelines.** Work is typed analyze / implement / validate; any agent may create work in any phase, every task leaves a handoff.
 - **Tickets are durable, tasks are disposable.** Everything the next run needs lives on GitHub.
 - **Pointers, not imports.** `CLAUDE.md` holds a short `## Agent skills (heinzelwerk)` block; agents read `docs/agents/heinzelwerk/*` when the pointer fires.
-- **Humans merge, unless a deterministic gate allows it.** Agents open PRs and never push main. `scripts/merge-gate` merges a validated PR only when `merge-policy.json` on main allows it: off by default, every changed file on the path allowlist, under a size limit, CI green, no unchecked human item in the PR body. Turn it on per repo once a few runs show you no longer edit before merging; never on a repo whose `main` deploys to production unless you accept that.
+- **Humans merge, unless a deterministic gate allows it.** Agents open PRs and never push main. `scripts/merge-gate` merges a PR only when `merge-policy.json` on main allows it: the validator's `heinzelwerk: validated <sha>` names the PR's current head, every changed file is allowed, under a size limit, CI green, no unchecked manual check left (the validator does the ones it can). The gate refuses to run if it differs from main's copy and never merges a change to itself or its policy. Setup section G turns it on (policy, a PR CI workflow, and the `Bash(scripts/merge-gate *)` permission auto mode needs); recommended off when `main` deploys to production.
 - **Infra auto-applies only through a deterministic gate.** `scripts/tf-gate` checks the saved plan against `infra-policy.json` (environment allowlist, no destroys, protected types, change limit). Tech-lead applies on pass and escalates on fail or doubt. Credential scope is the real boundary: agents never hold prod write credentials.
 
 ## Install
@@ -77,7 +77,7 @@ docs/agents/heinzelwerk/  heinzelwerk's own files; other files in docs/agents/ a
   issue-tracker.md  triage-labels.md  domain.md  team.md  repo-map.md  learnings.md
   design.md               UI repos: design system
   infra-policy.json       infra repos: tf-gate policy
-  merge-policy.json       merge-gate policy, auto-merge off
+  merge-policy.json       merge-gate policy (setup section G)
   adopted.md              ledger of adopted docs
   retros/                 retro records
   workspace.md            tickets repo only, workspace mode

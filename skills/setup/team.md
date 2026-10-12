@@ -10,6 +10,7 @@ How heinzelwerk agents work in this repo. Mode rules (single repo vs workspace) 
 - **Infra checks**: <e.g. `terraform fmt -check -recursive`, `tflint`>
 - **Infra policy**: `docs/agents/heinzelwerk/infra-policy.json`, enforced by `scripts/tf-gate`
 - **Shared paths** (only the task's named owner edits): <e.g. packages/types/>
+- **Worktree setup** (run once in every new task worktree; omit if none): <e.g. `npm ci --prefer-offline --no-audit --no-fund`>
 - **Checks** (validator runs every one, in order; quiet variants, failures only): <e.g. `npm run build --silent`, `npm run lint -- --quiet`, `npm test -- --reporter=dot`>
 - **Security**: <secret scan pre-commit hook, e.g. gitleaks> · <dependency audit in checks, e.g. `npm audit --audit-level=high`>
 - **Coding standards**: <path to CODING_STANDARDS.md / CONTRIBUTING.md, or "none: smell baseline only">; UI repos also `docs/agents/heinzelwerk/design.md`

@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: "Two-axis review of the diff since a fixed point: Standards (repo coding standards) and Spec (the originating issue), in parallel sub-agents. Use to review a branch, PR, or work in progress."
+description: "heinzelwerk copy: two-axis review (Standards, Spec) of the diff since a fixed point, in parallel sub-agents. Use inside heinzelwerk runs (validator)."
 ---
 
 Two-axis review of the diff between `HEAD` and a fixed point the user supplies:

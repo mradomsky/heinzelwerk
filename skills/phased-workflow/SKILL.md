@@ -17,7 +17,7 @@ user-invocable: false
 
 ## Phases
 Every task has exactly one phase. Roles say WHO, phases say WHAT KIND of work.
-A task is not done until its handoff exists. Phases chain by handoff, not by someone pushing.
+A task is not done until its handoff exists. Phases chain by handoff, not by someone pushing. Bugfix runs: [bugfix.md](bugfix.md).
 
 | Phase | Kind of work | Done when | Handoff (part of done) |
 |---|---|---|---|

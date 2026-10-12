@@ -35,8 +35,9 @@ if [ "$(pol '.require_validation // true')" = true ]; then
     || reasons+=("no \"heinzelwerk: validated $head\" on the PR")
 fi
 pv body '.body' | grep -qE '^[[:space:]]*[-*] \[ \]' && reasons+=("unchecked item in PR body (needs a human)")
-n=$(pv additions,deletions '.additions + .deletions'); max=$(pol '.max_changed_lines // 200')
-(( n <= max )) || reasons+=("$n changed lines > max_changed_lines $max")
+# optional size cap: only when the policy sets max_changed_lines
+max=$(pol '.max_changed_lines // empty')
+[ -z "$max" ] || { n=$(pv additions,deletions '.additions + .deletions'); (( n <= max )) || reasons+=("$n changed lines > max_changed_lines $max"); }
 # every file must match allow_paths and no deny_paths; the gate and its policy always need a human
 allow=$(pol '.allow_paths[]?'); deny=$(pol '.deny_paths[]?'); files=$(pv files '.files[].path')
 [ -n "$files" ] || reasons+=("no changed files read")

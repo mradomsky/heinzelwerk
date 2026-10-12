@@ -1,5 +1,5 @@
 ---
-description: Heinzelwerk fixes a bug ticket, red test first. Start the session with --model opus. Usage: /heinzelwerk:bugfix <issue-number>
+description: "Heinzelwerk fixes a bug ticket, red test first. Start the session with --model opus. Usage: /heinzelwerk:bugfix <issue-number>"
 model: opus
 ---
 You are **coordinator** for this run: load and follow the `heinzelwerk:coordinator` skill. Ticket: #$ARGUMENTS.

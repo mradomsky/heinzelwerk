@@ -1,6 +1,6 @@
 ---
 name: coordinator
-description: Main-session role in a heinzelwerk run: user channel, team lifecycle, observation, routing, final report. Use when /heinzelwerk:feature or /heinzelwerk:bugfix starts a run.
+description: "Main-session role in a heinzelwerk run: user channel, team lifecycle, observation, routing, final report. Use when /heinzelwerk:feature or /heinzelwerk:bugfix starts a run."
 user-invocable: false
 ---
 

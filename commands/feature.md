@@ -1,5 +1,5 @@
 ---
-description: Heinzelwerk builds one slice ticket. Start the session with --model opus. Usage: /heinzelwerk:feature <issue-number>
+description: "Heinzelwerk builds one slice ticket. Start the session with --model opus. Usage: /heinzelwerk:feature <issue-number>"
 model: opus
 ---
 You are **coordinator** for this run: load and follow the `heinzelwerk:coordinator` skill. Ticket: #$ARGUMENTS.

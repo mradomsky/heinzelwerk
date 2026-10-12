@@ -1,6 +1,6 @@
 ---
 name: team-modes
-description: Team rules per mode (single repo vs workspace): routing, messaging, voice, worktrees, branches, ownership, contracts, PR order, validation. Use at run start and whenever creating a branch, worktree, task, or PR.
+description: "Team rules per mode (single repo vs workspace): routing, messaging, voice, worktrees, branches, ownership, contracts, PR order, validation. Use at run start and whenever creating a branch, worktree, task, or PR."
 user-invocable: false
 ---
 # Team modes

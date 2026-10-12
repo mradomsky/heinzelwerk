@@ -13,8 +13,8 @@ Claude Code plugin: a lean autonomous dev team (coordinator / product / tech-lea
 - **Phases, not pipelines.** Work is typed analyze / implement / validate; any agent may create work in any phase, every task leaves a handoff.
 - **Tickets are durable, tasks are disposable.** Everything the next run needs lives on GitHub.
 - **Pointers, not imports.** `CLAUDE.md` holds a short `## Agent skills (heinzelwerk)` block; agents read `docs/agents/heinzelwerk/*` when the pointer fires.
-- **Humans merge, unless a deterministic gate allows it.** Agents open PRs and never push main. `scripts/merge-gate` merges a PR only when `merge-policy.json` on main allows it: the validator's `heinzelwerk: validated <sha>` names the PR's current head, every changed file is allowed, under a size limit, CI green, no unchecked manual check left (the validator does the ones it can). The gate refuses to run if it differs from main's copy and never merges a change to itself or its policy. Setup section G turns it on (policy, a PR CI workflow, and the `Bash(scripts/merge-gate *)` permission auto mode needs); recommended off when `main` deploys to production.
-- **Infra auto-applies only through a deterministic gate.** `scripts/tf-gate` checks the saved plan against `infra-policy.json` (environment allowlist, no destroys, protected types, change limit). Tech-lead applies on pass and escalates on fail or doubt. Credential scope is the real boundary: agents never hold prod write credentials.
+- **Humans merge, unless a deterministic gate allows it.** Agents open PRs and never push main. `scripts/merge-gate` merges a PR only when `merge-policy.json` on main allows it: the validator's `heinzelwerk: validated <sha>` names the PR's current head, every changed file is allowed, under a size limit, CI green, mergeable, no unchecked manual check left (the validator does the ones it can). The gate refuses to run if it differs from main's copy and never merges a change to itself or its policy; it runs after tech-lead's diagnose finds no gap. Setup section G turns it on (policy, a PR CI workflow, and the `Bash(scripts/merge-gate *)` permission auto mode needs); recommended off when `main` deploys to production, also because the `validated` line is a protocol marker, not an authorization: every role shares one `gh` login, so a teammate, or text it reads in the repo, could post it.
+- **Infra auto-applies only through a deterministic gate.** `scripts/tf-gate` checks the saved plan against `infra-policy.json` (environment allowlist, no destroys, protected types, change limit) and, like the merge gate, refuses to run unless it matches main's copy. Tech-lead applies on pass and escalates on fail or doubt. Credential scope is the real boundary: agents never hold prod write credentials.
 
 ## Install
 
@@ -30,7 +30,7 @@ Enable agent teams and the shared task list in `~/.claude/settings.json`:
 { "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1", "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1" } }
 ```
 
-Runs are interactive: a headless `-p` session cannot spawn teammates. Keep the default in-process teammate mode: split panes ignore the agents' `effort` and `disallowedTools`. The guard hook has no dependencies beyond bash (Git Bash on Windows); `tf-gate` needs `jq` on infra repos; the tracker and `merge-gate` need `gh`.
+Runs are interactive: a headless `-p` session cannot spawn teammates. Keep the default in-process teammate mode: split panes ignore the agents' `effort` and `disallowedTools`. The guard hook has no dependencies beyond bash (Git Bash on Windows); `tf-gate` needs `jq` on infra repos; the tracker and `merge-gate` need `gh`. The default branch must be `main`: both gates read their policy from it and every worktree starts from `origin/main`.
 
 Start every shaping or run session with `--model opus`: a command's `model:` covers only its first turn, and shape, feature, bugfix, and retro span many.
 
@@ -63,7 +63,7 @@ Need one for a run (e.g. an issue tracker without `gh`)? Pass only that one: `cl
 | tech-lead | how: tasks, seams, technical triage, diagnose, infra apply through the gate, docs PR | teammate | Opus |
 | backend / frontend | building, test-first | teammates | Sonnet |
 | infra | Terraform: plan, never apply | teammate | Sonnet |
-| validator | checks + two-axis review | teammate | Sonnet; Opus review on the project's risk areas |
+| validator | checks, two-axis review, slice acceptance, merge gate | teammate | Sonnet; Opus review on the project's risk areas |
 
 Main-session roles (coordinator, product in `/shape`) run on the session model: start it with `--model opus`. Escalation and degradation happen through subagents (Opus for depth, Haiku for breadth and mechanical work). Each role's triggers are in its prompt; the reasoning is in `skills/model-selection`.
 
@@ -111,7 +111,7 @@ Model-invoked (reusable discipline, agents reach for them):
 
 Other:
 - `agents/` — roles, usable as subagents or teammates
-- `hooks/` — `guard.sh` blocks pushing or checking out main, `gh pr merge`, plain `--force`, `--no-verify`, adding secret/state files, raw `terraform apply/destroy/import/state`, `-auto-approve`. A tripwire: the secret defence is the gitleaks pre-commit hook setup recommends
+- `hooks/` — `guard.sh` blocks pushing, checking out, or moving main, `gh pr merge` (also through the API), plain `--force`, `--no-verify` and hook-skipping (`core.hooksPath`, `HUSKY=0`), adding secret, state, or plan files, raw `terraform apply/destroy/import/state`, `-auto-approve`. Rules anchor on the command, so quoting a rule in a comment never trips it. `guard-test.sh` runs the regression cases (needs node). A tripwire: the secret defence is the gitleaks pre-commit hook setup recommends
 - `docs/test-run-plan.md` — staged plan for the first runs; `docs/reviews/` — review records
 - `prompts/` — loose prompts, staging area before `skills/` or `commands/` (e.g. `review-plugin.md`: independent review of this plugin)
 

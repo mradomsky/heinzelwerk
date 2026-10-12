@@ -32,7 +32,7 @@ Summarise what's present and what's missing. Then take the sections in order: on
 
 **B — Triage labels.** Ask exactly one question: keep the default five (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`)? Recommended: yes. Only on no, collect overrides so existing labels are reused instead of duplicated.
 
-**C — Team rules** (per repo). Propose backend paths, frontend paths, shared paths, risk areas (see below), E2E command (e2e or smoke tests, if any), security checks (deterministic, never a model: a secret scan such as gitleaks installed as a pre-commit hook so it runs in every worktree, and a dependency audit such as `npm audit --audit-level=high` or osv-scanner in `checks`), checks (from scripts/CI, in their quiet/summary form: flags that print failures only; any check that scans the whole repo must ignore `.claude/worktrees/`, where task worktrees live, else propose that ignore edit), coding standards source, contracts (API, infra outputs, shared types: paths and provider role for each). **Risk areas** are this project's, not a fixed list. Derive candidates from the code (security, money, persistence and migrations, data deletion, infra-as-code, public or cross-repo contracts, concurrency, personal data, external integrations, anything with past incidents in issues or docs), then ask the user for risks only they know. Each entry: path/glob or kind of change, plus why. Workspace: also propose each repo's role and the integration command if one exists (compose file, smoke script).
+**C — Team rules** (per repo). Propose backend paths, frontend paths, shared paths, risk areas (see below), E2E command (e2e or smoke tests, if any), worktree setup (the install command a fresh checkout needs, e.g. `npm ci` when a lockfile exists), security checks (deterministic, never a model: a secret scan such as gitleaks installed as a pre-commit hook so it runs in every worktree, and a dependency audit such as `npm audit --audit-level=high` or osv-scanner in `checks`), checks (from scripts/CI, in their quiet/summary form: flags that print failures only; any check that scans the whole repo must ignore `.claude/worktrees/`, where task worktrees live, else propose that ignore edit), coding standards source, contracts (API, infra outputs, shared types: paths and provider role for each). **Risk areas** are this project's, not a fixed list. Derive candidates from the code (security, money, persistence and migrations, data deletion, infra-as-code, public or cross-repo contracts, concurrency, personal data, external integrations, anything with past incidents in issues or docs), then ask the user for risks only they know. Each entry: path/glob or kind of change, plus why. Workspace: also propose each repo's role and the integration command if one exists (compose file, smoke script).
 
 **C2 — Infra** (only if Terraform/OpenTofu found). Propose infra paths and checks. Then the apply policy, recommended answers first:
 - Which environment dirs may agents auto-apply to? Recommend dev/sandbox only; never prod.
@@ -51,6 +51,11 @@ Summarise what's present and what's missing. Then take the sections in order: on
 
 **F — Existing docs.** If exploration found docs outside the agent structure, recommend adopting them now: run the `heinzelwerk:adopt-docs` skill on this setup's branch, after section E. It can be rerun later whenever new docs appear.
 
+**G — Auto-merge** (single mode; workspace: off). Check first whether a merge to `main` deploys anywhere (workflows triggered on push to `main`). Recommend **on** when it doesn't, or when the project isn't production-critical; **off** when `main` ships to users. On:
+- Policy from [merge-policy.json](merge-policy.json) with `enabled: true`. `allow_paths: ["*"]` unless the user names areas that must always wait for a human (`deny_paths`); risk areas still get Opus review either way. `merge_method` as the repo's history merges (merge commits vs squash). The gate and its policy always need a human.
+- CI on pull requests: `require_checks` stays true. No workflow runs on `pull_request` → propose `.github/workflows/heinzelwerk-checks.yml` running the **Worktree setup** and every **Checks** command from `team.md`.
+- Permission: add `Bash(scripts/merge-gate *)` to `permissions.allow` in `.claude/settings.json` (committed; merge into an existing file). Without it, Claude Code's auto mode blocks the gate as "merge without review".
+
 ## 3. Confirm
 
 Show drafts of the `## Agent skills (heinzelwerk)` block (below) and every file under `docs/agents/heinzelwerk/`. Let the user edit before writing.
@@ -65,7 +70,8 @@ Per repo, on a fresh branch from main `docs/heinzelwerk-setup`:
 - `docs/agents/heinzelwerk/team.md` from [team.md](team.md)
 - UI found: `docs/agents/heinzelwerk/design.md` (C3) and `scripts/ui-shots` copied from [scripts/ui-shots](scripts/ui-shots) (executable)
 - infra found: `docs/agents/heinzelwerk/infra-policy.json` from [infra-policy.json](infra-policy.json) with the answers from C2, and `scripts/tf-gate` copied from [scripts/tf-gate](scripts/tf-gate) (executable; needs `jq`)
-- `docs/agents/heinzelwerk/merge-policy.json` copied from [merge-policy.json](merge-policy.json) unchanged (auto-merge off; the user enables it later), and `scripts/merge-gate` from [scripts/merge-gate](scripts/merge-gate) (executable)
+- `docs/agents/heinzelwerk/merge-policy.json` from [merge-policy.json](merge-policy.json) with the answers from G (off if G was skipped), and `scripts/merge-gate` from [scripts/merge-gate](scripts/merge-gate) (executable); G on → also the CI workflow and the `.claude/settings.json` permission
+- `.gitattributes`: `scripts/* text eol=lf` (add the line if missing), so the scripts run under bash on Windows checkouts
 - `docs/agents/heinzelwerk/repo-map.md`: from the exploration, max 120 lines, facts only
 - `GLOSSARY.md` / `docs/adr/` only if section E produced resolved content (lazy otherwise)
 

@@ -9,7 +9,7 @@ root=$(git rev-parse --show-toplevel); policy=$(mktemp); trap 'rm -f "$policy"' 
 tf=${TF_BIN:-terraform}
 git fetch -q origin main && git show origin/main:docs/agents/heinzelwerk/infra-policy.json >"$policy" 2>/dev/null \
   || { echo "GATE FAIL: no docs/agents/heinzelwerk/infra-policy.json on origin/main"; exit 1; }
-rel=$(realpath --relative-to="$root" "$dir")
+rel=$(git -C "$dir" rev-parse --show-prefix); rel=${rel%/}   # portable: no GNU realpath (macOS)
 json=$("$tf" -chdir="$dir" show -json "$plan")
 
 reasons=()

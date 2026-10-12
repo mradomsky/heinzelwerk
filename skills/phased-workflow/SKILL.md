@@ -40,7 +40,7 @@ The task list has three states: pending, in progress, completed. A task's title 
 - **Smallest complete change**: reuse what the codebase has, then the standard library, then an installed dependency. No abstraction, option, config, or "for later" code nobody asked for. Finish every part the change touches: callers, tests, fixtures. Keep validation at trust boundaries, error handling, security, and accessibility. A shortcut with a known limit gets a code comment `shortcut: <limit>, <when to upgrade>`.
 - **Interfaces**: deep modules, small interfaces.
 - **Subagents**: Opus when the root cause is still unknown after two failed passes, or when you change shared code whose callers you can't see from the edit site; Haiku for call-site searches and mechanical batches. Your role prompt may add triggers. State both in `escalations:`.
-- **Done**: branch, worktree, commits, PR body per team-modes. PR open → done note into the task's details, complete the task, create `#N validate <role>: <what>`. A fix task from validator → same branch, same loop.
+- **Done**: branch, worktree, commits, PR body per team-modes. PR open → done note into the task's details, complete the task, create `#N validate <role>: <what>`, message coordinator `[<repo>@<branch>] validate task created: <PR>`. A fix task from validator → same branch, same loop.
 
 ## Discovering work (branching)
 Found something while working? Don't silently fix it, don't drop it. **Propose** it:

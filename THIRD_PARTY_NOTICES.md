@@ -9,6 +9,8 @@ heinzelwerk includes material from the projects below. Each keeps its own licens
 
 Ideas (no code or text) are also drawn from [Ido-Levi/Hephaestus](https://github.com/Ido-Levi/Hephaestus) (AGPL-3.0): phases, guardian (now part of coordinator), validation loop, diagnose step.
 
+`skills/model-selection` is heinzelwerk's own text (rewritten 2026-10-12 to replace an earlier adaptation of an unidentified source). Ideas (no text) from [zscole/model-hierarchy-skill](https://github.com/zscole/model-hierarchy-skill) (MIT): a default middle tier, escalating one tier at a time, batching small jobs.
+
 Adding material from a new source: add a row and its license text below. More files from a source already listed only need the table row updated.
 
 ---

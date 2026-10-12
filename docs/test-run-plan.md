@@ -71,7 +71,7 @@ claude --model opus --strict-mcp-config --allowedTools "Read,Grep,Glob,WebFetch,
 3. Watch for:
    - coordinator states mode; spawns product + tech-lead, then **only frontend**, then validator
    - spec gate passes; plan comment with seams and worktree paths
-   - frontend works in `../.worktrees/…`, never the main checkout; quiet test output
+   - frontend works in `.claude/worktrees/heinzelwerk/…`, never the main checkout; quiet test output
    - validator: checks + two-axis review; "tests unmodified" verified explicitly
    - final report + `heinzelwerk-metrics` block on the issue; docs PR if anything to add
 4. Answer escalations, take notes, don't steer unless it derails. Review the PR.

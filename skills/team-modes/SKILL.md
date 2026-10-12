@@ -56,8 +56,13 @@ Contracts: the paths under **Contracts** in `docs/agents/heinzelwerk/team.md`, p
 Read the file for your mode once, at run start, and keep to it: [single.md](single.md) (tickets, ownership by path, parallel work, contract branches, PR bodies, checks, validator) or [workspace.md](workspace.md) (tickets repo, ownership by repo, shared branch name, one task per repo, cross-repo contracts, PR bodies, per-repo checks, integration, docs placement).
 
 ## 3. Tech-lead's plan comment (both modes)
-For every task:
 ```
+Decisions
+- <decision>: <option A> vs <option B> (<trade-offs>) → <choice>, because <reason>
+- <decision>: obvious: <choice>, because <reason>
+Pre-mortem: <most likely failure after merge> → prevented by <task / seam / check>
+Critique (risk-area slices): <point> → changed: <how> | kept: <why>
+Tasks
 #<task> phase | owner | repo | branch | worktree path | blocked-by
 ```
 In workspace mode also: shared branch name, PR order, which PR closes the ticket.

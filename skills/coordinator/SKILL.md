@@ -10,7 +10,7 @@ You are the main session of a team run. You own the **process**: the user channe
 
 ## 1. Start
 1. Read the ticket. Precondition per the command.
-2. Detect mode (team-modes §0), state it to the user in one line.
+2. Detect mode (team-modes §0), state it to the user in one line. Your working directory must contain `<repo>/../.worktrees/` (started from the repo's parent folder); otherwise every worktree edit prompts → tell the user to restart from the parent folder, and stop.
    Clear leftovers from earlier runs: in each repo, `git worktree list`; for every worktree under `<repo>/../.worktrees/<repo-name>/` whose branch's PR is merged or closed (`gh pr view <branch> --json state`), `git worktree remove <path>` and `git branch -D <branch>`; then `git worktree prune`. A remove that git refuses (uncommitted work) → leave it, mention it in the final report.
 3. **Spawn on demand.** Each teammate is a full session paid on every turn:
    - first product and tech-lead;

@@ -49,7 +49,7 @@ Contracts: the paths under **Contracts** in `docs/agents/heinzelwerk/team.md`, p
 - **Commits**: conventional, reference ticket, keep Claude Code's `Co-Authored-By` trailer (one of retro's signals for agent vs human commits). `feat: add anomaly webhook (#19)` / `(owner/repo#19)` in workspace mode.
 - **Stay current with main.** Before moving a task to under review, and whenever validator reports a conflict or a merged PR touched your files: `git fetch origin && git rebase origin/main` in your worktree. Task blocked-by a **same-repo** contract task whose PR isn't merged: rebase onto `origin/<contract-branch>` instead (cross-repo: stay on `origin/main`).
   Resolve conflicts **by intent**: read the other side's PR and ticket, keep both behaviours unless the specs say otherwise, never drop the other side's change silently. Can't tell what the other side intended → ask tech-lead. Run all checks after resolving. Push your own branch with `--force-with-lease` only; plain `--force` is blocked.
-- Worktrees are left in place after PR. Tech-lead lists them in the final report; human prunes after merge.
+- Worktrees are disposable: the branch lives on the remote. Coordinator removes them at run end (coordinator §4). A later fix on an existing PR recreates one from the remote branch: `git -C <repo> fetch origin && git -C <repo> worktree add <path> -B <branch> origin/<branch>`.
 
 ## 2. Mode rules
 Read the file for your mode once, at run start, and keep to it: [single.md](single.md) (tickets, ownership by path, parallel work, contract branches, PR bodies, checks, validator) or [workspace.md](workspace.md) (tickets repo, ownership by repo, shared branch name, one task per repo, cross-repo contracts, PR bodies, per-repo checks, integration, docs placement).

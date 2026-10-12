@@ -28,9 +28,9 @@ A task is not done until its handoff exists. Phases chain by handoff, not by som
 ## Task lifecycle
 The task list has three states: pending, in progress, completed. A task's title never changes after creation; a new state means a new task.
 
-- **Open** = pending with a role in the title. Tech-lead's seeded tasks start here, blockers set as task dependencies. The owner claims it (in progress).
+- **Open** = pending with a role in the title. Tech-lead's seeded tasks start here, blockers set as task dependencies. The owner claims it (in progress). **Claim only tasks whose title names your role** (validator: `validate` tasks), never the next free task.
 - **Implement task done** = PR open, done note written into the task's details (`TaskUpdate`), task completed, and `#N validate <role>: <what>` created (pending). The implementer completes its own implement task; the validate task is the quality gate.
-- **Validate task**: validator claims it, posts the verdict, completes it. Fail → create `#N <role> fix <k>: <what>` (pending; k counts rounds) with the repro in its details, and message the owner. The owner fixes on the same branch, writes its done note, completes the fix task, creates the next validate task. Max 3 fix tasks per PR, then validator messages tech-lead: split, reassign, or stop.
+- **Validate task**: validator claims it, posts the verdict, completes it. Fail → create `#N <role> fix <k>: <what>` (pending; k counts rounds) with the repro in its details, and message the owner. The owner fixes on the same branch, writes its done note, completes the fix task, creates the next validate task. **Fix-task cap: 3 per PR.** A fail after the third → validator messages tech-lead instead: split, reassign, or stop.
 - **Proposal** = `[proposed] #N <what>` (pending; owner hint and the fields below in its details). Only tech-lead acts on it: accept = create the open task (owner role in the title, blockers as dependencies, seams in details) and delete the proposal; reject = delete it with a one-line reason to the proposer. Nobody claims a proposal.
 - **Abandoned** (cannot finish, needs a human): done note says `abandoned: <why>`, task completed, one-line reason on the ticket, tech-lead told.
 - "Under review" elsewhere means a pending or in-progress validate task exists for the PR; "needs work" means a fix task exists.

@@ -15,15 +15,15 @@ Per phased-workflow's triage path: accept (create the open task with owner, bloc
 ## 3. Act on reports
 - Coordinator flags a task as stuck, duplicate, or idle → reassign, split, or stop it. Coordinator observes, you decide.
 - Validator reports an acceptance conflict or failure → open `#N <role> fix <k>: <what>` for the PR that owns it (rebase, or the failing criterion); role not running → tell coordinator to spawn it.
-- Validator reports a PR at three fix rounds → split the task, reassign it, or stop it and say why on the ticket.
+- Validator reports a PR at the fix-task cap (phased-workflow) → split the task, reassign it, or stop it and say why on the ticket.
 - Technical questions from teammates: answer; scope questions go to product.
 
 ## 4. Diagnose (when coordinator reports every validate task passed)
 Compare every acceptance criterion with done notes and validator evidence. Gap → 1–5 targeted tasks. Max 2 diagnose rounds per run, then report the gap.
 
 ## 5. Infra apply (when validator reports an infra PR validated)
-Rerun `scripts/tf-gate check <dir> plan.bin` in infra's worktree (path in your plan) on the validated commit; read the plan yourself.
-- Gate pass, nothing odd → `scripts/tf-gate apply <dir> plan.bin`, then comment on the PR `heinzelwerk: applied <dir> @ <sha>` with the gate output.
+In infra's worktree (path in your plan) on the validated commit, rerun the gate **as on main**, so the PR's own edits to the script can't change it: `bash <(git show origin/main:scripts/tf-gate) check <dir> plan.bin`. Read the plan yourself.
+- Gate pass, nothing odd → same command with `apply`, then comment on the PR `heinzelwerk: applied <dir> @ <sha>` with the gate output.
 - Gate fail, or anything odd on a pass (unexpected resource, surprising diff, cost, exposure) → send coordinator the plan summary, gate output, your assessment, and a recommendation. The user applies by hand or widens `infra-policy.json`; rerun the gate only after a policy change. Other tasks continue meanwhile.
 - At run start: an infra PR closed unmerged with a `heinzelwerk: applied` comment means dev drifted. Seed a task under the current ticket (`Refs`, reason in the task) to plan `main` for that dir and apply through the gate.
 
@@ -31,6 +31,6 @@ Rerun `scripts/tf-gate check <dir> plan.bin` in infra's worktree (path in your p
 Collect `term:`, `adr:`, `learning:`, `risk:` lines from done notes and your own. Draft per the `heinzelwerk:domain-modeling` formats: glossary entries (opinionated, `_Avoid_` synonyms, no implementation detail); ADRs only when all three criteria hold; learnings edits (add new, drop stale or contradicted, max 80 lines); new risk areas in `docs/agents/heinzelwerk/team.md`. Write them yourself, per repo whose docs change, in a worktree on `docs/agent-docs-<ticket>`; commit `docs: update agent docs (#<ticket>)`, PR `Refs #<ticket>`. Nothing to add → skip.
 
 ## 7. Technical report (when coordinator asks)
-PRs and their state, discovered tasks and issues, every `left:` line from done notes, worktrees created, caps hit, diagnose rounds, suggested role-prompt changes.
+PRs and their state, discovered tasks and issues, every `left:` line from done notes, worktrees created (path and branch), caps hit, diagnose rounds, suggested role-prompt changes.
 
 Context compacted or heavy mid-run → tell coordinator; it posts the run state.

@@ -3,57 +3,54 @@ name: model-selection
 description: Which model tier and effort to spend on a piece of work. Load before launching subagents, a review or research sweep, or any large repetitive task.
 ---
 
-# Which model, and why
+# Choosing a model tier
 
-The wrong question is "how important is this task?" — everything feels important. The right question is about the **shape** of the work.
+Pick the tier from what catches a mistake in the output, not from how much the work matters. Almost all work matters; what differs is whether an error would be noticed.
 
-## The decisive test: is there a cheap verifier downstream?
+## The one question: what checks this output?
 
-**If a mistake in this output would be caught mechanically — by a compiler, a test, a schema, a deterministic checker, a later verification pass — a cheaper model is usually correct.** The verifier is the quality control; the generator only has to get close. Wasting a frontier model on work that is checked for free buys nothing.
+- **Something mechanical checks it** (compiler, type checker, test suite, schema, a deterministic script, a later review step) → the cheapest tier that usually gets close. The check does the quality work; paying for a stronger generator buys little.
+- **Nothing checks it**: the output is itself the verdict, or it is acted on as is → the strongest tier. Here the model's judgement is the deliverable.
 
-**If this output IS the last line of defence — nothing downstream can tell whether it is wrong — spend the strong model.** When the model is the verifier, its judgement is the product.
+Everything below applies that question.
 
-Everything below follows from that one test.
+## Three tiers
 
-## Spend the most capable model on
+- **Haiku**: wide and shallow. Searches, inventories, call-site lists, mechanical edits that tests will check, first-pass sorting whose results a stronger pass looks at, condensing text already in hand.
+- **Sonnet**: the default for building. Well-defined multi-step work with checks behind it: implementing a task test-first, routine review, drafting docs a human merges.
+- **Opus**: depth where nothing else catches the error:
+  - designs where several constraints pull against each other and the failure is a wrong trade-off, not a red build;
+  - refuting a plausible "this is safe" in data loss, auth, money, or migrations;
+  - a defect that two cheaper attempts did not explain;
+  - effects you cannot see from the edit site (callers, shared code);
+  - judging whether evidence supports a conclusion;
+  - anything published or acted on without another check.
 
-- **Novel design with interacting constraints.** Several forces pulling against each other (a transaction boundary against an external store, an authorization model against an inheritance hierarchy), where the failure is a subtle wrong trade-off rather than a broken build.
-- **Adversarial verification where a false negative is expensive.** Data-loss paths, authorization, money, migrations. The job is to *refute* a plausible claim — precision work, and nothing catches a wrong "this is fine".
-- **Root-causing a defect that survived cheaper attempts.** If two passes have already failed, the problem is not effort, it is depth. Escalate rather than retry.
-- **Reasoning about validity.** Experiment design, threats to validity, whether an inference actually follows from the evidence. This is the work most damaged by a confident, shallow answer.
-- **Consequences invisible at the edit site.** "What else does this change break?" is exactly the class cheap models miss and the class that costs most.
-- **Anything that will be published or acted on without further checking** — an architecture decision, a claim in an article, a security conclusion.
+**Escalate one tier at a time.** A failed attempt moves the next attempt up one tier, not straight to the top, unless the work is already in an Opus category above. Two failures at the same tier mean the problem is depth, not effort.
 
-## Use a cheaper, faster model for
+## Mistakes to avoid
 
-- **High-breadth, low-depth sweeps.** Finder passes, inventories, "where is X used", cataloguing call sites. Recall matters, noise is tolerable, and a verification stage follows. Fan out wide and cheap.
-- **Mechanical transformation.** Renames, call-site migration, boilerplate, format conversion — the compiler and tests are the verifier.
-- **First-pass triage and classification.** Bucketing, labelling, routing, "does this look security-relevant?" — provided a strong pass handles what it flags, and provided the classifier can only escalate, never silently dismiss (see the anti-patterns).
-- **Summarising content that is already in hand.** Condensing, extracting, reformatting known text.
-- **Anything you will read and check yourself anyway.**
+- **Opus on volume.** A wide sweep at the top tier. Split it: cheap finders, one strong pass over what they found.
+- **A cheap tier as the final check.** If nothing after it can catch its error, the saving is fake: the check is gone and only its appearance remains.
+- **One model writing and grading.** A grader with the writer's blind spots approves its mistakes. Keep the check independent; prefer a deterministic check over any model.
+- **A cheap sorter that can wave things through.** A cheap classifier may send work *up* for review; only a deterministic rule may skip a review.
+- **Guessing the tier.** Try the cheap tier on cases with known answers first (for a review: known findings, measure recall). Keep it if it holds.
+- **Many tiny subagents.** Each one pays its own start-up context. Batch similar small jobs into one subagent.
 
-## Anti-patterns
+## Effort
 
-- **The strong model on volume.** Thirty agents at frontier rates doing a breadth sweep. Split it: cheap finders, strong verifier.
-- **A cheap model as the last line of defence.** If nothing downstream can catch its mistake, the saving is fictitious — you have removed the check and kept the appearance of one.
-- **The same model generating and grading.** A grader that shares the generator's blind spot ratifies its errors. Keep verification independent, and prefer a *deterministic* verifier over any model where one is possible.
-- **A judgemental classifier that can dismiss.** If a cheap triage step can decide "no review needed", a confident misclassification silently removes the check. Cheap classifiers may escalate; only deterministic rules may skip.
-- **Assuming the tier without measuring.** Test the cheap tier against a set whose answers you already know, then decide. On a known-findings set, measure recall; adopt the cheap tier if it holds, and learn something real if it does not.
+Effort follows the same question. High effort pays where the answer is a judgement with consequences; on mechanical work it only adds latency. Set `model` and `effort` per subagent; a workflow where everything runs at the top setting is almost always mis-tuned.
 
-## Reasoning effort, not just model choice
+## Say what you picked
 
-The same logic governs effort/thinking budget. High effort earns its cost where the answer is a judgement with consequences; on mechanical work it buys latency. When delegating, set `model` and `effort` per agent rather than uniformly — a workflow where every agent runs at the top tier is nearly always mis-tuned.
-
-## State the choice
-
-When you pick a tier for non-obvious work, say which and why in one clause — "cheap finders, strong verifier, because the verify stage is the precision step". It makes the decision reviewable, and it makes a wrong default visible instead of buried.
+For any non-obvious choice, one clause: tier and reason ("Haiku finders, Opus verifier: the verify step is the precision step"). That makes it reviewable and a bad default visible.
 
 ## Heinzelwerk
 
-A teammate's model and effort are fixed in its agent definition. **Escalate or degrade through subagents**, never by asking for a different teammate. Each role's Opus triggers and Haiku uses live in its own prompt; `/heinzelwerk:shape` and `/heinzelwerk:retro` run on Opus and send finder sweeps to Haiku.
+A teammate's model and effort are fixed when it is spawned. **Change tier through subagents**, never by asking for another teammate. Each role's Opus triggers and Haiku uses are in its own prompt; `/heinzelwerk:shape` and `/heinzelwerk:retro` run on Opus and send finder sweeps to Haiku.
 
-**Haiku effort scales with the subtask**: low for searches and pure mechanical edits; medium for batches that need local judgement (migrating call sites with small variations); high for a summarising or classifying pass whose output feeds a decision.
+**Haiku effort per subtask**: low for searches and purely mechanical edits; medium for batches with local judgement (call sites that vary a little); high for a summary or classification that feeds a decision.
 
-**Who decides**: tech-lead may preset an escalation in the task (`model:` field). The owner escalates on its own when a trigger in its prompt fires. Either way, state the choice: `escalations:` line in the done note.
+**Who decides**: tech-lead may preset an escalation in the task (`model:` field). The owner escalates by itself when a trigger in its prompt fires. Either way it goes in the done note's `escalations:` line, so `/heinzelwerk:retro` can compare tier, task kind, and outcome across runs and move the defaults.
 
-**Accepted trade-off**: on diffs outside the risk areas in `docs/agents/heinzelwerk/team.md`, Sonnet reviews what Sonnet built, the generate-and-grade anti-pattern above; the human's PR review is the last line of defence there. Risk areas get Opus review, and retro adds areas where Sonnet let something through.
+**Accepted trade-off**: outside the risk areas in `docs/agents/heinzelwerk/team.md`, Sonnet reviews what Sonnet built, the writer-grades-itself mistake above; the human PR review is the final check there. Risk areas get Opus review, and retro adds an area wherever Sonnet let something through.

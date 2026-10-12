@@ -107,7 +107,7 @@ Model-invoked (reusable discipline, agents reach for them):
 - `skills/prototype` — throwaway UI variations / logic walkthroughs, used by `/shape`
 - `skills/model-selection` — which tier for which work, and why; the roles' triggers live in `agents/*`
 - `skills/ponytail-debt` — `shortcut:` ledger, used by retro
-- `skills/tdd`, `skills/code-review`, `skills/codebase-design`, `skills/domain-modeling`, `skills/grilling`, `skills/writing-for-agents`
+- `skills/tdd`, `skills/code-review`, `skills/codebase-design`, `skills/domain-modeling`, `skills/grilling`, `skills/writing-for-agents`: adapted copies of mattpocock/skills. Their descriptions say "heinzelwerk copy … Use inside heinzelwerk …", so if you also have the mattpocock plugin installed, your own sessions pick the upstream skill and runs pick ours. Both are namespaced (`heinzelwerk:tdd` vs `mattpocock-skills:tdd`); no rename needed.
 
 Other:
 - `agents/` — roles, usable as subagents or teammates

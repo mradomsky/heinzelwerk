@@ -1,6 +1,6 @@
 ---
 name: codebase-design
-description: Vocabulary and principles for deep modules. Use when designing or improving a module's interface, placing a seam, finding deepening opportunities, or when another skill needs the terms.
+description: "heinzelwerk copy: deep-module vocabulary (seams, interfaces). Use inside heinzelwerk runs, /heinzelwerk:retro, or when another heinzelwerk skill needs the terms."
 ---
 
 # Codebase Design

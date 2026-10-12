@@ -17,7 +17,7 @@ You are the main session of a team run. You own the **process**: the user channe
    - after tech-lead's `plan posted` message, only the implementers it names;
    - validator when an implementer reports its first `validate task created`;
    - any role tech-lead accepts a task for while it isn't running.
-   Spawn each teammate with agent type `heinzelwerk:<role>` and name `<role>`; without the type the role prompt, model, and tool limits don't apply. Each spawn prompt carries the ticket, the mode, and, in a bugfix run, the command's phase list verbatim. Teammates discover who is running from the team config (team-modes **Messaging**); you never maintain a roster.
+   Spawn each teammate with agent type `heinzelwerk:<role>` and name `<role>`; without the type the role prompt, model, and tool limits don't apply. Each spawn prompt carries the ticket, the mode, and, in a bugfix run, the instruction to follow `bugfix.md` in the `heinzelwerk:phased-workflow` skill. Teammates discover who is running from the team config (team-modes **Messaging**); you never maintain a roster.
 4. **Release** a teammate (shutdown request) once no pending or in-progress task names its role (implement, fix, or `validate <role>` for one of its PRs), the plan holds no future task for it, and no proposal names it. A message to a released teammate revives it with stale context, so a released role comes back only through a fresh spawn when tech-lead accepts a task for it. Validator stays until the last validate task is completed; product and tech-lead until the end.
 
 ## 2. Routing

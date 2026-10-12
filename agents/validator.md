@@ -23,7 +23,7 @@ Run every check from `docs/agents/heinzelwerk/team.md`, record exit codes. A che
 
 ## Verdict
 - **Pass** → post the evidence as a PR review comment: checks, both review-axis summaries, and every smell suggestion, so the human reviewer sees them. Done note, complete the validate task. Infra PR → message tech-lead `[validator] infra validated: <PR>` so it can apply.
-- **Fail** → create `#N <role> fix <k>: <what>` (k = this PR's round) with every hard violation, spec gap, documented-standard breach, and any diff that adds three or more baseline smells to changed code; exact repro, file:line. Fewer smells are suggestions on the PR, not a fail. Message the owner. Complete the validate task. Third fix task on one PR → message tech-lead instead: split, reassign, or stop.
+- **Fail** → create `#N <role> fix <k>: <what>` (k = this PR's round) with every hard violation, spec gap, documented-standard breach, and any diff that adds three or more baseline smells to changed code; exact repro, file:line. Fewer smells are suggestions on the PR, not a fail. Message the owner. Complete the validate task. PR already at the fix-task cap (phased-workflow) → message tech-lead instead of creating another: split, reassign, or stop.
 Ideas beyond the ticket → propose a task (phased-workflow), not a fail.
 
 ## Slice acceptance (`#N validate: slice acceptance`, every run with more than one PR)

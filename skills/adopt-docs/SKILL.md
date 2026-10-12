@@ -12,9 +12,9 @@ Follow `heinzelwerk:writing-for-agents` for anything you write. Terms and ADRs g
 ## 1. Inventory
 
 - Mode from the `heinzelwerk:team-modes` skill §0. Workspace: every repo, each handled in its own repo.
-- Read `docs/agents/heinzelwerk/adopted.md` if it exists: the ledger of docs already adopted, with the commit each was adopted at.
+- Read `docs/agents/heinzelwerk/adopted.md` if it exists: the ledger of docs already adopted, with each doc's content hash at adoption.
 - List candidate docs: Markdown and text docs anywhere outside `node_modules`, build output, and vendored code. Skip the agent structure (`docs/agents/heinzelwerk/`, `GLOSSARY*.md`, `docs/adr/`, `CLAUDE*.md`, `AGENTS*.md`). Other tools' files in `docs/agents/` are candidates.
-- Keep only docs that are **new** (not in the ledger) or **changed** since their ledger commit (`git log <commit>..HEAD -- <path>` is non-empty). Changed docs: work on the diff, not the whole file.
+- Keep only docs that are **new** (not in the ledger) or **changed** (`git hash-object <path>` differs from the ledger hash). Changed docs: work on the diff (`git diff <ledger hash> $(git hash-object -w <path>)`), not the whole file. Legacy entry with a commit SHA: use `git rev-parse <sha>:<path>` as the ledger hash; if that fails, treat the doc as new.
 - Nothing left → tell the user, stop.
 
 ## 2. Classify
@@ -51,6 +51,6 @@ Workspace: a decision or term spanning repos goes to the tickets repo (workspace
 
 - Called from setup: reuse setup's branch and PR. Otherwise, per repo, fresh branch from main `docs/adopt-docs`.
 - Write resolved ADRs, glossary terms, repo-map/team/learnings edits, create accepted issues.
-- Update `docs/agents/heinzelwerk/adopted.md` (create if missing): one line per processed doc, `- <path> @ <commit sha>: <classes found> → <where content went>`.
+- Update `docs/agents/heinzelwerk/adopted.md` (create if missing): one line per processed doc, `- <path> @ <hash>: <classes found> → <where content went>`, where `<hash>` is `git hash-object <path>`. Content hash, not commit SHA: it survives squash and rebase merges.
 - Never delete, move, or rewrite original docs.
 - Commit `docs: adopt existing docs into agent structure`, open PR (or add to setup's). PR body lists stale items and anything the user dropped. Do not merge.

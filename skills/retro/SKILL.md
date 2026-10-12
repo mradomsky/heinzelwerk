@@ -21,6 +21,7 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
    - Docs PRs: what the human accepted, edited, or dropped from glossary, ADR, and learnings candidates.
    - Session logs on this machine, when the user points at them or a finding needs detail.
    - Token usage: ask the user once; never estimate.
+   - Human run notes: ask the user once for the path (usually `docs/runs/` in their heinzelwerk checkout), then read the notes for runs in scope. Their `broke:` lines and `For /retro` items are findings to check against the sources above.
    - Shortcut debt: run the `heinzelwerk:ponytail-debt` skill; compare with the ledger in the last retro record.
 
 4. **Look for candidates for improvement** in these categories.

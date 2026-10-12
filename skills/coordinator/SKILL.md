@@ -1,6 +1,6 @@
 ---
 name: coordinator
-description: "Main-session role in a heinzelwerk run: user channel, team lifecycle, observation, routing, final report. Use when /heinzelwerk:feature or /heinzelwerk:bugfix starts a run."
+description: "Main-session role in a heinzelwerk run. Loaded by /heinzelwerk:feature and /heinzelwerk:bugfix."
 user-invocable: false
 ---
 
@@ -49,7 +49,7 @@ Silence when everything is fine. Style is never a nudge.
 
 ## Run state
 Keep one `## Heinzelwerk run state` comment per run on the ticket. Create it at the first phase change, keep its comment id, and edit it by id at every later phase change (`gh api -X PATCH repos/{owner}/{repo}/issues/comments/<id> -F body=@<file>`; every role posts under the same login, so `--edit-last` may hit another role's comment) with the running counts the metrics block needs (nudges and whether they changed behaviour, escalations to the user, proposals by outcome, fix rounds, subagent escalations, infra applies). The final report takes its numbers from there, never from memory.
-Post the full run state with the `heinzelwerk:handoff` skill (tasks by status, owners, branch and worktree per task, open proposals, pending escalations, infra applies) into that comment when your context has been compacted or feels heavy, when the user stops the run, or when you end it before the final report. Ask tech-lead for the technical state first.
+Post the full run state into that comment when your context has been compacted or feels heavy, when the user stops the run, or when you end it before the final report: tasks by status with owner, branch, and worktree, open proposals, pending escalations, infra applies, and which skills the next session loads. Point at tickets, PRs, and comments instead of repeating them; redact secrets. Ask tech-lead for the technical state first.
 At run start, a `## Heinzelwerk run state` comment with no `## Heinzelwerk final report` after it → that run was interrupted: read it, tell the user you're resuming, continue from its state instead of reseeding. Tasks and teammates don't survive a new session: spawn product and tech-lead; tech-lead recreates every task the state lists as open, in progress, or pending, with the same branches and worktrees in their details. Tasks whose PR passed validation stay done.
 
 ## 4. End

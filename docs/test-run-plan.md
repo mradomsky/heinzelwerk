@@ -36,7 +36,7 @@ claude --plugin-dir ~/heinzelwerk --model opus --strict-mcp-config
 | Guard without jq | session with `jq` and `node` off `PATH`: `git push origin main` still blocked, `ls` still allowed | fallback parser broken → fix `guard.sh` |
 | Subagent model override | that teammate spawns a Haiku subagent and reports its model | fallback agent defs `finder` (Haiku), `deep-analyst` (Opus) |
 | Skill namespacing | every skill reference in the plugin is `heinzelwerk:<name>` (bare names collide with other plugins, e.g. mattpocock-skills); `/heinzelwerk:shape` on a toy idea loads `heinzelwerk:grilling` and `heinzelwerk:domain-modeling` | a bare name slipped through → namespace it |
-| Hide building blocks | `/` menu hides `coordinator`, `phased-workflow`, `team-modes`, `handoff`; `/heinzelwerk:to-spec` still typeable; `/shape` still reaches `to-spec` | `user-invocable: false` ignored → leave them visible |
+| Hide building blocks | `/` menu hides `coordinator`, `phased-workflow`, `team-modes`; `/heinzelwerk:to-spec` still typeable; `/shape` still reaches `to-spec` | `user-invocable: false` ignored → leave them visible |
 | Frontmatter parses | headless: ask for every `heinzelwerk:` skill and command; `coordinator` and `team-modes` must be listed. A `: ` inside an unquoted `description` silently drops a skill | quote the value |
 
 ### Status 2026-10-12 (v0.24.0, Claude Code 2.1.296, Windows)

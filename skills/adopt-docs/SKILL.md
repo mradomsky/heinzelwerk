@@ -1,6 +1,6 @@
 ---
 name: adopt-docs
-description: Move a repo's existing docs into the heinzelwerk structure (ADRs, glossary, repo map, team rules, spec issues, pointers). Use to adopt or migrate docs, when new docs appeared, or from setup section F.
+description: "heinzelwerk: absorb a repo's existing docs into the agent structure. Use from setup section F, or when new docs appeared."
 ---
 
 # Adopt docs
@@ -19,7 +19,7 @@ Follow `heinzelwerk:writing-for-agents` for anything you write. Terms and ADRs g
 
 ## 2. Classify
 
-One Haiku subagent per doc (parallel, effort medium: classifying feeds your decisions; `heinzelwerk:model-selection`). Each returns its doc's content split into these classes, quoting the source heading for every item:
+Haiku subagents in parallel, 8–10 docs each (effort medium: classifying feeds your decisions; one subagent per doc would pay the start-up context once per doc). Each returns, per doc, its content split into these classes, quoting the source heading for every item:
 
 | Class | Destination |
 |---|---|

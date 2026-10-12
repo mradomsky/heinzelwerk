@@ -102,7 +102,6 @@ Model-invoked (reusable discipline, agents reach for them):
 - `skills/team-modes` — routing, messaging, voice, single-repo vs workspace cooperation rules
 - `skills/adopt-docs` — existing docs → ADRs, glossary, repo map, issues; also runnable directly
 - `skills/diagnosing-bugs` — red loop → minimise → hypothesise → instrument → fix, used by `/bugfix`
-- `skills/handoff` — run state to the ticket when context gets heavy or a run stops
 - `skills/improve-codebase-architecture` — deepening opportunities; run weekly by retro, or directly for an ad-hoc survey
 - `skills/prototype` — throwaway UI variations / logic walkthroughs, used by `/shape`
 - `skills/model-selection` — which tier for which work, and why; the roles' triggers live in `agents/*`

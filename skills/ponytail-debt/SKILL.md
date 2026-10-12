@@ -1,9 +1,6 @@
 ---
 name: ponytail-debt
-description: >
-  List every `shortcut:` comment (and older `ponytail:` ones) as a debt ledger. One-shot report,
-  changes nothing. Use for "ponytail debt", "what did ponytail defer", "list the
-  shortcuts", /ponytail-debt.
+description: "heinzelwerk copy: ledger of `shortcut:` comments, read-only. Use inside /heinzelwerk:retro."
 ---
 
 Every deliberate ponytail shortcut is marked with a `shortcut:` comment naming
@@ -17,7 +14,7 @@ output:
 
 `grep -rnE --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build '(#|//|/[*]) ?(shortcut|ponytail):' .`  (add other comment prefixes if your stack uses them)
 
-If the user names their own marker word (`/ponytail-debt TODO`), grep for that word instead.
+If the user names their own marker word, grep for that word instead.
 
 Each hit is one ledger row. The comment prefix keeps prose that merely mentions
 the convention out of the ledger. Skip hits that are not a deferral, like a note
@@ -40,6 +37,4 @@ End with `<N> markers, <M> with no trigger.` Nothing found: `No shortcut debt. C
 
 ## Boundaries
 
-Reads and reports only, changes nothing. To persist it, ask and it writes the
-ledger to a file (e.g. `PONYTAIL-DEBT.md`). One-shot. "stop ponytail-debt" or
-"normal mode" to revert.
+Reads and reports only, changes nothing; retro copies the summary into the retro record.

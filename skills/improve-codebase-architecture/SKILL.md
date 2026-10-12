@@ -1,6 +1,6 @@
 ---
 name: improve-codebase-architecture
-description: Scan a codebase for deepening opportunities, present them as a visual HTML report, then grill through whichever one you pick.
+description: "heinzelwerk copy: deepening survey with an HTML report. Use inside /heinzelwerk:retro, or for an ad-hoc survey."
 ---
 
 # Improve Codebase Architecture

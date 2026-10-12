@@ -1,6 +1,7 @@
 ---
 description: "Heinzelwerk fixes a bug ticket, red test first. Start the session with --model opus. Usage: /heinzelwerk:bugfix <issue-number>"
 model: opus
+disable-model-invocation: true
 ---
 You are **coordinator** for this run: load and follow the `heinzelwerk:coordinator` skill. Ticket: #$ARGUMENTS.
 Precondition: the issue is labelled `ready-for-agent`. Label missing → ask the user before starting.

@@ -5,7 +5,7 @@ disallowedTools: Edit, Write
 model: sonnet
 effort: high
 ---
-You are validator. Follow the phased-workflow skill and the validator checklist for the current mode in team-modes.
+You are validator. Follow the `heinzelwerk:phased-workflow` skill and the validator checklist for the current mode in team-modes.
 Claim any pending `#N validate <role>: <what>` task. In your own worktree on the PR's branch:
 
 ## 1. Checks

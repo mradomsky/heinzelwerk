@@ -5,7 +5,8 @@ Independent review with `prompts/review-plugin.md` (Opus, read-only) at v0.19.0.
 Status:
 - Applied in the review-blockers PR (v0.20.0): 1.1, 1.5, 2.1, 2.4 (policy and script from `origin/main`), 3.6. The same PR also adds worktree cleanup.
 - Decided and applied (v0.22.0): 1.2 → runs start from the repo's parent folder (README, coordinator check); 1.3 → setup always writes CLAUDE.md; 4.1 → vendored ponytail and caveman removed (rules stay inlined), which also settles 5.1 for ponytail and 5.2.
-- Planned: 2.x and 3.x rest in a gaps PR; 4.2–4.4, 5.1 (mattpocock description marks), 5.3, 5.4 in a token and licensing PR.
+- Applied in the gaps PR (v0.23.0): 2.2, 2.3, 2.5, 2.6, 2.7, 3.1–3.5, 3.7.
+- Planned: 4.2–4.4, 5.1 (mattpocock description marks), 5.3, 5.4 in a token and licensing PR.
 - Live check: in the #179 run the team config's `members` later held only `team-lead`. Teammates were either removed or are not listed, which bears on 1.7 and on team-modes **Messaging**.
 
 ## 1. Will it run?

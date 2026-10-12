@@ -4,7 +4,7 @@ description: Compact the current conversation into a handoff document for anothe
 user-invocable: false
 ---
 
-_(heinzelwerk: model-invocable so coordinator can call it. In a team run, post the document as a comment on the ticket starting with `## Heinzelwerk run state` instead of the temp directory, and include run state: tasks by status, owners, open proposals, pending escalations, infra applies.)_
+_(heinzelwerk: model-invocable so coordinator can call it. In a team run, post the document as a comment on the ticket starting with `## Heinzelwerk run state` instead of the temp directory, and include run state: tasks by status, owners, branch and worktree per task, open proposals, pending escalations, infra applies.)_
 
 Write a handoff document summarising the current conversation so a fresh agent can continue the work. Save to the temporary directory of the user's OS (`$TMPDIR`, else `/tmp`; `%TEMP%` on Windows) - not the current workspace.
 

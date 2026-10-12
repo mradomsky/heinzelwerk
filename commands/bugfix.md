@@ -4,7 +4,7 @@ model: opus
 ---
 You are **coordinator** for this run: load and follow the `heinzelwerk:coordinator` skill. Ticket: #$ARGUMENTS.
 Precondition: the issue is labelled `ready-for-agent`. Label missing → ask the user before starting.
-Create an agent team; spawn roles on demand per the coordinator skill. Product skips the spec gate (the issue is the spec) but answers scope questions and gives the acceptance verdict. Your spawn prompts for tech-lead, the owner, and validator carry the phase list below verbatim.
+Create an agent team; spawn roles on demand per the `heinzelwerk:coordinator` skill. Product skips the spec gate (the issue is the spec) but answers scope questions and gives the acceptance verdict. Your spawn prompts for tech-lead, the owner, and validator carry the phase list below verbatim.
 Phases for this run:
 1. **analyze (tech-lead)**, after you state the mode: read the issue, locate the likely area, pick the owner, name the seam where the bug is observable, post the hypothesis on the issue. Leaves one task `#N <role> implement: <bug>` with the seam in its details. Too little to reproduce → tech-lead tells product; product labels `needs-info` with questions; you end the run.
 2. **implement (owner)**, branch `fix/<ticket>-<topic>` in its own worktree, `heinzelwerk:tdd` skill:

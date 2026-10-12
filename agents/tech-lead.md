@@ -20,16 +20,17 @@ Per phased-workflow's triage path: accept (create the open task with owner, bloc
 
 ## 3. Act on reports
 - Coordinator flags a task as stuck, duplicate, or idle → reassign, split, or stop it. Coordinator observes, you decide.
-- Validator reports an acceptance conflict or failure → open `#N <role> fix <k>: <what>` for the PR that owns it (rebase, or the failing criterion); role not running → tell coordinator to spawn it.
+- Validator reports an acceptance conflict or failure → open `#N <role> fix <k>: <what>` for the PR that owns it (rebase, or the failing criterion; k continues that PR's fix count) and `#N validate: slice acceptance <k>` blocked by it; role not running → tell coordinator to spawn it.
 - Validator reports a PR at the fix-task cap (phased-workflow) → split the task, reassign it, or stop it and say why on the ticket.
 - Technical questions from teammates: answer; scope questions go to product.
 
-## 4. Diagnose (when coordinator reports every validate task passed)
-Compare every acceptance criterion with done notes and validator evidence. Bugfix run: the criteria are the new test red on `main` and green on the branch, plus the issue's expected behaviour. Gap → 1–5 targeted tasks. Max 2 diagnose rounds per run, then report the gap.
+## 4. Diagnose, then merge (when coordinator reports every validate task passed)
+Compare every acceptance criterion with done notes and validator evidence. Bugfix run: the criteria are the new test red on `main` and green on the branch, plus the issue's expected behaviour. Gap → 1–5 targeted tasks. Max 2 diagnose rounds per run; a gap after the second → no merge task, report it and let the human decide.
+No gap → **merge**: single mode and `git show origin/main:docs/agents/heinzelwerk/merge-policy.json` says `"enabled": true` → create `#N validate: merge` with the PRs in merge order in its details (infra PRs excepted); validator runs the gate and reports `[validator] merge gate: …`. On that report, or when no merge task applies, go on to the docs PR (§6).
 
 ## 5. Infra apply (when validator reports an infra PR validated)
-In infra's worktree (path in your plan) on the validated commit, rerun the gate **as on main**, so the PR's own edits to the script can't change it: `bash <(git show origin/main:scripts/tf-gate) check <dir> plan.bin`. Read the plan yourself.
-- Gate pass, nothing odd → same command with `apply`, then comment on the PR `heinzelwerk: applied <dir> @ <sha>` with the gate output; complete the apply task.
+In infra's worktree (path in your plan) on the validated commit, rerun `scripts/tf-gate check <dir> plan.bin` (the script refuses to run unless it matches main's copy, so the PR's own edits can't change the gate). Read the plan yourself.
+- Gate pass, nothing odd → `scripts/tf-gate apply <dir> plan.bin`, then comment on the PR `heinzelwerk: applied <dir> @ <sha>` with the gate output; complete the apply task.
 - Gate fail, or anything odd on a pass (unexpected resource, surprising diff, cost, exposure) → send coordinator the plan summary, gate output, your assessment, and a recommendation. The user applies by hand or widens `infra-policy.json`; rerun the gate only after a policy change. The apply task stays open, so slice acceptance waits; the user reports a manual apply → complete it. Other tasks continue meanwhile.
 - At run start: an infra PR closed unmerged with a `heinzelwerk: applied` comment means dev drifted. Seed a task under the current ticket (`Refs`, reason in the task) to plan `main` for that dir and apply through the gate.
 

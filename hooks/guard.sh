@@ -13,37 +13,54 @@ else
   [ -n "$m" ] && { raw=$(sed -E 's/^"command" *: *"//; s/"$//; s/\\"/"/g; s/\\n/\n/g; s/\\t/ /g; s#\\/#/#g; s/\\\\/\\/g' <<<"$m"); read_ok=yes; }
 fi
 [ $read_ok = yes ] || ! grep -q '"command"' <<<"$input" || block "the guard could not read the command (no jq or node, and the fallback parser failed)"
-# Commit messages (-m "...", heredoc bodies) are text, not flags: dropped for the commit --no-verify check only.
-msgfree=$(awk 'h { if ($0 ~ "^[ \t]*" t "[ \t]*$") h=0; next }
-  { print; if (match($0, /<<-?[ ]*["'\'']?[A-Za-z_]+/)) { t=substr($0, RSTART, RLENGTH); sub(/<<-?[ ]*["'\'']?/, "", t); h=1 } }' <<<"$raw" \
-  | sed -E "s/(-m|--message)(=| +)\"([^\"\\\\]|\\\\.)*\"//g; s/(-m|--message)(=| +)'[^']*'//g")
-# One line per command (split on newline && || ; |), whitespace collapsed, quotes and backticks stripped so quoting
-# cannot hide an argument and a rule never matches across two commands.
-segments() { printf '%s\n' "$1" | tr '\n' ';' | tr -s '[:space:]' ' ' | tr -d "\"'\`" | sed -E 's/&&|[|][|]|[;|]/\n/g'; echo; }
-git='git( +(-[cC] +[^ ]+|--[a-z-]+(=[^ ]+)?))* +'
+# Heredoc bodies are text (commit messages, PR bodies, comments), never commands: dropped before any rule runs.
+# Quoted -m/-b/-t "..." arguments are text too, dropped for the flag checks in the second loop.
+text=$(awk 'h { if ($0 ~ "^[ \t]*" t "[ \t]*$") h=0; next }
+  { print; if (match($0, /<<-?[ ]*["'\'']?[A-Za-z_]+/)) { t=substr($0, RSTART, RLENGTH); sub(/<<-?[ ]*["'\'']?/, "", t); h=1 } }' <<<"$raw")
+msgfree=$(sed -E "s/(-m|--message|-b|--body|-t|--title)(=| +)\"([^\"\\\\]|\\\\.)*\"//g; s/(-m|--message|-b|--body|-t|--title)(=| +)'[^']*'//g" <<<"$text")
+# One line per command: continuation lines joined, split on newline && || ; |, whitespace collapsed, quotes, backticks,
+# backslashes, parentheses and $ stripped so quoting or expansion cannot hide an argument.
+segments() {
+  printf '%s\n' "$1" | awk '{ if (sub(/\\$/, "")) printf "%s ", $0; else print }' | tr '\n' ';' | tr -s '[:space:]' ' ' \
+    | tr -d "\"'\`\\\\()\$" | sed -E 's/&&|[|][|]|[;|]/\n/g'; echo
+}
+# Wrappers in front of the command (env assignments, env/sudo/eval, bash -c, timeout) are dropped so every rule anchors
+# on the command itself: text that merely mentions a command (grep, echo, a comment body) never matches.
+wrap='^ *((env|sudo|time|nohup|command|exec|eval|timeout +[0-9]+[smh]?|[A-Za-z_][A-Za-z0-9_]*=[^ ]*|(bash|sh|zsh|dash) +-[a-z]*c) +)*'
+git='^git( +(-[cC] +[^ ]+|--[a-z-]+(=[^ ]+)?))* +'
 ref='[ :/+](main|master)( |$)'
-while IFS= read -r cmd; do
+while IFS= read -r seg; do
+  cmd=$(sed -E "s/$wrap//" <<<"$seg")
   grep -qE "${git}push\b.*${ref}" <<<"$cmd" && block "agents never push main"
   grep -qE "${git}push\b.*--(mirror|all)\b" <<<"$cmd" && block "agents never push --all or --mirror"
-  grep -qE "${git}(checkout|switch)( +-[bB])? +(main|master)( |$)" <<<"$cmd" && block "agents never work on main; use a worktree on a task branch"
+  grep -qE "${git}(checkout|switch)( +(-[bBcC]|--create|--force-create))? +(main|master)( |$)" <<<"$cmd" \
+    && ! grep -qE "${git}checkout +(main|master) +--( |$)" <<<"$cmd" && block "agents never work on main; use a worktree on a task branch"
   grep -qE "${git}worktree +add\b.* (main|master)( |$)" <<<"$cmd" && block "a worktree on main is still main; add it on a task branch"
-  grep -qE 'gh +pr +merge\b|pulls/[0-9]+/merge\b' <<<"$cmd" && block "agents never merge; humans merge"
-  grep -qE '(^|[(]| )(terraform|tofu)( +-chdir=[^ ]+)? +(apply|destroy|import|state +(rm|mv|push|replace-provider)|force-unlock|workspace +delete)\b' <<<"$cmd" \
+  grep -qE "${git}branch\b.*( -[a-zA-Z]*[fmMdD][a-zA-Z]*| --(force|move|delete|copy))\b.* (main|master)( |$)" <<<"$cmd" \
+    && block "local main is a read-only reference; never move, rename, or delete it"
+  grep -qE "${git}update-ref\b.*refs/heads/(main|master)( |$)" <<<"$cmd" && block "local main is a read-only reference; never move it"
+  grep -qE '^gh +pr +merge\b' <<<"$cmd" && block "merge only through scripts/merge-gate"
+  grep -qE '^gh +api\b.*(pulls/[0-9]+/merge\b|mergePullRequest|enablePullRequestAutoMerge)' <<<"$cmd" && block "merge only through scripts/merge-gate"
+  grep -qE '^(terraform|tofu)( +-chdir=[^ ]+)? +(apply|destroy|import|state +(rm|mv|push|replace-provider)|force-unlock|workspace +delete)\b' <<<"$cmd" \
     && block "raw terraform apply/destroy/import/state changes are not allowed; use scripts/tf-gate apply <dir> <plan>"
-  grep -qE -- '-auto-approve' <<<"$cmd" && block "-auto-approve is not allowed"
   grep -qE "${git}push\b.*( -f\b|--force( |$))" <<<"$cmd" && block "use --force-with-lease, never plain --force"
   grep -qE "${git}push\b.*--no-verify\b" <<<"$cmd" && block "--no-verify skips the secret scan"
+  grep -qE '(^|[ ;&|])(HUSKY|LEFTHOOK|SKIP|PRE_COMMIT_ALLOW_NO_CONFIG|GIT_CONFIG_PARAMETERS)=' <<<"$seg" && grep -qE "${git}commit\b" <<<"$cmd" \
+    && block "hook-skipping variables disable the secret scan"
   # git add: judge every argument on its own, so one safe file cannot whitelist a secret beside it.
-  for arg in $(grep -oE "${git}add\b.*" <<<"$cmd" | sed -E "s/^${git}add//"); do
+  for arg in $(grep -oE "${git}(add|stage|update-index)\b.*" <<<"$cmd" | sed -E "s/^${git}(add|stage|update-index)//"); do
     case $arg in
       -*) ;;
       *.env.example|*.env.sample|*.env.template) ;;
-      *.env|*.env.*|*.tfstate|*.tfstate.*|*.pem|*.key|*id_rsa*|*id_ed25519*|*credentials.json)
-        block "looks like a secret or state file ($arg); never commit it" ;;
+      *.env|*.env.*|*.tfstate|*.tfstate.*|*.tfplan|*.tfplan.*|*plan.bin|*.pem|*.key|*id_rsa*|*id_ed25519*|*credentials.json)
+        block "looks like a secret, state, or plan file ($arg); never commit it" ;;
     esac
   done
-done < <(segments "$raw")
-while IFS= read -r cmd; do
-  grep -qE "${git}commit\b.*( -n\b|--no-verify\b)" <<<"$cmd" && block "--no-verify skips the secret scan"
+done < <(segments "$text")
+while IFS= read -r seg; do
+  cmd=$(sed -E "s/$wrap//" <<<"$seg")
+  grep -qE "${git}commit\b.*( -[a-zA-Z]*n[a-zA-Z]*\b|--no-verify\b)" <<<"$cmd" && block "--no-verify skips the secret scan"
+  grep -qiE 'core\.hookspath' <<<"$seg" && block "core.hooksPath moves the secret-scan hook; leave it"
+  grep -qE -- '-auto-approve' <<<"$seg" && block "-auto-approve is not allowed"
 done < <(segments "$msgfree")
 exit 0

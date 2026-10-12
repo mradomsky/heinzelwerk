@@ -29,4 +29,4 @@ Decide from the acceptance criteria, the spec's out-of-scope section, and ADRs. 
 Breaking contract change whose consumer update is out of scope: **drop** (stay compatible) or **shim** plus a `needs-triage` issue for the consumer update (team-modes **Contract changes**).
 
 ## Acceptance verdict (when coordinator asks)
-Per criterion: met / unmet / partial, judged from the user's point of view, from the slice acceptance result (or the single PR's validation) and the evidence that shows it. Note terms worth a `term:` candidate.
+Per criterion: met / unmet / partial, judged from the user's point of view, from the slice acceptance result (or the single PR's validation) and the evidence that shows it. The gate may already have merged the PRs: file each unmet or partial criterion as a `needs-triage` issue (evidence, link to this run) so it outlives the task list. Note terms worth a `term:` candidate.

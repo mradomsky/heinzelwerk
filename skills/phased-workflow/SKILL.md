@@ -8,7 +8,7 @@ user-invocable: false
 ## Ticket vs task
 - **Ticket = GitHub issue.** Durable. Carries context across runs. One ticket spans all phases.
 - A team run takes one **slice ticket**: a tracer bullet from `heinzelwerk:to-tickets`, labelled `ready-for-agent`, usually a sub-issue of a spec issue. Spec issues are never run directly.
-- **Task = agent-team task.** Disposable, gone after the run. Title: `#<ticket> <role> <kind>: <what>`, e.g. `#19 backend implement: anomaly webhook`, `#19 validate backend: anomaly webhook`, `#19 frontend fix 1: anomaly webhook`, `#19 validate: slice acceptance`, `#19 tech-lead analyze: locate bug`. The role in the title is the owner; nothing else in the task list says who owns it.
+- **Task = agent-team task.** Disposable, gone after the run. Title: `#<ticket> <role> <kind>: <what>`, e.g. `#19 backend implement: anomaly webhook`, `#19 validate backend: anomaly webhook`, `#19 frontend fix 1: anomaly webhook`, `#19 validate: slice acceptance`, `#19 validate: merge`, `#19 tech-lead analyze: locate bug`. The role in the title is the owner; nothing else in the task list says who owns it.
 - Where tickets live, how refs, branches, worktrees, and PRs look → **team-modes skill**. It differs between single-repo and workspace mode.
 - Anything the next run must know goes on GitHub, never only in a task:
   - decisions, rejected approaches, blockers → `gh issue comment N`
@@ -28,9 +28,9 @@ A task is not done until its handoff exists. Phases chain by handoff, not by som
 ## Task lifecycle
 The task list has three states: pending, in progress, completed. A task's title never changes after creation; a new state means a new task.
 
-- **Open** = pending with a role in the title. Tech-lead's seeded tasks start here, blockers set as task dependencies. The owner claims it (in progress). **Claim only tasks whose title names your role** (validator: `validate` tasks), never the next free task.
-- **Implement task done** = PR open, done note written into the task's details (`TaskUpdate`), task completed, and `#N validate <role>: <what>` created (pending). The implementer completes its own implement task; the validate task is the quality gate.
-- **Validate task**: validator claims it, posts the verdict, completes it. Fail → create `#N <role> fix <k>: <what>` (pending; k counts rounds) with the repro in its details, and message the owner. The owner fixes on the same branch, writes its done note, completes the fix task, creates the next validate task. **Fix-task cap: 3 per PR.** A fail after the third → validator messages tech-lead instead: split, reassign, or stop.
+- **Open** = pending with a role in the title. Tech-lead's seeded tasks start here, blockers set as task dependencies. The owner claims it (in progress). **Claim only tasks whose title names your role**, never the next free task. Every `validate` task is validator's, whatever role its title also names.
+- **Implement task done** = PR open, done note written into the task's details (`TaskUpdate`), `#N validate <role>: <what>` created (pending), then the implement task completed by the implementer itself. The next task exists before yours is completed: a role with no open task gets released, and validator may start slice acceptance. The validate task is the quality gate.
+- **Validate task**: validator claims it, posts the verdict, completes it. Fail → create `#N <role> fix <k>: <what>` (pending; k counts rounds) with the repro in its details, and message the owner. The owner fixes on the same branch, writes its done note, creates the next validate task, then completes the fix task. **Fix-task cap: 3 per PR.** A fail after the third → validator messages tech-lead instead: split, reassign, or stop.
 - **Proposal** = `[proposed] #N <what>` (pending; owner hint and the fields below in its details). Only tech-lead acts on it: accept = create the open task (owner role in the title, blockers as dependencies, seams in details) and delete the proposal; reject = delete it with a one-line reason to the proposer. Nobody claims a proposal.
 - **Abandoned** (cannot finish, needs a human): done note says `abandoned: <why>`, task completed, one-line reason on the ticket, tech-lead told.
 - "Under review" elsewhere means a pending or in-progress validate task exists for the PR; "needs work" means a fix task exists.
@@ -40,7 +40,7 @@ The task list has three states: pending, in progress, completed. A task's title 
 - **Smallest complete change**: reuse what the codebase has, then the standard library, then an installed dependency. No abstraction, option, config, or "for later" code nobody asked for. Finish every part the change touches: callers, tests, fixtures. Keep validation at trust boundaries, error handling, security, and accessibility. A shortcut with a known limit gets a code comment `shortcut: <limit>, <when to upgrade>`.
 - **Interfaces**: deep modules, small interfaces.
 - **Subagents**: Opus when the root cause is still unknown after two failed passes, or when you change shared code whose callers you can't see from the edit site; Haiku for call-site searches and mechanical batches. Your role prompt may add triggers. State both in `escalations:`.
-- **Done**: branch, worktree, commits, PR body per team-modes. PR open → done note into the task's details, complete the task, create `#N validate <role>: <what>`, message coordinator `[<repo>@<branch>] validate task created: <PR>`. A fix task from validator → same branch, same loop.
+- **Done**: branch, worktree, commits, PR body per team-modes. PR open → done note into the task's details, create `#N validate <role>: <what>`, complete the task, message coordinator `[<repo>@<branch>] validate task created: <PR>`. A fix task from validator → same branch, same loop.
 
 ## Discovering work (branching)
 Found something while working? Don't silently fix it, don't drop it. **Propose** it:

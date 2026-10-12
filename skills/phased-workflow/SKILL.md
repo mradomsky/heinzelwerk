@@ -8,7 +8,7 @@ user-invocable: false
 ## Ticket vs task
 - **Ticket = GitHub issue.** Durable. Carries context across runs. One ticket spans all phases.
 - A team run takes one **slice ticket**: a tracer bullet from `heinzelwerk:to-tickets`, labelled `ready-for-agent`, usually a sub-issue of a spec issue. Spec issues are never run directly.
-- **Task = agent-team task.** Disposable, gone after the run. Title: `#<ticket> <role> <kind>: <what>`, e.g. `#19 backend implement: anomaly webhook`, `#19 validate backend: anomaly webhook`, `#19 frontend fix 1: anomaly webhook`, `#19 validate: slice acceptance`, `#19 lead analyze: locate bug`. The role in the title is the owner; nothing else in the task list says who owns it.
+- **Task = agent-team task.** Disposable, gone after the run. Title: `#<ticket> <role> <kind>: <what>`, e.g. `#19 backend implement: anomaly webhook`, `#19 validate backend: anomaly webhook`, `#19 frontend fix 1: anomaly webhook`, `#19 validate: slice acceptance`, `#19 tech-lead analyze: locate bug`. The role in the title is the owner; nothing else in the task list says who owns it.
 - Where tickets live, how refs, branches, worktrees, and PRs look → **team-modes skill**. It differs between single-repo and workspace mode.
 - Anything the next run must know goes on GitHub, never only in a task:
   - decisions, rejected approaches, blockers → `gh issue comment N`
@@ -28,11 +28,11 @@ A task is not done until its handoff exists. Phases chain by handoff, not by som
 ## Task lifecycle
 The task list has three states: pending, in progress, completed. A task's title never changes after creation; a new state means a new task.
 
-- **Open** = pending with a role in the title. Lead's seeded tasks start here, blockers set as task dependencies. The owner claims it (in progress).
+- **Open** = pending with a role in the title. Tech-lead's seeded tasks start here, blockers set as task dependencies. The owner claims it (in progress).
 - **Implement task done** = PR open, done note written into the task's details (`TaskUpdate`), task completed, and `#N validate <role>: <what>` created (pending). The implementer completes its own implement task; the validate task is the quality gate.
-- **Validate task**: validator claims it, posts the verdict, completes it. Fail → create `#N <role> fix <k>: <what>` (pending; k counts rounds) with the repro in its details, and message the owner. The owner fixes on the same branch, writes its done note, completes the fix task, creates the next validate task. Max 3 fix tasks per PR, then validator messages lead: split, reassign, or stop.
-- **Proposal** = `[proposed] #N <what>` (pending; owner hint and the fields below in its details). Only lead acts on it: accept = create the open task (owner role in the title, blockers as dependencies, seams in details) and delete the proposal; reject = delete it with a one-line reason to the proposer. Nobody claims a proposal.
-- **Abandoned** (cannot finish, needs a human): done note says `abandoned: <why>`, task completed, one-line reason on the ticket, lead told.
+- **Validate task**: validator claims it, posts the verdict, completes it. Fail → create `#N <role> fix <k>: <what>` (pending; k counts rounds) with the repro in its details, and message the owner. The owner fixes on the same branch, writes its done note, completes the fix task, creates the next validate task. Max 3 fix tasks per PR, then validator messages tech-lead: split, reassign, or stop.
+- **Proposal** = `[proposed] #N <what>` (pending; owner hint and the fields below in its details). Only tech-lead acts on it: accept = create the open task (owner role in the title, blockers as dependencies, seams in details) and delete the proposal; reject = delete it with a one-line reason to the proposer. Nobody claims a proposal.
+- **Abandoned** (cannot finish, needs a human): done note says `abandoned: <why>`, task completed, one-line reason on the ticket, tech-lead told.
 - "Under review" elsewhere means a pending or in-progress validate task exists for the PR; "needs work" means a fix task exists.
 
 ## Implementers (backend, frontend, infra)
@@ -52,22 +52,22 @@ why: <what you saw, file:line or failing output>
 done when: <concrete, checkable>
 handoff: <what task/verdict you will leave behind>
 blocks / blocked-by: <task ids>
-owner hint: product | lead | backend | frontend | infra | validator
+owner hint: product | tech-lead | backend | frontend | infra | validator
 scope guess: in | out | unsure — <one line why>
 model: default | opus: <trigger> | haiku: <what>   (optional; triggers are in your role prompt)
 ```
-3. Message lead: `[repo@branch] proposed: <title>`. Continue your own task; never switch mid-way because of a discovery.
+3. Message tech-lead: `[repo@branch] proposed: <title>`. Continue your own task; never switch mid-way because of a discovery.
 
 **Triage path** (who decides what):
 ```
-proposer → lead
+proposer → tech-lead
   technical + clearly in scope → accept: open task, owner, blockers
   scope unclear → product decides:
-      in scope → lead accepts
+      in scope → tech-lead accepts
       out of scope → product files a `needs-triage` issue, proposal deleted
       needs the user → product → coordinator → user
   duplicate → merged | not worth it → deleted, one-line reason to the proposer
-accepted for a role not running → lead tells coordinator → coordinator spawns it
+accepted for a role not running → tech-lead tells coordinator → coordinator spawns it
 ```
 The proposer's `scope guess` is input, never the decision. Scope is product's call.
 
@@ -82,7 +82,7 @@ Write it into the task's details before completing the task; the `did:` and `evi
 did: <what changed, files>
 evidence: <command + result summary, or PR link>
 handoff: <task id / verdict created>
-left: <anything not done, discoveries not filed; lead collects these into the technical report>
+left: <anything not done, discoveries not filed; tech-lead collects these into the technical report>
 term: <optional: domain concept that is missing from or contradicts GLOSSARY.md>
 adr: <optional: decision you made that is hard to reverse, surprising, and a real trade-off>
 learning: <optional: one line worth remembering next run: warning | discovery | codebase>
@@ -92,7 +92,7 @@ risk: <optional: area that deserves an Opus review but isn't in team.md's risk a
 
 ## Docs
 Before starting, follow the `## Agent skills (heinzelwerk)` pointers in CLAUDE.md (or AGENTS.md): domain docs, team rules, learnings. Name things with `GLOSSARY.md` vocabulary; flag ADR conflicts explicitly.
-`GLOSSARY.md`, `docs/adr/`, and learnings change only through lead's docs PR at the end of a run. Your job is to leave candidates in your done note (`term:`, `adr:`, `learning:`, `risk:`).
+`GLOSSARY.md`, `docs/adr/`, and learnings change only through tech-lead's docs PR at the end of a run. Your job is to leave candidates in your done note (`term:`, `adr:`, `learning:`, `risk:`).
 
 ## Token discipline
 Every token you read is paid again on every later turn. Keep context small:

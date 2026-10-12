@@ -39,7 +39,7 @@ Summarise what's present and what's missing. Then take the sections in order: on
 - Protected resource types: start from [infra-policy.json](infra-policy.json), add project-specific ones (state backend, DNS, data stores, anything listed as a risk area).
 - Allowed deletes: recommend none to start.
 - Credentials: tell the user the real boundary is credential scope — agents get credentials that can write only the auto-apply environments and read (plan) elsewhere; prod write credentials never exist in the agent environment. Ask them to confirm this is set up; record the answer in `team.md`.
-- Post-merge apply for higher environments: CI job if they have one (recommend), else lead applies through the gate in the next run where policy allows.
+- Post-merge apply for higher environments: CI job if they have one (recommend), else tech-lead applies through the gate in the next run where policy allows.
 
 **C3 — Frontend design and preview** (only if a UI exists). Propose:
 - `docs/agents/heinzelwerk/design.md` from [design.md](design.md): extract tokens, components, and style rules from the code, theme files, and existing style docs; ask the user for rules only they know.

@@ -1,7 +1,7 @@
 {
   "name": "heinzelwerk",
   "description": "Heinzelwerk: an autonomous, spec-driven dev team for Claude Code agent teams \u2014 coordinator, product, lead, backend, frontend, infra, validator \u2014 plus skills to shape work, set up agentic docs, and run weekly retros.",
-  "version": "0.18.0",
+  "version": "0.18.1",
   "repository": "https://github.com/mradomsky/heinzelwerk",
   "license": "MIT"
 }

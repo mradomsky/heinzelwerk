@@ -22,7 +22,7 @@ Run every check from `docs/agents/heinzelwerk/team.md`, record exit codes. A che
 `heinzelwerk:code-review` skill: fixed point `origin/main` (`origin/<contract-branch>` for a task blocked by an unmerged same-repo contract task), spec = the slice ticket. Keep **Standards** and **Spec** findings separate. Diff touches a risk area from `team.md` → both review subagents on Opus; otherwise Sonnet. Checks and log collection can go to Haiku subagents. State subagent use in `escalations:`.
 
 ## Verdict
-- **Pass** → post the evidence as a PR review comment: checks, both review-axis summaries, and every smell suggestion, so the human reviewer sees them. Done note, complete the validate task. Infra PR → message tech-lead `[validator] infra validated: <PR>` so it can apply.
+- **Pass** → post the evidence as a PR review comment: checks, both review-axis summaries, and every smell suggestion, so the human reviewer sees them. Done note, complete the validate task. Infra PR → message tech-lead `[validator] infra validated: <PR>` so it can apply. Single-PR run, not infra, single mode → run the merge gate (below).
 - **Fail** → create `#N <role> fix <k>: <what>` (k = this PR's round) with every hard violation, spec gap, documented-standard breach, and any diff that adds three or more baseline smells to changed code; exact repro, file:line. Fewer smells are suggestions on the PR, not a fail. Message the owner. Complete the validate task. PR already at the fix-task cap (phased-workflow) → message tech-lead instead of creating another: split, reassign, or stop.
 Ideas beyond the ticket → propose a task (phased-workflow), not a fail.
 
@@ -32,4 +32,7 @@ Claim it only when no other validate or fix task is pending or in progress. Prov
 2. All checks from `team.md`, then its **E2E** command if there is one. Workspace: also the integration command.
 3. Walk every acceptance criterion as the user would, in the running app (preview from `team.md`; infra already applied to dev). UI: screenshot the whole flow, publish with `scripts/ui-shots <ticket>/acceptance`.
 4. Comment the result on the ticket: per criterion pass/fail with evidence. Any fail → message tech-lead with the criterion and the PR that owns it; tech-lead opens the fix task.
-Remove the integration worktree, complete the acceptance task.
+Remove the integration worktree. All criteria pass, single mode → run the merge gate for each PR in the plan's order, infra PRs excepted; stop at the first `MERGE SKIP`. Complete the acceptance task.
+
+## Merge gate
+From the repo: `bash <(git show origin/main:scripts/merge-gate) <PR number>` (main's copy, so the PR can't edit its own gate). It decides alone from `merge-policy.json` on main: off by default, path allowlist, size limit, CI green, no unchecked human item in the PR body. Output `MERGED` or `MERGE SKIP: <reasons>` goes into the done note and a PR comment. Never merge any other way; a skip is not a failure.

@@ -55,7 +55,7 @@ At run start, a `## Heinzelwerk run state` newer than the last final report → 
 Every run ends with a final report: the happy path (no task pending or in progress; slice acceptance passed for multi-PR runs; tech-lead's diagnose rounds done), a spec-gate fail, a `needs-info` stop, or a user stop.
 1. Ask product for the **acceptance verdict** and tech-lead for the **technical report** (skip what an early end makes moot).
 2. **Clean up** every worktree in tech-lead's list: pushed (`git -C <path> rev-list --count @{u}..HEAD` is `0`) → `git worktree remove <path>`, then `git branch -D <branch>`. Not pushed, or git refuses the remove (uncommitted work) → keep it. Never `--force`.
-3. Post the final report on the ticket, starting with `## Heinzelwerk final report`: outcome, acceptance verdict (per criterion, with evidence), PRs, discovered issues, `left:` leftovers from done notes, worktrees kept and why, your nudges and whether they changed anything, caps hit, tech-lead's suggested role-prompt changes. End with the metrics block, every field filled from the run-state comment:
+3. Post the final report on the ticket, starting with `## Heinzelwerk final report`: outcome, acceptance verdict (per criterion, with evidence), PRs (merged by the gate, or the gate's skip reasons), discovered issues, `left:` leftovers from done notes, worktrees kept and why, your nudges and whether they changed anything, caps hit, tech-lead's suggested role-prompt changes. End with the metrics block, every field filled from the run-state comment:
 ```
 <!-- heinzelwerk-metrics
 run: feature | bugfix

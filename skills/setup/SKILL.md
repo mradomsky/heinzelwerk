@@ -65,6 +65,7 @@ Per repo, on a fresh branch from main `docs/heinzelwerk-setup`:
 - `docs/agents/heinzelwerk/team.md` from [team.md](team.md)
 - UI found: `docs/agents/heinzelwerk/design.md` (C3) and `scripts/ui-shots` copied from [scripts/ui-shots](scripts/ui-shots) (executable)
 - infra found: `docs/agents/heinzelwerk/infra-policy.json` from [infra-policy.json](infra-policy.json) with the answers from C2, and `scripts/tf-gate` copied from [scripts/tf-gate](scripts/tf-gate) (executable; needs `jq`)
+- `docs/agents/heinzelwerk/merge-policy.json` copied from [merge-policy.json](merge-policy.json) unchanged (auto-merge off; the user enables it later), and `scripts/merge-gate` from [scripts/merge-gate](scripts/merge-gate) (executable)
 - `docs/agents/heinzelwerk/repo-map.md`: from the exploration, max 120 lines, facts only
 - `GLOSSARY.md` / `docs/adr/` only if section E produced resolved content (lazy otherwise)
 

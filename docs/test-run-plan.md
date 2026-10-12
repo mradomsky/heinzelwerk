@@ -27,7 +27,7 @@ claude --plugin-dir ~/heinzelwerk --model opus --strict-mcp-config
 |---|---|---|
 | Plugin loads | `/agents` lists the roles, `/help` lists `/heinzelwerk:*` | fix layout / manifest |
 | Marketplace install | `/plugin marketplace add mradomsky/heinzelwerk`, `/plugin install heinzelwerk` | fix `marketplace.json` (`source` path) |
-| No MCP | `/mcp` is empty in the lead; spawn one teammate and ask it to list its MCP tools: none | find the right flag; else remove servers from user/project config for runs |
+| No MCP | `/mcp` is empty in the main session; spawn one teammate and ask it to list its MCP tools: none | find the right flag; else remove servers from user/project config for runs |
 | Windows hook shell | `bash --version` works from the terminal that runs `claude`; ask Claude to run `git push origin main`: blocked | install Git Bash |
 | Guard hook | ask Claude to run `git push origin main`, `terraform apply x`, `git push --force origin x` | fix `hooks.json` / `${CLAUDE_PLUGIN_ROOT}` |
 | Task chain | team of 2: one creates `#1 backend implement: test`, claims it, writes a done note into its details, completes it, creates `#1 validate backend: test`; the other claims that, reads the first task's details, completes it. Both see the same list; `TaskGet` returns the details | list not shared or details lost → rethink the `phased-workflow` lifecycle |
@@ -60,7 +60,7 @@ claude --model opus --strict-mcp-config --allowedTools "Read,Grep,Glob,WebFetch,
 1. `/heinzelwerk:shape 105` → expect the "only needs sharpening" path, label `ready-for-agent`.
 2. New session: `/heinzelwerk:feature 105`.
 3. Watch for:
-   - coordinator states mode; spawns product + lead, then **only frontend**, then validator
+   - coordinator states mode; spawns product + tech-lead, then **only frontend**, then validator
    - spec gate passes; plan comment with seams and worktree paths
    - frontend works in `../.worktrees/…`, never the main checkout; quiet test output
    - validator: checks + two-axis review; "tests unmodified" verified explicitly
@@ -71,10 +71,10 @@ claude --model opus --strict-mcp-config --allowedTools "Read,Grep,Glob,WebFetch,
 
 Same procedure. Watch for:
 - spec gate turns the `undefined → listed` rule into a Given/When/Then
-- lead orders `types.ts` + validation (backend) first, frontend tasks blocked by it
+- tech-lead orders `types.ts` + validation (backend) first, frontend tasks blocked by it
 - screenshots of landing page and admin form published via `scripts/ui-shots`
 - slice acceptance in an integration worktree: an existing festival without the field still on `/`; an unlisted one gone from `/`, its `/room/` and embed routes still working
-- discoveries go through lead as proposals, nothing silently fixed
+- discoveries go through tech-lead as proposals, nothing silently fixed
 
 ## Phase 5 — Retro (~1 h)
 

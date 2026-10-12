@@ -37,17 +37,17 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
 
 **Team** (the heinzelwerk plugin):
 
-- **Role prompts**: did a role act outside its job, miss its job, or need the same correction twice? _Use when_ the human or lead corrected one role repeatedly.
+- **Role prompts**: did a role act outside its job, miss its job, or need the same correction twice? _Use when_ the human or tech-lead corrected one role repeatedly.
 - **Task splitting**: were tasks too big (many review rounds, diagnose rounds), too small (many tasks, little per PR), or overlapping (file conflicts, duplicates)? _Use when_ review rounds or diagnose rounds are high.
-- **Discovery**: how many proposals were accepted vs rejected, and did accepted ones matter? Many rejections → proposers need a sharper bar; many escalations to product → slices too vague. Lead slow to triage → bottleneck signal. _Use when_ proposals appear in metrics.
+- **Discovery**: how many proposals were accepted vs rejected, and did accepted ones matter? Many rejections → proposers need a sharper bar; many escalations to product → slices too vague. Tech-lead slow to triage → bottleneck signal. _Use when_ proposals appear in metrics.
 - **Handoffs and phases**: did work stall between phases, or did a done note miss what the next agent needed? _Use when_ a teammate sat idle or redid work.
 - **Spec gate**: did product pass slices that later failed on spec, or block runnable ones? _Use when_ validator's Spec axis found gaps product should have caught.
 - **Validator**: did merged PRs need human fixes the validator should have caught? Classify each: mechanical → a check (environment category), judgement → a coding-standards rule. _Use when_ human edits exist on validator-passed PRs.
-- **Coordinator**: count nudges that changed what an agent did versus noise; were escalations to the user necessary, or answerable by product or lead? _Use when_ nudges or escalations appear in metrics.
+- **Coordinator**: count nudges that changed what an agent did versus noise; were escalations to the user necessary, or answerable by product or tech-lead? _Use when_ nudges or escalations appear in metrics.
 - **Model choice**: did Opus escalations find what Sonnet missed? Did Haiku subagents produce work that later failed? Did a Sonnet review let something through in an area that should be a risk area? → propose adding it to `team.md`. Judge with the `heinzelwerk:model-selection` anti-patterns. _Use when_ escalations appear in metrics or human edits cluster in one role.
 - **Acceptance**: did slice acceptance fail on things per-PR validation passed? Did you find integration issues after merge it missed? _Use when_ `acceptance` appears in metrics.
 - **UI**: did you have to fix visual or UX issues after merge? Missing design rules → propose additions to `design.md`; screenshots missing or useless → tighten the frontend step. _Use when_ human edits touch UI code.
-- **Infra**: gate fails and lead escalations: real catches or policy too strict? Any auto-apply you had to undo? Propose policy changes (`infra-policy.json`) with evidence: widen only what proved safe. Infra PRs closed unmerged that carry a `heinzelwerk: applied` comment are unreverted dev drift → `ready-for-agent` issue. _Use when_ `infra_applies` appears in metrics.
+- **Infra**: gate fails and tech-lead escalations: real catches or policy too strict? Any auto-apply you had to undo? Propose policy changes (`infra-policy.json`) with evidence: widen only what proved safe. Infra PRs closed unmerged that carry a `heinzelwerk: applied` comment are unreverted dev drift → `ready-for-agent` issue. _Use when_ `infra_applies` appears in metrics.
 - **Shortcut debt**: new `shortcut:` markers since last retro, and any with `no-trigger`. A marker whose upgrade trigger has fired → finding with a `ready-for-agent` issue. Growing ledger with no triggers firing → fine; growing `no-trigger` count → tighten the implementer prompts. _Use when_ the ledger changed.
 - **Budget caps**: were caps hit, and did hitting them help or cut off good work? _Use when_ caps appear in metrics.
 - **Docs flow**: are glossary terms, ADRs, and learnings landing, or piling up as dropped candidates? Is the learnings file near its cap with stale lines? _Use when_ docs PRs were edited heavily or skipped.

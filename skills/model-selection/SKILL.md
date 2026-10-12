@@ -54,6 +54,6 @@ A teammate's model and effort are fixed in its agent definition. **Escalate or d
 
 **Haiku effort scales with the subtask**: low for searches and pure mechanical edits; medium for batches that need local judgement (migrating call sites with small variations); high for a summarising or classifying pass whose output feeds a decision.
 
-**Who decides**: lead may preset an escalation in the task (`model:` field). The owner escalates on its own when a trigger in its prompt fires. Either way, state the choice: `escalations:` line in the done note.
+**Who decides**: tech-lead may preset an escalation in the task (`model:` field). The owner escalates on its own when a trigger in its prompt fires. Either way, state the choice: `escalations:` line in the done note.
 
 **Accepted trade-off**: on diffs outside the risk areas in `docs/agents/heinzelwerk/team.md`, Sonnet reviews what Sonnet built, the generate-and-grade anti-pattern above; the human's PR review is the last line of defence there. Risk areas get Opus review, and retro adds areas where Sonnet let something through.

@@ -2,7 +2,7 @@
 
 _Named after the Heinzelmännchen of Cologne, the house gnomes who finished the town's work overnight while everyone slept._
 
-Claude Code plugin: a lean autonomous dev team (coordinator / product / lead / backend / frontend / infra / validator) on top of Claude Code agent teams, plus the skills to shape work before the team touches it.
+Claude Code plugin: a lean autonomous dev team (coordinator / product / tech-lead / backend / frontend / infra / validator) on top of Claude Code agent teams, plus the skills to shape work before the team touches it.
 
 ## Principles
 
@@ -14,7 +14,7 @@ Claude Code plugin: a lean autonomous dev team (coordinator / product / lead / b
 - **Tickets are durable, tasks are disposable.** Everything the next run needs lives on GitHub.
 - **Pointers, not imports.** `CLAUDE.md` (or `AGENTS.md`) holds a short `## Agent skills (heinzelwerk)` block; agents read `docs/agents/heinzelwerk/*` when the pointer fires.
 - **Humans merge.** Agents open PRs, never merge, never push main.
-- **Infra auto-applies only through a deterministic gate.** `scripts/tf-gate` checks the saved plan against `infra-policy.json` (environment allowlist, no destroys, protected types, change limit). Lead applies on pass and escalates on fail or doubt. Credential scope is the real boundary: agents never hold prod write credentials.
+- **Infra auto-applies only through a deterministic gate.** `scripts/tf-gate` checks the saved plan against `infra-policy.json` (environment allowlist, no destroys, protected types, change limit). Tech-lead applies on pass and escalates on fail or doubt. Credential scope is the real boundary: agents never hold prod write credentials.
 
 ## Install
 
@@ -34,10 +34,10 @@ Runs are interactive: a headless `-p` session cannot spawn teammates. Keep the d
 
 Start every shaping or run session with `--model opus`: a command's `model:` covers only its first turn, and shape, feature, bugfix, and retro span many.
 
-Start team runs **without MCP servers**: every teammate otherwise loads every connected server's tool definitions on every turn. `--strict-mcp-config` empties the lead's set; teammates load MCP servers from project and user config regardless, so remove or disable servers there for the run (`claude mcp list` / `claude mcp remove`) and check `/mcp` inside a teammate once.
+Start team runs **without MCP servers**: every teammate otherwise loads every connected server's tool definitions on every turn. `--strict-mcp-config` empties the main session's set; teammates load MCP servers from project and user config regardless, so remove or disable servers there for the run (`claude mcp list` / `claude mcp remove`) and check `/mcp` inside a teammate once.
 
 ```sh
-claude --model opus --strict-mcp-config   # coordinator on Opus; no MCP servers in the lead session
+claude --model opus --strict-mcp-config   # coordinator on Opus; no MCP servers in the main session
 ```
 
 Need one for a run (e.g. an issue tracker without `gh`)? Pass only that one: `claude --strict-mcp-config --mcp-config ./mcp-run.json`.
@@ -46,7 +46,7 @@ Need one for a run (e.g. an issue tracker without `gh`)? Pass only that one: `cl
 
 1. **Once per repo or workspace**: `/heinzelwerk:setup` → interview → one PR per repo with `docs/agents/heinzelwerk/*`, optional seeded `GLOSSARY.md`/ADRs, and the `## Agent skills (heinzelwerk)` block. Review, merge. In a multi-repo folder, run it from the parent folder; it also writes the workspace docs into the tickets repo.
 2. **Shape (you + product)**: `/heinzelwerk:shape [issue | idea]`. Product grills you, writes the spec, slices it into `ready-for-agent` tickets with blocking edges, and lists the frontier. Also the way back in after a run stops on `needs-info`. Want only the interview? Stop after the grill. `/heinzelwerk:to-spec` and `/heinzelwerk:to-tickets` stay typeable for odd cases (e.g. slicing a spec written elsewhere).
-3. **Build (you + coordinator)**: `/heinzelwerk:feature <slice>` or `/heinzelwerk:bugfix <issue>`. Your session becomes coordinator: your single point of contact, routes scope questions to product and technical ones to lead, watches the team, posts the final report.
+3. **Build (you + coordinator)**: `/heinzelwerk:feature <slice>` or `/heinzelwerk:bugfix <issue>`. Your session becomes coordinator: your single point of contact, routes scope questions to product and technical ones to tech-lead, watches the team, posts the final report.
 4. **Review** the PRs, including the docs PR (that review is how glossary, ADRs, and learnings get approved). Merge.
 5. **Weekly**: `/heinzelwerk:retro` over the week's runs, including an architecture survey (deepening candidates filed as `needs-triage`) → retro record + doc PR for the project, issues in this repo for the team. Good use of leftover tokens.
 6. **New docs appeared?** `/heinzelwerk:adopt-docs` absorbs only new or changed docs (ledger in `docs/agents/heinzelwerk/adopted.md`).
@@ -57,7 +57,7 @@ Need one for a run (e.g. an issue tracker without `gh`)? Pass only that one: `cl
 |---|---|---|---|
 | coordinator | process: your channel, lifecycle, observation, final report | main session of a run (`skills/coordinator`) | Opus |
 | product | what: shaping, spec gate, scope answers, acceptance verdict | main session of `/shape`; teammate in runs | Opus in `/shape`, Sonnet in runs |
-| lead | how: tasks, seams, technical triage, diagnose, infra apply through the gate, docs PR | teammate | Opus |
+| tech-lead | how: tasks, seams, technical triage, diagnose, infra apply through the gate, docs PR | teammate | Opus |
 | backend / frontend | building, test-first | teammates | Sonnet |
 | infra | Terraform: plan, never apply | teammate | Sonnet |
 | validator | checks + two-axis review | teammate | Sonnet; Opus review on the project's risk areas |

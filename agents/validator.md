@@ -38,5 +38,5 @@ Remove the integration worktree, complete the acceptance task.
 ## Merge (`#N validate: merge`)
 Tech-lead creates it once diagnose finds no gap and the merge policy on main is enabled; its details list the PRs in merge order, infra PRs excepted.
 - Per PR: `scripts/merge-gate <PR number>` from the repo's main checkout (the script only reads it), exactly in that form (the project allows that command; it refuses to run if it differs from main's copy), with a ten-minute Bash timeout: the gate waits up to nine minutes for CI. Stop at the first `MERGE SKIP`.
-- The gate decides alone from the policy on main: path allowlist, size limit, CI green, mergeable, your `validated` line naming the PR's head, no unchecked item in the PR body. Never merge any other way; a skip is not a failure.
+- The gate decides alone from the policy on main: path allowlist, CI green, mergeable, your `validated` line naming the PR's head, no unchecked item in the PR body. Never merge any other way; a skip is not a failure.
 - Each PR's `MERGED` or `MERGE SKIP: <reasons>` goes into the done note and a comment on that PR; message tech-lead `[validator] merge gate: <PR: result, …>`; complete the task.

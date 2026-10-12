@@ -1,6 +1,6 @@
 ---
 name: model-selection
-description: Which model tier and effort to spend on a piece of work. Load before launching subagents, a review or research sweep, or any large repetitive task.
+description: "heinzelwerk model tiers and effort for subagents. Use inside /heinzelwerk:shape, retro, setup, or adopt-docs; team runs use the triggers in their role prompts."
 ---
 
 # Choosing a model tier
@@ -47,10 +47,5 @@ For any non-obvious choice, one clause: tier and reason ("Haiku finders, Opus ve
 
 ## Heinzelwerk
 
-A teammate's model and effort are fixed when it is spawned. **Change tier through subagents**, never by asking for another teammate. Each role's Opus triggers and Haiku uses are in its own prompt; `/heinzelwerk:shape` and `/heinzelwerk:retro` run on Opus and send finder sweeps to Haiku.
-
-**Haiku effort per subtask**: low for searches and purely mechanical edits; medium for batches with local judgement (call sites that vary a little); high for a summary or classification that feeds a decision.
-
-**Who decides**: tech-lead may preset an escalation in the task (`model:` field). The owner escalates by itself when a trigger in its prompt fires. Either way it goes in the done note's `escalations:` line, so `/heinzelwerk:retro` can compare tier, task kind, and outcome across runs and move the defaults.
-
-**Accepted trade-off**: outside the risk areas in `docs/agents/heinzelwerk/team.md`, Sonnet reviews what Sonnet built, the writer-grades-itself mistake above; the human PR review is the final check there. Risk areas get Opus review, and retro adds an area wherever Sonnet let something through.
+Haiku effort per subtask: low for searches and mechanical edits; medium for batches with local judgement; high for a summary or classification that feeds a decision.
+Accepted trade-off in team runs: outside the risk areas in `docs/agents/heinzelwerk/team.md`, Sonnet reviews what Sonnet built and the human PR review is the final check; risk areas get Opus review, and retro adds an area wherever Sonnet let something through.

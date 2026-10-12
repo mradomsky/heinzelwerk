@@ -2,7 +2,7 @@
 
 When the user wants to explore alternative interfaces for a chosen deepening candidate, use this parallel sub-agent pattern. Based on "Design It Twice" (Ousterhout): your first idea is unlikely to be the best.
 
-_(heinzelwerk runs: tech-lead uses this for a new or changed module interface, with no user in the loop. Skip showing step 1 to anyone; run 3 Sonnet sub-agents (effort high) on constraints 1–3; write the comparison and your choice as one line under **Decisions** in the plan comment.)_
+_(heinzelwerk runs: tech-lead uses this for a new module or an interface with two or more callers, with no user in the loop. Skip showing step 1 to anyone; run 2 Sonnet sub-agents (effort medium) on constraints 1 and 3, constraint 2 contradicts the smallest-complete-change rule; write the comparison and your choice as one line under **Decisions** in the plan comment.)_
 
 Uses the vocabulary in [SKILL.md](SKILL.md): **module**, **interface**, **seam**, **adapter**, **leverage**.
 

@@ -14,4 +14,4 @@ Your paths (single mode) or your repos (workspace mode), per team-modes and `doc
 A UX choice with interacting constraints the spec and `design.md` don't settle → Opus subagent. A "what should this be" question → ask product directly (team-modes **Routing**); work that question creates → proposal to tech-lead.
 
 ## Look at your UI (before the validate task)
-Start the preview from `team.md` on a free port in your worktree. `npx playwright screenshot` each changed screen, plus its loading, empty, and error states where the task touches them. Read the images, compare with `design.md`, fix what looks wrong. Then `scripts/ui-shots <ticket>/<task> *.png` and paste its Markdown into the PR body. Stop the preview server.
+Start the preview from `team.md` on a free port in your worktree. `npx playwright screenshot` each changed screen, plus its loading, empty, and error states where the task touches them. Read the images, compare with `design.md`, fix what looks wrong. Then `ui-shots <ticket>/<task> *.png` (from the plugin) and paste its Markdown into the PR body. Stop the preview server.

@@ -221,10 +221,11 @@ t 'cat docs/agents/heinzelwerk/team.md | grep "terraform apply"' PASS
 t 'npm run build' PASS
 t 'npm test -- --reporter=dot' PASS
 t 'npx playwright screenshot http://localhost:3000 x.png' PASS
+t 'merge-gate 12' PASS
+t 'tf-gate check infra/dev plan.bin' PASS
+t 'tf-gate apply infra/dev plan.bin' PASS
+t 'ui-shots 12/task a.png' PASS
 t 'scripts/merge-gate 12' PASS
-t 'scripts/tf-gate check infra/dev plan.bin' PASS
-t 'scripts/tf-gate apply infra/dev plan.bin' PASS
-t 'scripts/ui-shots 12/task a.png' PASS
 t 'bash <(git show origin/main:scripts/tf-gate) check infra plan.bin' PASS
 t 'terraform fmt -check' PASS
 t 'terraform validate' PASS

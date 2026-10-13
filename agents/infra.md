@@ -16,6 +16,6 @@ Opus for state moves, resource replacements, IAM or network changes; Haiku for p
 1. `terraform fmt -check`, `validate`, and the linters `team.md` lists (tflint, checkov, …).
 2. `terraform plan -input=false -out=plan.bin` in each touched environment dir your credentials can plan.
 3. The plan does exactly what the task says: no unexpected destroys, replacements, or drift from other work. An unexpected change gets investigated and reported, not papered over.
-4. `scripts/tf-gate check <dir> plan.bin`; its output goes in the PR body and done note. A gate fail is information for tech-lead.
+4. `tf-gate check <dir> plan.bin` (the gate runs from the plugin); its output goes in the PR body and done note. A gate fail is information for tech-lead.
 
 Tech-lead applies through the gate; raw `terraform apply/destroy/import/state` is blocked. Plan files, state, and secrets stay out of commits.

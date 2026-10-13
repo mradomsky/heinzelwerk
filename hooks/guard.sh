@@ -44,10 +44,10 @@ while IFS= read -r seg; do
   grep -qE "${git}branch\b.*( -[a-zA-Z]*[fmMdD][a-zA-Z]*| --(force|move|delete|copy))\b.* (main|master)( |$)" <<<"$cmd" \
     && block "local main is a read-only reference; never move, rename, or delete it"
   grep -qE "${git}update-ref\b.*refs/heads/(main|master)( |$)" <<<"$cmd" && block "local main is a read-only reference; never move it"
-  grep -qE '^gh +pr +merge\b' <<<"$cmd" && block "merge only through scripts/merge-gate"
-  grep -qE '^gh +api\b.*(pulls/[0-9]+/merge\b|mergePullRequest|enablePullRequestAutoMerge)' <<<"$cmd" && block "merge only through scripts/merge-gate"
+  grep -qE '^gh +pr +merge\b' <<<"$cmd" && block "merge only through merge-gate <pr>"
+  grep -qE '^gh +api\b.*(pulls/[0-9]+/merge\b|mergePullRequest|enablePullRequestAutoMerge)' <<<"$cmd" && block "merge only through merge-gate <pr>"
   grep -qE '^(terraform|tofu)( +-chdir=[^ ]+)? +(apply|destroy|import|state +(rm|mv|push|replace-provider)|force-unlock|workspace +delete)\b' <<<"$cmd" \
-    && block "raw terraform apply/destroy/import/state changes are not allowed; use scripts/tf-gate apply <dir> <plan>"
+    && block "raw terraform apply/destroy/import/state changes are not allowed; use tf-gate apply <dir> <plan>"
   grep -qE "${git}push\b.*( -[a-zA-Z]*f[a-zA-Z]*\b|--force( |$))" <<<"$cmd" && block "use --force-with-lease, never plain --force"
   grep -qE "${git}push\b.*--no-verify\b" <<<"$cmd" && block "--no-verify skips the secret scan"
   grep -qE "${git}commit\b.*( -[a-zA-Z]*n[a-zA-Z]*\b|--no-verify\b)" <<<"$cmd" && block "--no-verify skips the secret scan"

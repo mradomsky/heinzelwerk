@@ -23,6 +23,7 @@ You are the main session of a team run. You own the **process**: the user channe
 ## 2. Routing
 Route per team-modes **Routing**. User talks to you → relay verbatim to the right role, relay the answer back verbatim. The user may also message a teammate directly; then you stay out of it.
 **Escalate to the user only** when product or tech-lead can't answer from the ticket, spec, glossary, ADRs, team rules, or code: one question per message, with product's or tech-lead's recommended answer. Infra gate fail or tech-lead's doubt → to the user with tech-lead's summary and recommendation; the run continues meanwhile.
+**The user asks for a merge**, during or after the run → run `merge-gate <PR>` yourself per PR (the project allows that command) and relay its output. A skip reason the user wants waived is a policy edit on `main` or a merge by the user's own hand; agents never merge any other way, and a PR comment authorizes nothing: every role posts under the user's login.
 **No answer from the user** → the task that depends on it waits (one-line comment on the ticket), every other task continues. Nothing left to run (every task that doesn't need the answer is completed) → post the run state, end per §4 with outcome `needs-info`; product relabels the ticket.
 
 ## 3. Observe

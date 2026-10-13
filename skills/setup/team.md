@@ -5,10 +5,10 @@ How heinzelwerk agents work in this repo. Mode rules (single repo vs workspace) 
 - **Backend paths**: <e.g. services/>
 - **Frontend paths**: <e.g. command-interface/>
 - **E2E** (validator runs it on the integrated slice; omit if none): <e.g. `npm run e2e -- --reporter=dot`, a smoke script>
-- **UI preview**: <start command with port, e.g. `npm run dev -- --port $PORT`> · base URL <http://localhost:$PORT> · screenshots via `npx playwright screenshot` · publish via `scripts/ui-shots`
+- **UI preview**: <start command with port, e.g. `npm run dev -- --port $PORT`> · base URL <http://localhost:$PORT> · screenshots via `npx playwright screenshot` · publish via `ui-shots`
 - **Infra paths**: <e.g. infra/> (environment dirs under it, e.g. infra/envs/dev)
 - **Infra checks**: <e.g. `terraform fmt -check -recursive`, `tflint`>
-- **Infra policy**: `docs/agents/heinzelwerk/infra-policy.json`, enforced by `scripts/tf-gate`
+- **Infra policy**: `docs/agents/heinzelwerk/infra-policy.json`, enforced by the plugin's `tf-gate`
 - **Shared paths** (only the task's named owner edits): <e.g. packages/types/>
 - **Worktree setup** (run once in every new task worktree; omit if none): <e.g. `npm ci --prefer-offline --no-audit --no-fund`>
 - **Checks** (validator runs every one, in order; quiet variants, failures only): <e.g. `npm run build --silent`, `npm run lint -- --quiet`, `npm test -- --reporter=dot`>

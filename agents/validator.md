@@ -31,12 +31,15 @@ Ideas beyond the ticket → propose a task (phased-workflow), not a fail.
 Claim it only when no other validate or fix task is pending or in progress. Prove the slice works **as a whole**:
 1. Integration worktree, never pushed: `git worktree add <repo>/.claude/worktrees/heinzelwerk/accept-<ticket> origin/main --detach`, then `git merge --no-ff --no-edit origin/<branch>` for every task branch in the PR order from tech-lead's plan. Workspace: the same per touched repo on the shared branch name. Conflict → message tech-lead with both branches; tech-lead opens the rebase task and the next acceptance task. Stop: remove the worktree, complete this task.
 2. All checks from `team.md`, then its **E2E** command if there is one. Workspace: also the integration command.
-3. Walk every acceptance criterion as the user would, in the running app (preview from `team.md`; infra already applied to dev). UI: screenshot the whole flow, publish with `scripts/ui-shots <ticket>/acceptance`.
+3. Walk every acceptance criterion as the user would, in the running app (preview from `team.md`; infra already applied to dev). UI: screenshot the whole flow, publish with `ui-shots <ticket>/acceptance`.
 4. Comment the result on the ticket: per criterion pass/fail with evidence. Any fail → message tech-lead with the criterion and the PR that owns it; tech-lead opens the fix task and the next acceptance task.
 Remove the integration worktree, complete the acceptance task.
 
+## Docs (`#N validate tech-lead: docs`)
+Tech-lead's docs PR. No checks, no review subagents. The diff touches only `docs/agents/heinzelwerk/`, `GLOSSARY*.md`, and `docs/adr/`; glossary entries and ADRs follow the `heinzelwerk:domain-modeling` formats; learnings stay within 80 lines; `team.md` edits add risk areas only. Anything else → fail: `#N tech-lead fix <k>: docs` with the reason. Pass → the `heinzelwerk: validated <sha>` review comment, done note, complete the task.
+
 ## Merge (`#N validate: merge`)
-Tech-lead creates it once diagnose finds no gap and the merge policy on main is enabled; its details list the PRs in merge order, infra PRs excepted.
-- Per PR: `scripts/merge-gate <PR number>` from the repo's main checkout (the script only reads it), exactly in that form (the project allows that command; it refuses to run if it differs from main's copy), with a ten-minute Bash timeout: the gate waits up to eight minutes for CI. Stop at the first `MERGE SKIP`. No `MERGED` or `MERGE SKIP` line at all (timeout, tool error) → run it once more; still none → treat it as `MERGE SKIP: gate error`.
+Tech-lead creates it once diagnose finds no gap and the merge policy on main is enabled; its details list the PRs in merge order, the docs PR last, infra PRs excepted.
+- Per PR: `merge-gate <PR number>` from the repo's main checkout (the script only reads it), exactly in that form (the project allows that command; it runs from the plugin, so no PR can change it), with a ten-minute Bash timeout: the gate waits up to eight minutes for CI. A `MERGE SKIP` stops only the PRs stacked on the skipped one (base = its branch); gate the rest. No `MERGED` or `MERGE SKIP` line at all (timeout, tool error) → run it once more; still none → treat it as `MERGE SKIP: gate error`.
 - The gate decides alone from the policy on main. Never merge any other way; a skip is not a failure.
 - Each PR's `MERGED` or `MERGE SKIP: <reasons>` goes into the done note and a comment on that PR; message tech-lead `[validator] merge gate: <PR: result, …>`; complete the task.

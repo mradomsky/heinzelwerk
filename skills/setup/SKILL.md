@@ -44,7 +44,7 @@ Summarise what's present and what's missing. Then take the sections in order: on
 
 **C3 — Frontend design and preview** (only if a UI exists). Propose:
 - `docs/agents/heinzelwerk/design.md` from [design.md](design.md): extract tokens, components, and style rules from the code, theme files, and existing style docs; ask the user for rules only they know.
-- UI preview: the command that starts the app for screenshots (dev server with a port argument, or a static build + preview) and the base URL; Playwright as the screenshot tool (`npx playwright screenshot`, no MCP needed). Record both in `team.md`.
+- UI preview: the command that starts the app for screenshots (dev server with a port argument, or a static build + preview) and the base URL; Playwright as the screenshot tool (`npx playwright screenshot`, no MCP needed); screenshots are published by the plugin's `ui-shots`. Record both in `team.md`.
 
 **D — Domain docs.** Default single-context: `GLOSSARY.md` + `docs/adr/` at repo root. Workspace: one context per repo plus `GLOSSARY-MAP.md` and workspace-wide ADRs in the tickets repo. A legacy `CONTEXT.md` → offer to rename it to `GLOSSARY.md`.
 
@@ -55,7 +55,8 @@ Summarise what's present and what's missing. Then take the sections in order: on
 **G — Auto-merge** (single mode; workspace: off). Check first whether a merge to `main` deploys anywhere (workflows triggered on push to `main`). Recommend **on** when it doesn't, or when the project isn't production-critical; **off** when `main` ships to users. On:
 - Policy from [merge-policy.json](merge-policy.json) with `enabled: true`. `allow_paths: ["*"]` unless the user names areas that must always wait for a human (`deny_paths`); risk areas still get Opus review either way. `merge_method` as the repo's history merges (merge commits vs squash). The gate and its policy always need a human. Say once: the `validated` line the gate trusts could be posted by any role (one `gh` login for all); acceptable while `main` is not production.
 - CI on pull requests: `require_checks` stays true. No workflow runs on `pull_request` → propose `.github/workflows/heinzelwerk-checks.yml` running the **Worktree setup** and every **Checks** command from `team.md`.
-- Permission: add `Bash(scripts/merge-gate *)` to `permissions.allow` in `.claude/settings.json` (committed; merge into an existing file). Without it, Claude Code's auto mode blocks the gate as "merge without review".
+- Permission: add `Bash(merge-gate *)` to `permissions.allow` in `.claude/settings.json` (committed; merge into an existing file). Without it, Claude Code's auto mode blocks the gate as "merge without review". The gate itself runs from the plugin's `bin/`, so updates arrive with the plugin and no PR can change it.
+- Docs PRs merge through the gate too (validator checks their formats). Terms, ADRs, or learnings that should wait for a human → their paths in `deny_paths`.
 
 ## 3. Confirm
 
@@ -69,10 +70,10 @@ Per repo, on a fresh branch from main `docs/heinzelwerk-setup`:
 - `docs/agents/heinzelwerk/triage-labels.md` from [triage-labels.md](triage-labels.md); create missing labels with `gh label create`
 - `docs/agents/heinzelwerk/domain.md` from [domain.md](domain.md)
 - `docs/agents/heinzelwerk/team.md` from [team.md](team.md)
-- UI found: `docs/agents/heinzelwerk/design.md` (C3) and `scripts/ui-shots` copied from [scripts/ui-shots](scripts/ui-shots) (executable)
-- infra found: `docs/agents/heinzelwerk/infra-policy.json` from [infra-policy.json](infra-policy.json) with the answers from C2, `scripts/tf-gate` copied from [scripts/tf-gate](scripts/tf-gate) (executable; needs `jq`), and the `.gitignore` lines from C2
-- `docs/agents/heinzelwerk/merge-policy.json` from [merge-policy.json](merge-policy.json) with the answers from G (off if G was skipped), and `scripts/merge-gate` from [scripts/merge-gate](scripts/merge-gate) (executable); G on → also the CI workflow and the `.claude/settings.json` permission
-- `.gitattributes`: `scripts/* text eol=lf` (add the line if missing), so the scripts run under bash on Windows checkouts
+- UI found: `docs/agents/heinzelwerk/design.md` (C3)
+- infra found: `docs/agents/heinzelwerk/infra-policy.json` from [infra-policy.json](infra-policy.json) with the answers from C2, and the `.gitignore` lines from C2 (`tf-gate` needs `jq` on the machine)
+- `docs/agents/heinzelwerk/merge-policy.json` from [merge-policy.json](merge-policy.json) with the answers from G (off if G was skipped); G on → also the CI workflow and the `.claude/settings.json` permission
+- **Upgrade from an older plugin**: `scripts/merge-gate`, `scripts/tf-gate`, `scripts/ui-shots` in the repo are copies an earlier setup made; delete them, replace `Bash(scripts/merge-gate *)` with `Bash(merge-gate *)`, and drop `max_changed_lines` from the policy unless the user wants a cap. The plugin's `bin/` provides the scripts now.
 - `docs/agents/heinzelwerk/repo-map.md`: from the exploration, max 120 lines, facts only
 - `GLOSSARY.md` / `docs/adr/` only if section E produced resolved content (lazy otherwise)
 

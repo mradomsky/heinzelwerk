@@ -38,6 +38,7 @@ Summarise what's present and what's missing. Then take the sections in order: on
 - Which environment dirs may agents auto-apply to? Recommend dev/sandbox only; never prod.
 - Protected resource types: start from [infra-policy.json](infra-policy.json), add project-specific ones (state backend, DNS, data stores, anything listed as a risk area).
 - Allowed deletes: recommend none to start.
+- `.gitignore`: `plan.bin`, `*.tfplan`, `*.tfstate*` (saved plans carry sensitive values; the guard checks only explicit `git add` arguments, so `git add -A` must not see them).
 - Credentials: tell the user the real boundary is credential scope — agents get credentials that can write only the auto-apply environments and read (plan) elsewhere; prod write credentials never exist in the agent environment. Ask them to confirm this is set up; record the answer in `team.md`.
 - Post-merge apply for higher environments: CI job if they have one (recommend), else tech-lead applies through the gate in the next run where policy allows.
 
@@ -69,7 +70,7 @@ Per repo, on a fresh branch from main `docs/heinzelwerk-setup`:
 - `docs/agents/heinzelwerk/domain.md` from [domain.md](domain.md)
 - `docs/agents/heinzelwerk/team.md` from [team.md](team.md)
 - UI found: `docs/agents/heinzelwerk/design.md` (C3) and `scripts/ui-shots` copied from [scripts/ui-shots](scripts/ui-shots) (executable)
-- infra found: `docs/agents/heinzelwerk/infra-policy.json` from [infra-policy.json](infra-policy.json) with the answers from C2, and `scripts/tf-gate` copied from [scripts/tf-gate](scripts/tf-gate) (executable; needs `jq`)
+- infra found: `docs/agents/heinzelwerk/infra-policy.json` from [infra-policy.json](infra-policy.json) with the answers from C2, `scripts/tf-gate` copied from [scripts/tf-gate](scripts/tf-gate) (executable; needs `jq`), and the `.gitignore` lines from C2
 - `docs/agents/heinzelwerk/merge-policy.json` from [merge-policy.json](merge-policy.json) with the answers from G (off if G was skipped), and `scripts/merge-gate` from [scripts/merge-gate](scripts/merge-gate) (executable); G on → also the CI workflow and the `.claude/settings.json` permission
 - `.gitattributes`: `scripts/* text eol=lf` (add the line if missing), so the scripts run under bash on Windows checkouts
 - `docs/agents/heinzelwerk/repo-map.md`: from the exploration, max 120 lines, facts only

@@ -3,14 +3,17 @@
 # Usage: scripts/merge-gate <pr-number>   (run inside the repo; prints MERGED or MERGE SKIP: <reasons>; exit 0 either way)
 # Policy: docs/agents/heinzelwerk/merge-policy.json as on main on GitHub, never the branch's copy. The script
 # refuses to run unless it is identical to main's copy, and never merges a PR that touches the gate or its policy.
-# Waits up to MERGE_GATE_WAIT seconds (default 540) for CI: run it with a ten-minute Bash timeout.
+# Waits up to MERGE_GATE_WAIT seconds (default 450) for CI: run it with a ten-minute Bash timeout.
 # Needs: gh only (its built-in --jq). Globs: bash patterns on the repo-relative path; * also matches /.
 set -euo pipefail
+# a gh or network failure still ends in a verdict line (no -E: an inherited trap inside $(...) would swallow the error)
+trap 'echo "MERGE SKIP: gate error (line $LINENO)"; exit 0' ERR
 pr=${1:?pr number}
 raw() { gh api -H 'Accept: application/vnd.github.raw+json' "repos/{owner}/{repo}/contents/$1?ref=main" "${@:2}"; }
 pol() { raw docs/agents/heinzelwerk/merge-policy.json --jq "$1"; }
 pv() { gh pr view "$pr" --json "$1" --jq "$2"; }
-checks() { pv statusCheckRollup '.statusCheckRollup[]? | (.conclusion // .state // "PENDING")'; }
+# a check run's conclusion is "" until it completes, so branch on status; a commit status carries state directly
+checks() { pv statusCheckRollup '.statusCheckRollup[]? | if .__typename == "CheckRun" then (if .status == "COMPLETED" then .conclusion else "PENDING" end) else (.state // "PENDING") end'; }
 cr=$'\r'
 main_gate=$(raw scripts/merge-gate 2>/dev/null) || main_gate=""
 [ -n "$main_gate" ] && [ "${main_gate//$cr/}" = "$(tr -d "$cr" <"$0")" ] \
@@ -19,7 +22,7 @@ enabled=$(pol '.enabled // false' 2>/dev/null) || { echo "MERGE SKIP: no docs/ag
 [ "$enabled" = true ] || { echo "MERGE SKIP: auto-merge off"; exit 0; }
 
 # let CI finish; the verdict reads the final state
-wait=${MERGE_GATE_WAIT:-540}; deadline=$(( SECONDS + wait ))
+wait=${MERGE_GATE_WAIT:-450}; deadline=$(( SECONDS + wait ))
 while grep -qE '^(PENDING|EXPECTED)$' <<<"$(checks)" && (( SECONDS < deadline )); do sleep 15; done
 reasons=()
 [ "$(pv state .state)" = OPEN ] || reasons+=("PR not open")
@@ -37,7 +40,9 @@ fi
 pv body '.body' | grep -qE '^[[:space:]]*[-*] \[ \]' && reasons+=("unchecked item in PR body (needs a human)")
 # optional size cap: only when the policy sets max_changed_lines
 max=$(pol '.max_changed_lines // empty')
-[ -z "$max" ] || { n=$(pv additions,deletions '.additions + .deletions'); (( n <= max )) || reasons+=("$n changed lines > max_changed_lines $max"); }
+if [[ -n $max && $max =~ ^[0-9]+$ ]]; then
+  n=$(pv additions,deletions '.additions + .deletions'); (( n <= max )) || reasons+=("$n changed lines > max_changed_lines $max")
+elif [ -n "$max" ]; then reasons+=("max_changed_lines is not a number: $max"); fi
 # every file must match allow_paths and no deny_paths; the gate and its policy always need a human
 allow=$(pol '.allow_paths[]?'); deny=$(pol '.deny_paths[]?'); files=$(pv files '.files[].path')
 [ -n "$files" ] || reasons+=("no changed files read")

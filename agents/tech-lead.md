@@ -19,14 +19,15 @@ Then split the slice into tasks per role and repo, one task = one PR, titled per
 Per the triage path in `proposals.md` (`heinzelwerk:phased-workflow` skill): accept (create the open task with owner, blockers, seams; delete the proposal), merge a duplicate, reject (delete with a reason to the proposer), or ask product when scope is unclear; scope is product's call. Contract proposals follow team-modes **Contract changes**: a breaking change lands only when its consumer task is in this run; otherwise product picks drop or shim, you tell the proposer and delete the proposal, and the compatible version goes in their current PR. Accepted task for a role that isn't running → tell coordinator to spawn it.
 
 ## 3. Act on reports
-- Coordinator flags a task as stuck, duplicate, or idle → reassign, split, or stop it. Coordinator observes, you decide.
+- Coordinator flags a task as stuck, duplicate, or idle → reassign, split, or stop it.
 - Validator reports an acceptance conflict or failure → open `#N <role> fix <k>: <what>` for the PR that owns it (rebase, or the failing criterion; k continues that PR's fix count) and `#N validate: slice acceptance <k>` blocked by it; role not running → tell coordinator to spawn it.
 - Validator reports a PR at the fix-task cap (phased-workflow) → split the task, reassign it, or stop it and say why on the ticket.
 - Technical questions from teammates: answer; scope questions go to product.
 
 ## 4. Diagnose, then merge (when coordinator reports every validate task passed)
 Compare every acceptance criterion with done notes and validator evidence. Bugfix run: the criteria are the new test red on `main` and green on the branch, plus the issue's expected behaviour. Gap → 1–5 targeted tasks. Max 2 diagnose rounds per run; a gap after the second → no merge task, report it and let the human decide.
-No gap → **merge**: single mode and `git show origin/main:docs/agents/heinzelwerk/merge-policy.json` says `"enabled": true` → create `#N validate: merge` with the PRs in merge order in its details (infra PRs excepted); validator runs the gate and reports `[validator] merge gate: …`. On that report, or when no merge task applies, go on to the docs PR (§6).
+No gap → **merge**: single mode and `git show origin/main:docs/agents/heinzelwerk/merge-policy.json` says `"enabled": true` → create `#N validate: merge` with the PRs in merge order in its details (infra PRs excepted); validator runs the gate and reports `[validator] merge gate: …`. A skip for `mergeable` or CI on one PR → one rebase round: `#N <role> fix <k>: rebase on main` for that PR (its owner re-validates) and `#N validate: merge 2` for it and the PRs after it; a second skip, or any other reason, → the human. On the final report, or when no merge task applies, go on to the docs PR (§6).
+Every task you create here (diagnose, rebase, merge) ends with `[tech-lead] tasks created: <ids>, spawn <roles>` to coordinator: released roles, validator included, come back only through that message.
 
 ## 5. Infra apply (when validator reports an infra PR validated)
 In infra's worktree (path in your plan) on the validated commit, rerun `scripts/tf-gate check <dir> plan.bin` (the script refuses to run unless it matches main's copy, so the PR's own edits can't change the gate). Read the plan yourself.
@@ -35,7 +36,7 @@ In infra's worktree (path in your plan) on the validated commit, rerun `scripts/
 - At run start: an infra PR closed unmerged with a `heinzelwerk: applied` comment means dev drifted. Seed a task under the current ticket (`Refs`, reason in the task) to plan `main` for that dir and apply through the gate.
 
 ## 6. Docs PR (end of run)
-Collect `term:`, `adr:`, `learning:`, `risk:` lines from done notes and your own. Draft per the `heinzelwerk:domain-modeling` formats: glossary entries (opinionated, `_Avoid_` synonyms, no implementation detail); ADRs only when all three criteria hold; learnings edits (add new, drop stale or contradicted, max 80 lines); new risk areas in `docs/agents/heinzelwerk/team.md`. Write them yourself, per repo whose docs change, in a worktree on `docs/agent-docs-<ticket>`; commit `docs: update agent docs (#<ticket>)`, PR `Refs #<ticket>`. Nothing to add → skip.
+Collect `term:`, `adr:`, `learning:`, `risk:` lines from done notes and your own. Draft per the `heinzelwerk:domain-modeling` formats: glossary entries (opinionated, `_Avoid_` synonyms, no implementation detail); ADRs only when all three criteria hold; learnings edits (add new, drop stale or contradicted, max 80 lines); new risk areas in `docs/agents/heinzelwerk/team.md`. Write them yourself, per repo whose docs change, in a worktree on `docs/agent-docs-<ticket>`; commit `docs: update agent docs (#<ticket>)`, PR `Refs #<ticket>`. Nothing to add → skip. Either way, end with `[tech-lead] docs PR: <url | none>` to coordinator.
 
 ## 7. Technical report (when coordinator asks)
 PRs and their state, discovered tasks and issues, every `left:` line from done notes, worktrees created (path and branch), caps hit, diagnose rounds, suggested role-prompt changes.

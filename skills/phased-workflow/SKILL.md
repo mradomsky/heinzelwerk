@@ -16,14 +16,7 @@ user-invocable: false
   - task state change that matters (blocked, needs work, abandoned) → issue comment with one-line reason
 
 ## Phases
-Every task has exactly one phase. Roles say WHO, phases say WHAT KIND of work.
-A task is not done until its handoff exists. Phases chain by handoff, not by someone pushing. Bugfix runs: [bugfix.md](bugfix.md).
-
-| Phase | Kind of work | Done when | Handoff (part of done) |
-|---|---|---|---|
-| analyze | understand, plan, investigate, decide | conclusion posted on ticket | next tasks created, or "no action" stated on ticket |
-| implement | change code or contract | red → green at the task's seams (`heinzelwerk:tdd` skill), checks pass locally, PR open. Infra: fmt/validate/lint green, plan saved, tf-gate output in PR. UI: screenshots of changed screens in PR | done note in the task's details, then a **validate task** for this PR created |
-| validate | test, review, verify; last one: slice acceptance on integrated branches | verdict with evidence | pass → nothing more; fail → a **fix task** for the implementer with the repro |
+Every task has exactly one phase: **analyze** (understand, decide; ends with a conclusion on the ticket and the next tasks), **implement** (ends with a PR and a validate task), **validate** (ends with a verdict: pass, or a fix task with the repro). Roles say WHO, phases say WHAT KIND of work. A task is not done until its handoff exists; phases chain by handoff, not by someone pushing. Bugfix runs: [bugfix.md](bugfix.md).
 
 ## Task lifecycle
 The task list has three states: pending, in progress, completed. A task's title never changes after creation; a new state means a new task.
@@ -38,9 +31,8 @@ The task list has three states: pending, in progress, completed. A task's title 
 ## Implementers (backend, frontend, infra)
 - **Before coding**: the docs the `## Docs` section names; frontend also `docs/agents/heinzelwerk/design.md`, infra also `docs/agents/heinzelwerk/infra-policy.json`.
 - **Smallest complete change**: reuse what the codebase has, then the standard library, then an installed dependency. No abstraction, option, config, or "for later" code nobody asked for. Finish every part the change touches: callers, tests, fixtures. Keep validation at trust boundaries, error handling, security, and accessibility. A shortcut with a known limit gets a code comment `shortcut: <limit>, <when to upgrade>`.
-- **Interfaces**: deep modules, small interfaces.
 - **Subagents**: Opus when the root cause is still unknown after two failed passes, or when you change shared code whose callers you can't see from the edit site; Haiku for call-site searches and mechanical batches. Your role prompt may add triggers. State both in `escalations:`.
-- **Done**: branch, worktree, commits, PR body per team-modes. PR open → done note into the task's details, create `#N validate <role>: <what>`, complete the task, message coordinator `[<repo>@<branch>] validate task created: <PR>`. A fix task from validator → same branch, same loop.
+- **Done**: branch, worktree, commits, PR body per team-modes. PR open → done note into the task's details, create `#N validate <role>: <what>`, complete the task, message coordinator `[<repo>@<branch>] validate task created: <PR>`. A fix task, validator's or tech-lead's → same branch, same loop.
 
 ## Discovering work
 Found something while working? Don't silently fix it, don't drop it: propose it as a `[proposed] #N <what>` task to tech-lead and continue your own task. The fields, the dedup rule, the triage path, and the budget (3 per agent per run) are in [proposals.md](proposals.md): read it before proposing, and (tech-lead) before triaging.

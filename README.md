@@ -24,10 +24,10 @@ claude --plugin-dir /path/to/heinzelwerk         # try locally
 /plugin install heinzelwerk
 ```
 
-Enable agent teams and the shared task list in `~/.claude/settings.json`:
+Needs Claude Code 2.1.295 or later (hook `onFailure`). Enable agent teams and the shared task list in `~/.claude/settings.json`; on Windows also keep runs on the Bash tool, the guard's rules and the setup scripts are bash-shaped (the hook matches the PowerShell tool too, as a backstop):
 
 ```json
-{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1", "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1" } }
+{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1", "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1", "CLAUDE_CODE_USE_POWERSHELL_TOOL": "0" } }
 ```
 
 Runs are interactive: a headless `-p` session cannot spawn teammates. Keep the default in-process teammate mode: split panes ignore the agents' `effort` and `disallowedTools`. The guard hook has no dependencies beyond bash (Git Bash on Windows); `tf-gate` needs `jq` on infra repos; the tracker and `merge-gate` need `gh`. The default branch must be `main`: both gates read their policy from it and every worktree starts from `origin/main`.
@@ -106,11 +106,11 @@ Model-invoked (reusable discipline, agents reach for them):
 - `skills/prototype` — throwaway UI variations / logic walkthroughs, used by `/shape`
 - `skills/model-selection` — which tier for which work, and why; the roles' triggers live in `agents/*`
 - `skills/ponytail-debt` — `shortcut:` ledger, used by retro
-- `skills/tdd`, `skills/code-review`, `skills/codebase-design`, `skills/domain-modeling`, `skills/grilling`, `skills/writing-for-agents`: adapted copies of mattpocock/skills. Their descriptions say "heinzelwerk copy … Use inside heinzelwerk …", so if you also have the mattpocock plugin installed, your own sessions pick the upstream skill and runs pick ours. Both are namespaced (`heinzelwerk:tdd` vs `mattpocock-skills:tdd`); no rename needed.
+- `skills/tdd`, `skills/code-review`, `skills/codebase-design`, `skills/domain-modeling`, `skills/grilling`, `skills/writing-for-agents`, `skills/prototype`, `skills/diagnosing-bugs`, `skills/improve-codebase-architecture`, `skills/to-spec`, `skills/to-tickets`: adapted copies of mattpocock/skills. Their descriptions say "heinzelwerk copy … Use inside heinzelwerk …", so if you also have the mattpocock plugin installed, your own sessions pick the upstream skill and runs pick ours. Both are namespaced (`heinzelwerk:tdd` vs `mattpocock-skills:tdd`); no rename needed.
 
 Other:
 - `agents/` — roles, usable as subagents or teammates
-- `hooks/` — `guard.sh` blocks pushing, checking out, or moving main, `gh pr merge` (also through the API), plain `--force`, `--no-verify` and hook-skipping (`core.hooksPath`, `HUSKY=0`), adding secret, state, or plan files, raw `terraform apply/destroy/import/state`, `-auto-approve`. Rules anchor on the command, so quoting a rule in a comment never trips it. `guard-test.sh` runs the regression cases (needs node). A tripwire: the secret defence is the gitleaks pre-commit hook setup recommends
+- `hooks/` — `guard.sh` blocks pushing, checking out, or moving main, `gh pr merge` (also through the API), plain `--force`, `--no-verify` and hook-skipping (`core.hooksPath`, `HUSKY=0`), adding secret, state, or plan files, raw `terraform apply/destroy/import/state`, `-auto-approve`. Rules anchor on the command and ignore quoted text, so a verdict quoting a rule never trips it. By design it does not block a bare `git push` or `git push origin HEAD`, which push main from the main checkout: agents work in worktrees. `guard-test.sh` runs the regression cases (needs node). A tripwire: the secret defence is the gitleaks pre-commit hook setup recommends
 - `docs/test-run-plan.md` — staged plan for the first runs; `docs/reviews/` — review records
 - `prompts/` — loose prompts, staging area before `skills/` or `commands/` (e.g. `review-plugin.md`: independent review of this plugin)
 

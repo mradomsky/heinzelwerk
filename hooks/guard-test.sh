@@ -117,7 +117,23 @@ t 'terraform  apply' BLOCK
 t 'TF_CLI_ARGS_apply=-auto-approve terraform apply' BLOCK
 t 'bash -c "terraform apply"' BLOCK
 t 'sudo terraform apply' BLOCK
+t 'git checkout -q main' BLOCK
+t 'git checkout --force main' BLOCK
+t 'git switch --quiet main' BLOCK
+t 'git push -fu origin x' BLOCK
+t 'export HUSKY=0; git commit -m x' BLOCK
+t '$env:HUSKY=0; git commit -m x' BLOCK
+t 'git commit -i .env -m x' BLOCK
+t 'git commit -m x --include .env' BLOCK
 echo "--- must pass"
+t 'gh pr review 12 --comment -b "checks: pass | gh pr merge not run"' PASS
+t 'gh issue comment 5 --body "ran checks && gh pr merge was refused"' PASS
+t 'gh pr comment 12 --body "PASS | git push origin main is blocked"' PASS
+t 'git commit -m "a; git push origin main"' PASS
+t 'gh api repos/o/r/issues/1/comments -f body="x && gh pr merge y"' PASS
+t 'git commit -m "x" -i src/a.ts' PASS
+t 'git checkout -q -- file.txt' PASS
+t 'git switch -c feat/1 main' PASS
 t 'git push origin feat/1 --force-with-lease' PASS
 t 'git push origin feat/22-main-page' PASS
 t 'git push origin feat/22-maintenance' PASS

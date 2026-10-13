@@ -11,6 +11,6 @@ Rules that apply only in workspace mode. The shared rules are in [SKILL.md](SKIL
 | Cross-repo contract | change a consumer task depends on: provider repo's task first (it owns the contract); consumer tasks blocked-by it; consumer PR body: `Depends on owner/provider-repo#<PR>`. Compatible change no consumer task needs: provider PR with the `contract: compatible` line (see **Contract changes** in SKILL.md) |
 | PR body | `Refs owner/tickets-repo#N` on all PRs; `Closes owner/tickets-repo#N` only on the last PR tech-lead names |
 | Checks | each repo's own `checks:`, run inside that repo's worktree |
-| Integration | if `docs/agents/heinzelwerk/workspace.md` defines one, validator creates worktrees of the shared branch name in every touched repo (main for untouched ones) and runs it from there |
+| Integration | if `docs/agents/heinzelwerk/workspace.md` defines one, validator creates worktrees of the shared branch name in every touched repo (main for untouched ones) and runs it from there. Fail → fix task for the owner of the repo where the failure originates; unclear → tech-lead |
 | Learnings, `GLOSSARY-MAP.md`, workspace-wide ADRs | only in tickets repo. Per-repo `GLOSSARY.md` and ADRs stay in their repo |
 | Repo not in workspace map | do not touch. Tell tech-lead |

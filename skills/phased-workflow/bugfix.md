@@ -2,7 +2,7 @@
 
 Read by tech-lead, the owner, and validator in a `/heinzelwerk:bugfix` run. `#N` is the bug issue.
 
-1. **analyze (tech-lead)**, after coordinator states the mode: read the issue, locate the likely area, pick the owner, name the seam where the bug is observable, post the hypothesis on the issue. Leaves one task `#N <role> implement: <bug>` with the seam in its details. Too little to reproduce → tech-lead tells product; product labels `needs-info` with questions; coordinator ends the run.
+1. **analyze (tech-lead)**, after coordinator states the mode: read the issue, locate the likely area, pick the owner, name the seam where the bug is observable, post the hypothesis on the issue (the design block from your §1 only when the fix changes an interface or touches a risk area). Leaves one task `#N <role> implement: <bug>` with the seam in its details, then `[tech-lead] plan posted: spawn <role>` to coordinator. Too little to reproduce → tech-lead tells product; product labels `needs-info` with questions; coordinator ends the run.
 2. **implement (owner)**, branch `fix/<ticket>-<topic>` in its own worktree, `heinzelwerk:tdd` skill:
    a. Cause not obvious, or the bug intermittent or performance-related → run the `heinzelwerk:diagnosing-bugs` skill first: a loop that goes **red**, minimise, find the cause; post findings on the issue.
    b. Test at the seam that goes **red** on this bug; commit `test: reproduce <bug> (#N)`.

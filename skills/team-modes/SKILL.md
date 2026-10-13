@@ -21,10 +21,10 @@ Only coordinator talks to the user.
 
 ## Messaging
 - Every message starts with `[<repo>@<branch>]` from an implementer, `[<role>]` from everyone else.
-- Member names: coordinator is `team-lead` (the platform's name for the main session); every other role is its own name (`tech-lead`, `product`, …; a replacement after a crash: `<role>-2`). Never confuse `team-lead` with `tech-lead`.
+- Member names: coordinator is `team-lead` (the platform's name for the main session); every other role is its own name (`tech-lead`, `product`, …; a respawn after a release or crash: `<role>-N`). Never confuse `team-lead` with `tech-lead`.
 - Coordinator, product, and tech-lead always run: message them without checking. Any other role → message it **only if it is running**: first read the `members` array in the team config (path in your spawn prompt: `~/.claude/teams/<team>/config.json`). Replying to a message you received is always allowed. A message to a stopped teammate revives it with stale context; only coordinator spawns.
 - Target not running → message **tech-lead** instead, saying who you meant and why. Tech-lead decides whether that role is needed (coordinator spawns it) or the matter becomes a task or proposal.
-- Messages vanish with the run. Anything a later run or a human needs goes on GitHub: ticket comment, PR body, or contract file.
+- Messages vanish with the run; what goes on GitHub is in phased-workflow **Ticket vs task**.
 - **Voice** in teammate messages and done notes: answer first, no greeting or recap, short words, drop articles when the sentence still reads, keep every not/never/no/only, payload (paths, commands, numbers, errors) exact. Ticket comments, PRs, code, and docs: normal prose.
 
 ## Contract changes
@@ -59,7 +59,3 @@ Tasks
 #<task> phase | owner | repo | branch | worktree path | blocked-by
 ```
 In workspace mode also: shared branch name, PR order, which PR closes the ticket.
-
-## 4. Validator checklist per mode
-- Single: own worktree on PR branch → checks → task done-when → criteria → diff review.
-- Workspace: per repo as single, then integration (if defined) across all touched repos on the shared branch name. Fail → needs work to the owner of the repo where the failure originates; unclear → tech-lead.

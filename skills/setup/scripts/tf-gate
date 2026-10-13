@@ -6,9 +6,10 @@
 # Needs: terraform (or TF_BIN), jq.
 set -euo pipefail
 mode=${1:?check|apply}; dir=${2:?terraform dir}; plan=${3:?saved plan file}
+case $mode in check|apply) ;; *) echo "usage: tf-gate check|apply <terraform-dir> <saved-plan-file>"; exit 1 ;; esac
 policy=$(mktemp); trap 'rm -f "$policy"' EXIT
 tf=${TF_BIN:-terraform}; cr=$'\r'
-git fetch -q origin main
+git fetch -q origin main || { echo "GATE FAIL: git fetch origin main failed"; exit 1; }
 main_gate=$(git show origin/main:scripts/tf-gate 2>/dev/null) || main_gate=""
 [ -n "$main_gate" ] && [ "${main_gate//$cr/}" = "$(tr -d "$cr" <"$0")" ] \
   || { echo "GATE FAIL: this tf-gate differs from origin/main's copy"; exit 1; }

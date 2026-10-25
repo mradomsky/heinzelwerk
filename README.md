@@ -20,11 +20,10 @@ Claude Code plugin: a lean autonomous dev team (coordinator / product / tech-lea
 
 ```sh
 claude --plugin-dir /path/to/heinzelwerk         # try locally
-/plugin marketplace add mradomsky/heinzelwerk     # or from GitHub
-/plugin install heinzelwerk
+/plugin install heinzelwerk --marketplace mradomsky/heinzelwerk   # or from GitHub (Claude Code 2.1.275+)
 ```
 
-Needs Claude Code 2.1.295 or later (hook `onFailure`). Enable agent teams and the shared task list in `~/.claude/settings.json`; on Windows also keep runs on the Bash tool, the guard's rules and the setup scripts are bash-shaped (the hook matches the PowerShell tool too, as a backstop):
+Needs Claude Code 2.1.295 or later (hook `onFailure`). Updates: `/plugin marketplace update heinzelwerk`, then update the plugin from `/plugin` → Installed; every release bumps `version` in `plugin.json`, so an unchanged version never updates. Enable agent teams and the shared task list in `~/.claude/settings.json`; on Windows also keep runs on the Bash tool, the guard's rules and the setup scripts are bash-shaped (the hook matches the PowerShell tool too, as a backstop):
 
 ```json
 { "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1", "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1", "CLAUDE_CODE_USE_POWERSHELL_TOOL": "0" } }

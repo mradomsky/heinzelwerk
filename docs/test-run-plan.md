@@ -26,7 +26,7 @@ claude --plugin-dir ~/heinzelwerk --model opus --strict-mcp-config
 | Check | How | If it fails |
 |---|---|---|
 | Plugin loads | `/agents` lists the roles, `/help` lists `/heinzelwerk:*` | fix layout / manifest |
-| Marketplace install | `/plugin marketplace add mradomsky/heinzelwerk`, `/plugin install heinzelwerk` | fix `marketplace.json` (`source` path) |
+| Marketplace install | `claude plugin install heinzelwerk --marketplace mradomsky/heinzelwerk`, then `claude plugin list` shows it and a session has `/heinzelwerk:*` | fix `marketplace.json` (`source` path) |
 | No MCP | `/mcp` is empty in the main session; spawn one teammate and ask it to list its MCP tools: none | find the right flag; else remove servers from user/project config for runs |
 | Windows hook shell | `bash --version` works from the terminal that runs `claude`; ask Claude to run `git push origin main`: blocked | install Git Bash |
 | Guard hook | ask Claude to run `git push origin main`, `terraform apply x`, `git push --force origin x` | fix `hooks.json` / `${CLAUDE_PLUGIN_ROOT}` |
@@ -46,7 +46,7 @@ claude --plugin-dir ~/heinzelwerk --model opus --strict-mcp-config
 - **Found and fixed**: unquoted `: ` in six descriptions made `coordinator` and `team-modes` invisible to the model; quoted (v0.24.1). Run #179's coordinator never had its skill.
 - **Seen in run #179**: task chain with done notes and a validate task works; team config `members` lists teammates while they run and drops them after shutdown.
 - **Check during run 1**: teammate spawned as `heinzelwerk:frontend` shows Sonnet/its effort; `/mcp` empty in a teammate; `/` menu hides building blocks.
-- **Not checked**: marketplace install (runs use `--plugin-dir`).
+- **Verified 2026-10-25** (Claude Code 2.1.310): marketplace install from the GitHub repo (`claude plugin install heinzelwerk --marketplace mradomsky/heinzelwerk`), `claude plugin validate . --strict` clean. Runs still use `--plugin-dir` for the live checkout.
 
 Then run the independent review and fix its "will it run?" findings:
 

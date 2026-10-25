@@ -1,14 +1,36 @@
 {
   "name": "heinzelwerk",
   "description": "Heinzelwerk: an autonomous, spec-driven agentic dev team for Claude Code.",
-  "owner": { "name": "Maksym Radomsky", "url": "https://github.com/mradomsky" },
+  "owner": {
+    "name": "Maksym Radomsky",
+    "url": "https://github.com/mradomsky"
+  },
   "plugins": [
     {
       "name": "heinzelwerk",
       "source": "./",
       "description": "Autonomous, spec-driven agentic dev team for Claude Code.",
       "category": "workflow",
-      "tags": ["agent-teams", "autonomous", "spec-driven", "tdd", "github"]
+      "tags": [
+        "agent-teams",
+        "autonomous",
+        "spec-driven",
+        "tdd",
+        "github"
+      ]
+    },
+    {
+      "name": "heinzelwerk-cloud",
+      "source": "./cloud",
+      "description": "Heinzelwerk for cloud Claude Code sessions: subagents instead of an agent team, GitHub through REST.",
+      "category": "workflow",
+      "tags": [
+        "cloud",
+        "subagents",
+        "spec-driven",
+        "tdd",
+        "github"
+      ]
     }
   ]
 }

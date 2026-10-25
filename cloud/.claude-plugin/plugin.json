@@ -1,0 +1,8 @@
+{
+  "name": "heinzelwerk-cloud",
+  "description": "Heinzelwerk for cloud Claude Code sessions: the same roles and skills run as subagents (no agent team), GitHub through REST only.",
+  "version": "0.1.0",
+  "author": { "name": "Maksym Radomsky" },
+  "repository": "https://github.com/mradomsky/heinzelwerk",
+  "license": "MIT"
+}

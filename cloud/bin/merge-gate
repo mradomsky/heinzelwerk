@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# heinzelwerk-cloud auto-merge gate: the root plugin's merge-gate on REST only. Cloud sessions reject GitHub GraphQL,
+# so every `gh pr` subcommand; everything here is `gh api repos/{owner}/{repo}/...`. Same policy file, same verdicts.
+# Usage: merge-gate <pr-number>   (run inside the repo; prints MERGED or MERGE SKIP: <reasons>; exit 0 either way)
+# Policy: docs/agents/heinzelwerk/merge-policy.json as on main on GitHub, never the branch's copy. A PR that touches a
+# heinzelwerk policy file, the project's Claude Code settings, or a workflow always waits for a human. A PR stacked on
+# another PR's branch is retargeted to main once that PR merged. Waits up to MERGE_GATE_WAIT seconds (default 450) for
+# CI: run it with a ten-minute Bash timeout. Needs: gh only (its built-in --jq).
+set -euo pipefail
+# a gh or network failure still ends in a verdict line (no -E: an inherited trap inside $(...) would swallow the error)
+trap 'echo "MERGE SKIP: gate error (line $LINENO)"; exit 0' ERR
+pr=${1:?pr number}
+api() { gh api "repos/{owner}/{repo}/$1" "${@:2}"; }
+pol() { api "contents/docs/agents/heinzelwerk/merge-policy.json?ref=main" -H 'Accept: application/vnd.github.raw+json' --jq "$1"; }
+pv() { api "pulls/$pr" --jq "$1"; }
+# check runs: conclusion once completed, else PENDING; commit statuses carry their state. Upper-cased like GraphQL's enums.
+checks() {
+  local sha; sha=$(pv .head.sha)
+  api "commits/$sha/check-runs?per_page=100" --jq '.check_runs[] | (if .status == "completed" then .conclusion else "pending" end) | ascii_upcase'
+  api "commits/$sha/status" --jq '.statuses[].state | ascii_upcase'
+}
+enabled=$(pol '.enabled // false' 2>/dev/null) || { echo "MERGE SKIP: no docs/agents/heinzelwerk/merge-policy.json on main"; exit 0; }
+[ "$enabled" = true ] || { echo "MERGE SKIP: auto-merge off"; exit 0; }
+
+# stacked on another PR's branch: once that PR is merged, retarget to main (GitHub recomputes diff and mergeability)
+base=$(pv .base.ref)
+if [ "$base" != main ]; then
+  bstate=$(api "pulls?state=all&per_page=1&head={owner}:$base" --jq 'if length == 0 then "none" elif .[0].merged_at then "MERGED" else (.[0].state | ascii_upcase) end')
+  if [ "$bstate" = MERGED ]; then api "pulls/$pr" -X PATCH -f base=main >/dev/null; sleep 5
+  else echo "MERGE SKIP: base $base is not main (its PR: $bstate)"; exit 0; fi
+fi
+
+# let CI finish; the verdict reads the final state
+wait=${MERGE_GATE_WAIT:-450}; deadline=$(( SECONDS + wait ))
+while grep -qE '^PENDING$' <<<"$(checks)" && (( SECONDS < deadline )); do sleep 15; done
+reasons=()
+[ "$(pv .state)" = open ] || reasons+=("PR not open")
+[ "$(pv .draft)" = false ] || reasons+=("draft")
+# GitHub recomputes mergeability after every merge to main; null means it is still at it
+mq='if .mergeable == null then "UNKNOWN" else .mergeable end'
+m=$(pv "$mq"); for _ in 1 2 3 4 5 6; do [ "$m" = UNKNOWN ] || break; sleep 5; m=$(pv "$mq"); done
+[ "$m" = true ] || reasons+=("mergeable: $m (needs a rebase)")
+# the validator's pass must name the commit being merged; a push after validation needs a new pass
+if [ "$(pol '.require_validation // true')" = true ]; then
+  head=$(pv .head.sha)
+  { api "issues/$pr/comments?per_page=100" --jq '.[].body'; api "pulls/$pr/reviews?per_page=100" --jq '.[].body'; } \
+    | grep -qF "heinzelwerk: validated $head" || reasons+=("no \"heinzelwerk: validated $head\" on the PR")
+fi
+pv '.body // ""' | grep -qE '^[[:space:]]*[-*] \[ \]' && reasons+=("unchecked item in PR body (needs a human)")
+# optional size cap: only when the policy sets max_changed_lines
+max=$(pol '.max_changed_lines // empty')
+if [[ -n $max && $max =~ ^[0-9]+$ ]]; then
+  n=$(pv '.additions + .deletions'); (( n <= max )) || reasons+=("$n changed lines > max_changed_lines $max")
+elif [ -n "$max" ]; then reasons+=("max_changed_lines is not a number: $max"); fi
+# every file must match allow_paths and no deny_paths; policy, settings, and workflows always need a human
+allow=$(pol '.allow_paths[]?'); deny=$(pol '.deny_paths[]?'); files=$(api "pulls/$pr/files?per_page=100" --jq '.[].filename')
+[ -n "$files" ] || reasons+=("no changed files read")
+(( $(wc -l <<<"$files") < 100 )) || reasons+=("100 or more changed files (one page lists at most 100, so the check is partial)")
+while IFS= read -r f; do
+  [ -n "$f" ] || continue; ok=no
+  while IFS= read -r g; do [[ -n $g && $f == $g ]] && ok=yes; done <<<"$allow"
+  while IFS= read -r g; do [[ -n $g && $f == $g ]] && ok=no; done <<<"$deny"
+  [[ $f == docs/agents/heinzelwerk/*-policy.json || $f == .claude/settings*.json || $f == .github/workflows/* ]] && ok=no
+  [ $ok = yes ] || reasons+=("path not allowed: $f")
+done <<<"$files"
+# CI: every check passed; none at all only if the policy doesn't require checks
+results=$(checks)
+if [ -z "$results" ]; then
+  [ "$(pol '.require_checks // true')" = false ] || reasons+=("no CI checks on the PR")
+else
+  pending=$(grep -cE '^PENDING$' <<<"$results" || true)
+  (( pending == 0 )) || reasons+=("$pending CI check(s) still running after ${wait}s")
+  bad=$(grep -cvE '^(SUCCESS|NEUTRAL|SKIPPED|PENDING)$' <<<"$results" || true)
+  (( bad == 0 )) || reasons+=("$bad CI check(s) failed")
+fi
+
+if (( ${#reasons[@]} )); then echo "MERGE SKIP:"; printf '  - %s\n' "${reasons[@]}"; exit 0; fi
+if out=$(api "pulls/$pr/merge" -X PUT -f merge_method="$(pol '.merge_method // "squash"')" 2>&1); then echo "MERGED: PR $pr"
+else echo "MERGE SKIP:"; echo "  - merge failed: ${out//$'\n'/ }"; fi

@@ -22,7 +22,10 @@ enabled=$(pol '.enabled // false' 2>/dev/null) || { echo "MERGE SKIP: no docs/ag
 base=$(pv baseRefName .baseRefName)
 if [ "$base" != main ]; then
   bstate=$(gh pr view "$base" --json state --jq .state 2>/dev/null || echo none)
-  if [ "$bstate" = MERGED ]; then gh pr edit "$pr" --base main >/dev/null; sleep 5
+  if [ "$bstate" = MERGED ]; then
+    gh pr edit "$pr" --base main >/dev/null; sleep 5
+    # a base change fires no pull_request run on a default-typed workflow; close+reopen does (same head, validated line stays)
+    gh pr close "$pr" >/dev/null && gh pr reopen "$pr" >/dev/null; sleep 10
   else echo "MERGE SKIP: base $base is not main (its PR: $bstate)"; exit 0; fi
 fi
 
@@ -37,9 +40,12 @@ m=$(pv mergeable .mergeable); for _ in 1 2 3 4 5 6; do [ "$m" = UNKNOWN ] || bre
 [ "$m" = MERGEABLE ] || reasons+=("mergeable: $m (needs a rebase)")
 # the validator's pass must name the commit being merged; a push after validation needs a new pass
 if [ "$(pol '.require_validation // true')" = true ]; then
-  head=$(pv headRefOid .headRefOid)
-  pv comments,reviews '.comments[].body, .reviews[].body' | grep -qF "heinzelwerk: validated $head" \
-    || reasons+=("no \"heinzelwerk: validated $head\" on the PR")
+  head=$(pv headRefOid .headRefOid); vok=no
+  # the validator should post the full sha; a prefix of 7+ hex chars that matches the head is accepted too
+  for v in $(pv comments,reviews '.comments[].body, .reviews[].body' | grep -oE 'heinzelwerk: validated [0-9a-f]{7,40}' | awk '{print $3}' || true); do
+    [[ $head == "$v"* ]] && vok=yes
+  done
+  [ $vok = yes ] || reasons+=("no \"heinzelwerk: validated $head\" on the PR")
 fi
 pv body '.body' | grep -qE '^[[:space:]]*[-*] \[ \]' && reasons+=("unchecked item in PR body (needs a human)")
 # optional size cap: only when the policy sets max_changed_lines

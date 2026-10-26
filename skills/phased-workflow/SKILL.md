@@ -31,17 +31,22 @@ The task list has three states: pending, in progress, completed. A task's title 
 ## Implementers (backend, frontend, infra)
 - **Before coding**: the docs the `## Docs` section names; frontend also `docs/agents/heinzelwerk/design.md`, infra also `docs/agents/heinzelwerk/infra-policy.json`.
 - **Smallest complete change**: reuse what the codebase has, then the standard library, then an installed dependency. No abstraction, option, config, or "for later" code nobody asked for. Finish every part the change touches: callers, tests, fixtures. Keep validation at trust boundaries, error handling, security, and accessibility. A shortcut with a known limit gets a code comment `shortcut: <limit>, <when to upgrade>`.
-- **Subagents**: Opus when the root cause is still unknown after two failed passes, or when you change shared code whose callers you can't see from the edit site; Haiku for call-site searches and mechanical batches. Your role prompt may add triggers. State both in `escalations:`.
-- **Done**: branch, worktree, commits, PR body per team-modes. PR open → done note into the task's details, create `#N validate <role>: <what>`, complete the task, message coordinator `[<repo>@<branch>] validate task created: <PR>`. A fix task, validator's or tech-lead's → same branch, same loop.
+- **Subagents**: Opus when the root cause is still unknown after two failed passes, or when you change shared code whose callers you can't see from the edit site; Haiku for call-site searches and mechanical batches. Your role prompt may add triggers. State both in `escalations:`. Spawn them per **Subagents** below.
+- **Checks before the validate task**: every check from `team.md`, in order, exit codes into the done note's `checks:` line. The validator fails a PR whose line is missing or short without running anything.
+- **Done**: branch, worktree, commits, PR body per team-modes. PR open → done note into the PR body and the task's details, create `#N validate <role>: <what>`, complete the task, message coordinator `[<repo>@<branch>] validate task created: <PR>`. From then on the branch is frozen: validator reviews the head it claimed, and the next change is a fix round. A fix task, validator's or tech-lead's → same branch, same loop, done note section in the PR body updated.
+
+## Subagents (every role)
+A teammate's subagent may hand back to the main session (the platform's `team-lead`) instead of you: run subagents in the foreground, and end every subagent prompt with `Put the whole report in your final message and call no tool after it.` A report that never arrives → read the last message of the transcript the spawn result named (`output_file`), or wait for the coordinator's `[team-lead] hand-back for you:` forward; respawn only when both are empty.
 
 ## Discovering work
 Found something while working? Don't silently fix it, don't drop it: propose it as a `[proposed] #N <what>` task to tech-lead and continue your own task. The fields, the dedup rule, the triage path, and the budget (3 per agent per run) are in [proposals.md](proposals.md): read it before proposing, and (tech-lead) before triaging.
 
 ## Done note (required on every task you finish)
-Write it into the task's details before completing the task; the `did:` and `evidence:` lines also go in the PR body.
+Write the whole note into the PR body under `## Done note` (edit it on every fix round) and into the task's details before completing the task. The PR body is the copy that outlives the task list; tech-lead's docs PR, the technical report, and retro read it.
 ```
 did: <what changed, files>
 evidence: <command + result summary, or PR link>
+checks: <exit code per team.md check, in order, e.g. 0 0 0 0; implement and fix tasks>
 handoff: <task id / verdict created>
 left: <anything not done, discoveries not filed; tech-lead collects these into the technical report>
 term: <optional: domain concept that is missing from or contradicts GLOSSARY.md>

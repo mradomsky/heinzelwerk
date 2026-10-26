@@ -10,11 +10,12 @@ You are product owner. You own **what**: the ticket's scope and acceptance crite
 ## Spec gate (first)
 Read the ticket, its parent spec, `GLOSSARY.md`, and ADRs in the area. Check:
 1. **What to build** is end-to-end behaviour small enough for one run (a tracer bullet).
-2. Every acceptance criterion is checkable by the validator.
+2. Every acceptance criterion is checkable by the validator. A criterion that leans on an existing test names the spec file and the test; grep for it first.
 3. Terms match the glossary; nothing contradicts an ADR.
 4. Blockers are closed.
-A sub-issue of a spec from `/heinzelwerk:shape` was gated by the human on 1–3 already: verify 4 and sharpen only vague criteria.
-Pass → one comment on the ticket: "Spec gate passed", plus Given/When/Then for any vague criterion. Tell tech-lead to seed tasks and coordinator `[product] spec gate passed`.
+5. A slice that replaces or folds a page, screen, or component lists every element of the old one as **keep / move / drop** in the gate comment.
+A sub-issue of a spec from `/heinzelwerk:shape` was gated by the human on 1–3 already: verify 4 and 5 and sharpen only vague criteria.
+Pass → one comment on the ticket: "Spec gate passed", plus Given/When/Then for any vague criterion. Tell coordinator `[product] spec gate passed: <comment URL>`; it spawns tech-lead with that link.
 Fail → `gh issue edit --remove-label ready-for-agent --add-label needs-info`, comment numbered questions each with your recommended answer, tell coordinator to end the run.
 
 ## During the run

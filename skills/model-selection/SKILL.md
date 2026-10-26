@@ -9,8 +9,10 @@ Pick the tier from what catches a mistake in the output, not from how much the w
 
 ## The one question: what checks this output?
 
-- **Something mechanical checks it** (compiler, type checker, test suite, schema, a deterministic script, a later review step) → the cheapest tier that usually gets close. The check does the quality work; paying for a stronger generator buys little.
-- **Nothing checks it**: the output is itself the verdict, or it is acted on as is → the strongest tier. Here the model's judgement is the deliverable.
+| What checks the output | Tier |
+|---|---|
+| **Something mechanical**: a compiler, type checker, test suite, schema, a deterministic script, a later review step | The cheapest tier that usually gets close. The check does the quality work; paying for a stronger generator buys little. |
+| **Nothing**: the output is itself the verdict, or it is acted on as is | The strongest tier. Here the model's judgement is the deliverable. |
 
 Everything below applies that question.
 
@@ -26,7 +28,7 @@ Everything below applies that question.
   - judging whether evidence supports a conclusion;
   - anything published or acted on without another check.
 
-**Escalate one tier at a time.** A failed attempt moves the next attempt up one tier, not straight to the top, unless the work is already in an Opus category above. Two failures at the same tier mean the problem is depth, not effort.
+**Escalate one tier at a time.** A failed attempt moves the next attempt up one tier, not straight to the top. Exception: the work is already in an Opus category above. Two failures at the same tier mean the problem is depth, not effort.
 
 ## Mistakes to avoid
 
@@ -39,13 +41,13 @@ Everything below applies that question.
 
 ## Effort
 
-Effort follows the same question. High effort pays where the answer is a judgement with consequences; on mechanical work it only adds latency. Set `model` and `effort` per subagent; a workflow where everything runs at the top setting is almost always mis-tuned.
+Effort follows the same question. High effort pays where the answer is a judgement with consequences. On mechanical work it only adds latency. Set `model` and `effort` per subagent; a workflow where everything runs at the top setting is almost always mis-tuned.
 
 ## Say what you picked
 
 For any non-obvious choice, one clause: tier and reason ("Haiku finders, Opus verifier: the verify step is the precision step"). That makes it reviewable and a bad default visible.
 
-## Heinzelwerk
+## Heinzelwerk defaults
 
-Haiku effort per subtask: low for searches and mechanical edits; medium for batches with local judgement; high for a summary or classification that feeds a decision.
-Accepted trade-off in team runs: outside the risk areas in `docs/agents/heinzelwerk/team.md`, Sonnet reviews what Sonnet built and the human PR review is the final check; risk areas get Opus review, and retro adds an area wherever Sonnet let something through.
+- **Haiku effort per subtask**: low for searches and mechanical edits; medium for batches with local judgement; high for a summary or classification that feeds a decision.
+- **Accepted trade-off in team runs**: outside the risk areas in `docs/agents/heinzelwerk/team.md`, Sonnet reviews what Sonnet built and the human PR review is the final check. Risk areas get Opus review. Retro adds an area wherever Sonnet let something through.

@@ -1,6 +1,6 @@
 # Team rules
 
-How heinzelwerk agents work in this repo. Mode rules (single repo vs workspace) live in the `heinzelwerk:team-modes` skill; this file holds only what is specific to this repo.
+How heinzelwerk agents work in this repo. Mode rules (single repo vs workspace) live in the `heinzelwerk:team-modes` skill. This file holds only what is specific to this repo.
 
 - **Backend paths**: <e.g. services/>
 - **Frontend paths**: <e.g. command-interface/>

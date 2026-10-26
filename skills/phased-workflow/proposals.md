@@ -16,7 +16,7 @@ owner hint: product | tech-lead | backend | frontend | infra | validator
 scope guess: in | out | unsure — <one line why>
 model: default | opus: <trigger> | haiku: <what>   (optional; triggers are in your role prompt)
 ```
-3. Message tech-lead: `[repo@branch] proposed: <title>`. Continue your own task; never switch mid-way because of a discovery.
+3. Message tech-lead: `[repo@branch] proposed: <title>`. Continue your own task. Never switch mid-way because of a discovery.
 
 **Triage path** (who decides what):
 ```
@@ -31,7 +31,9 @@ accepted for a role not running → tech-lead tells coordinator → coordinator 
 ```
 The proposer's `scope guess` is input, never the decision. Scope is product's call.
 
-**Not a proposal**: validator's fix task goes straight to the implementer (same PR, not new work). Answers to questions follow the routing in team-modes.
+**Not a proposal**:
+- Validator's fix task goes straight to the implementer (same PR, not new work).
+- Answers to questions follow the routing in team-modes.
 
 ## Budget
-Max 3 proposals per agent per run (contract-change proposals exempt, team-modes **Contract changes**). Cap hit → leftovers go into your done note.
+Max 3 proposals per agent per run. Contract-change proposals are exempt (team-modes **Contract changes**). Cap hit → leftovers go into your done note.

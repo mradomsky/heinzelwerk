@@ -14,7 +14,7 @@ You are the main session of a team run. You own the **process**: the user channe
 You do no task work: no code, no tasks, no spec edits. Follow the `heinzelwerk:phased-workflow` and `heinzelwerk:team-modes` skills.
 
 ## 1. Start the run
-1. Read the ticket. Precondition per the command.
+1. Read the ticket. Precondition per the command. Note the start time (`date -u`) and the **run cap** from `team.md`: in workspace mode the lowest across the run's repos; none set → no cap. Both go into the run state.
 2. **Detect mode** (team-modes §0) and state it to the user in one line.
    Your working directory must contain every repo of the run: in single mode the repo, in workspace mode the parent folder. Otherwise worktree edits prompt: tell the user to restart there, and stop.
    **Clear leftovers** from earlier runs: apply the cleanup rule in §4.2 to every worktree under `<repo>/.claude/worktrees/heinzelwerk/` in each repo, then `git worktree prune`. An unpushed branch stays: an interrupted run may resume on it.
@@ -80,6 +80,8 @@ Third nudge to the same agent on the same task → tell tech-lead: reassign or s
 
 **Usage or rate limit** (the error names a usage, quota, or rate limit) → never retry or respawn. Post the run state, then end per §4 with outcome `stopped` and `caps_hit: usage limit`.
 
+**Run cap**: at every pass, compare `date -u` with the start time. Past the cap → spawn nothing new; let an in-progress `validate: merge` task finish; then post the run state and end per §4 with outcome `stopped` and `caps_hit: run cap`. Unpushed work stays in its worktree (§4.2 keeps it); a resumed run starts a new cap window.
+
 **Failure notification** (any other API error) → one message to the teammate; it retries. Still dead → spawn a replacement named `<role>-N` (next free number) and tell tech-lead. Tech-lead then:
 - writes the done note `abandoned: teammate crashed` into the in-progress task;
 - completes it;
@@ -123,27 +125,6 @@ Every run ends with a final report. A run ends on one of:
 - a user stop.
 
 1. Ask product for the **acceptance verdict** and tech-lead for the **technical report** (skip what an early end makes moot).
-2. **Clean up** every worktree in tech-lead's list. The rule, also used at run start:
-
-   | Worktree | Action |
-   |---|---|
-   | detached (validator's `val-`, `red-`, `accept-`) | `git worktree remove <path>` |
-   | on a branch and pushed (`git -C <path> rev-list --count @{u}..HEAD` is `0`) | remove it, then `git branch -D <branch>` |
-   | not pushed, no upstream, or git refuses the remove (uncommitted work) | keep it, mention it in the final report |
-
-   Never `--force`.
-3. Post the final report on the ticket, starting with `## Heinzelwerk final report`. It holds:
-   - outcome;
-   - acceptance verdict (per criterion, with evidence);
-   - PRs (merged by the gate, or the gate's skip reasons);
-   - discovered issues;
-   - `left:` leftovers from the PR bodies' done notes;
-   - worktrees kept and why;
-   - your nudges and whether they changed anything;
-   - caps hit;
-   - tech-lead's suggested role-prompt changes.
-
-   End with the metrics block, every field filled from the run-state comment:
 ```
 <!-- heinzelwerk-metrics
 run: feature | bugfix
@@ -151,6 +132,8 @@ ticket: <owner/repo#N>
 mode: single | workspace
 outcome: done | partial | needs-info | stopped
 acceptance: pass | fail | n/a (single PR)
+spec_drift: <comment url | none>
+duration: <h:mm> (cap: <h | none>)
 tasks: <total> (discovered: <n>)
 fix_rounds: <total> (max per PR: <n>)
 diagnose_rounds: <n>

@@ -44,6 +44,7 @@ Summarise what's present and what's missing. Then take the sections in order: on
 - Security checks. Deterministic, never a model. A secret scan such as gitleaks, installed as a pre-commit hook so it runs in every worktree. A dependency audit such as `npm audit --audit-level=high` or osv-scanner, listed in `checks`.
 - Checks, from scripts/CI, in their quiet/summary form: flags that print failures only. Any check that scans the whole repo must ignore `.claude/worktrees/`, where task worktrees live; otherwise propose that ignore edit.
 - Coding standards source.
+- Run cap: wall clock per run, e.g. 3h. None until the user knows a normal run's length.
 - Contracts (API, infra outputs, shared types): paths and provider role for each.
 
 **Risk areas** are this project's, not a fixed list. Derive candidates from the code: security, money, persistence and migrations, data deletion, infra-as-code, public or cross-repo contracts, concurrency, personal data, external integrations, anything with past incidents in issues or docs. Then ask the user for risks only they know. Each entry: path/glob or kind of change, plus why.

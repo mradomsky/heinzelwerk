@@ -4,5 +4,6 @@
   "version": "0.37.0",
   "author": { "name": "Maksym Radomsky" },
   "repository": "https://github.com/mradomsky/heinzelwerk",
-  "license": "MIT"
+  "license": "MIT",
+  "icon": "./.claude-plugin/icon.png"
 }

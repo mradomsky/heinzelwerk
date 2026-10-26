@@ -5,24 +5,24 @@ description: "heinzelwerk: absorb a repo's existing docs into the agent structur
 
 # Adopt docs
 
-Existing docs hold decisions, vocabulary, and planned work the team can't use until they sit where the team looks. This skill moves the **content** into that structure; the original files stay where they are.
+Existing docs hold decisions, vocabulary, and planned work the team can't use until they sit where the team looks. This skill moves the **content** into the agent structure; the original files stay where they are.
 
 Follow `heinzelwerk:writing-for-agents` for anything you write. Terms and ADRs go through `heinzelwerk:domain-modeling` formats and rules.
 
 ## 1. Inventory
 
-- Mode from the `heinzelwerk:team-modes` skill §0. Workspace: every repo, each handled in its own repo.
+- Read the mode from the `heinzelwerk:team-modes` skill §0. In a workspace, cover every repo, each handled in its own repo.
 - Read `docs/agents/heinzelwerk/adopted.md` if it exists. It is the ledger of docs already adopted, with each doc's content hash at adoption.
 - List candidate docs: Markdown and text docs anywhere outside `node_modules`, build output, and vendored code. Skip the agent structure: `docs/agents/heinzelwerk/`, `GLOSSARY*.md`, `docs/adr/`, `CLAUDE*.md`, `AGENTS*.md`. Other tools' files in `docs/agents/` are candidates.
 - Keep only docs that are **new** or **changed**:
   - **new**: not in the ledger;
   - **changed**: `git hash-object <path>` differs from the ledger hash. Work on the diff (`git diff <ledger hash> $(git hash-object -w <path>)`), not the whole file;
-  - legacy entry with a commit SHA: use `git rev-parse <sha>:<path>` as the ledger hash. If that fails, treat the doc as new.
+  - a legacy ledger entry with a commit SHA: use `git rev-parse <sha>:<path>` as the ledger hash. If that fails, treat the doc as new.
 - Nothing left → tell the user, stop.
 
 ## 2. Classify
 
-Haiku subagents in parallel, 8–10 docs each, effort medium. Medium because classifying feeds your decisions; 8–10 per subagent because one subagent per doc would pay the start-up context once per doc. Each returns, per doc, its content split into these classes, quoting the source heading for every item:
+Run Haiku subagents in parallel, 8–10 docs each, at effort medium. Medium because classifying feeds your decisions; 8–10 per subagent because one subagent per doc would pay the start-up context once per doc. Each returns, per doc, its content split into these classes, quoting the source heading for every item:
 
 | Class | Destination |
 |---|---|
@@ -48,12 +48,12 @@ Present per class, one class per round, recommended answer first (`heinzelwerk:g
 - **How-to, reference, gotchas**: show the proposed edits to repo map, team rules, and learnings. Reference docs get a pointer line under `## Reference docs` in the repo map, worded as a trigger: `- <path>: read when <condition>.`
 - **Stale**: list item, source, and what contradicts it. User decides: fix the doc, mark it, or ignore. Never fix a source doc silently.
 
-**Workspace**: a decision or term spanning repos goes to the tickets repo (workspace ADRs, `GLOSSARY-MAP.md` relationships). Everything else stays in its own repo.
+**Workspace**: a decision or term that spans repos goes to the tickets repo: decisions as workspace ADRs, terms as `GLOSSARY-MAP.md` relationships. Everything else stays in its own repo.
 
 ## 4. Write
 
-- Branch: called from setup → reuse setup's branch and PR. Otherwise, per repo, a fresh branch from main `docs/adopt-docs`.
+- Branch: when called from setup, reuse setup's branch and PR. Otherwise, per repo, a fresh branch from main named `docs/adopt-docs`.
 - Write resolved ADRs, glossary terms, repo-map/team/learnings edits; create accepted issues.
 - Update `docs/agents/heinzelwerk/adopted.md` (create if missing): one line per processed doc, `- <path> @ <hash>: <classes found> → <where content went>`. `<hash>` is `git hash-object <path>`: a content hash, not a commit SHA, because it survives squash and rebase merges.
 - Never delete, move, or rewrite original docs.
-- Commit `docs: adopt existing docs into agent structure`, then open a PR (or add to setup's). PR body lists stale items and anything the user dropped. Do not merge.
+- Commit `docs: adopt existing docs into agent structure`, then open a PR, or add the commit to setup's PR when called from setup. PR body lists stale items and anything the user dropped. Do not merge.

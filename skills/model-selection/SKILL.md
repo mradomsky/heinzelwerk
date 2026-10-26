@@ -28,7 +28,7 @@ Everything below applies that question.
   - judging whether evidence supports a conclusion;
   - anything published or acted on without another check.
 
-**Escalate one tier at a time.** A failed attempt moves the next attempt up one tier, not straight to the top. Exception: the work is already in an Opus category above. Two failures at the same tier mean the problem is depth, not effort.
+**Escalate one tier at a time.** A failed attempt moves the next attempt up one tier, not straight to the top. Exception: work already in an Opus category above goes straight to Opus. Two failures at the same tier mean the problem is depth, not effort.
 
 ## Mistakes to avoid
 
@@ -45,7 +45,7 @@ Effort follows the same question. High effort pays where the answer is a judgeme
 
 ## Say what you picked
 
-For any non-obvious choice, one clause: tier and reason ("Haiku finders, Opus verifier: the verify step is the precision step"). That makes it reviewable and a bad default visible.
+For any non-obvious choice, say in one clause which tier and why ("Haiku finders, Opus verifier: the verify step is the precision step"). That makes it reviewable and a bad default visible.
 
 ## Heinzelwerk defaults
 

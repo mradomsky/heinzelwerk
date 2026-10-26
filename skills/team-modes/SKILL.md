@@ -21,37 +21,37 @@ Coordinator does this first and tells the team; tech-lead confirms it in the pla
 Only coordinator talks to the user.
 
 ## Messaging
-- Every message starts with `[<repo>@<branch>]` from an implementer, `[<role>]` from everyone else.
+- Every message starts with a tag: `[<repo>@<branch>]` from an implementer, `[<role>]` from everyone else.
 - Member names: coordinator is `team-lead` (the platform's name for the main session); every other role is its own name (`tech-lead`, `product`, …; a respawn after a release or crash: `<role>-N`). Never confuse `team-lead` with `tech-lead`.
 - Coordinator, product, and tech-lead always run: message them without checking.
-- Any other role → message it **only if it is running**. First read the `members` array in the team config; its path is in your spawn prompt (`~/.claude/teams/<team>/config.json`). Replying to a message you received is always allowed. A message to a stopped teammate revives it with stale context; only coordinator spawns.
-- Target not running → message **tech-lead** instead, saying who you meant and why. Tech-lead decides whether that role is needed (coordinator spawns it) or the matter becomes a task or proposal.
-- Messages vanish with the run; what goes on GitHub is in phased-workflow **Ticket vs task**.
-- **Voice** in teammate messages and done notes: answer first; no greeting or recap; short words; drop articles when the sentence still reads; keep every not/never/no/only; payload (paths, commands, numbers, errors) exact. Ticket comments, PRs, code, and docs: normal prose.
+- Any other role → message it **only if it is running**. To check, first read the `members` array in the team config; its path is in your spawn prompt (`~/.claude/teams/<team>/config.json`). Replying to a message you received is always allowed. A message to a stopped teammate revives it with stale context; only coordinator spawns.
+- Target not running → message **tech-lead** instead, saying who you meant and why. Tech-lead decides whether that role is needed (then coordinator spawns it) or whether the matter becomes a task or proposal.
+- Messages vanish when the run ends; which things go on GitHub instead is in phased-workflow **Ticket vs task**.
+- **Voice** in teammate messages and done notes: answer first; no greeting or recap; short words; drop articles when the sentence still reads without them; keep every not/never/no/only; payload (paths, commands, numbers, errors) exact. Ticket comments, PRs, code, and docs use normal prose.
 
 ## Contract changes
-Contracts are the paths under **Contracts** in `docs/agents/heinzelwerk/team.md`, plus cross-repo interfaces in workspace mode. Compatible by default; a breaking change is a proposal to tech-lead before coding. The rules are in [contracts.md](contracts.md): who the provider is, what counts as compatible, how a breaking change or a mid-task consumer need is handled. Read it when your task, or team.md, names a contract your change touches.
+Contracts are the paths under **Contracts** in `docs/agents/heinzelwerk/team.md`, plus cross-repo interfaces in workspace mode. Changes are compatible by default; a breaking change goes to tech-lead as a proposal before you code it. The rules are in [contracts.md](contracts.md): who the provider is, what counts as compatible, how a breaking change or a mid-task consumer need is handled. Read it when your task, or team.md, names a contract your change touches.
 
 ## 1. Same in both modes
 - **All edits happen in your own worktree.** The main checkout is read-only reference.
-- **Worktree per task**, created explicitly (do not rely on automatic isolation):
+- **Worktree per task**, which you create yourself with these commands (do not rely on automatic isolation):
   ```sh
   git -C <repo> fetch origin
   grep -qxF .claude/worktrees/ <repo>/.git/info/exclude || echo .claude/worktrees/ >> <repo>/.git/info/exclude
   git -C <repo> worktree add <repo>/.claude/worktrees/heinzelwerk/<branch> -b <branch> origin/main
   ```
-  Then run the **Worktree setup** command from `team.md` inside it (e.g. `npm ci`): a fresh worktree has no dependencies. Work only inside that path. One task = one branch = one worktree = one PR.
-  Temp files go in your own scratchpad directory; `/tmp` is shared with every agent on the machine. Unfinished work waits as a WIP commit on your branch; the stash is one per repo, shared by every worktree and by the user.
+  Then run the **Worktree setup** command from `team.md` inside the new worktree (e.g. `npm ci`): a fresh worktree has no dependencies. Work only inside that path. One task = one branch = one worktree = one PR.
+  Temp files go in your own scratchpad directory; `/tmp` is shared with every agent on the machine. Unfinished work waits as a WIP commit on your branch, not in the stash: the stash is one per repo, shared by every worktree and by the user.
 - **Branch name**: `<type>/<ticket-number>-<topic>`, type from conventional commits (`feat`, `fix`, `docs`, `test`, `refactor`, `chore`). Example: `feat/19-anomaly-webhook`.
-- **Commits**: conventional, reference ticket, keep Claude Code's `Co-Authored-By` trailer (one of retro's signals for agent vs human commits). `feat: add anomaly webhook (#19)` / `(owner/repo#19)` in workspace mode.
+- **Commits**: conventional commits that reference the ticket; keep Claude Code's `Co-Authored-By` trailer (retro uses it as one signal to tell agent commits from human ones). Example: `feat: add anomaly webhook (#19)`; in workspace mode the ref is `(owner/repo#19)`.
 - **Stay current with main.** Run `git fetch origin && git rebase origin/main` in your worktree:
   - before moving a task to under review;
   - whenever validator reports a conflict;
   - whenever a merged PR touched your files.
 
-  Task blocked-by a **same-repo** contract task whose PR isn't merged: rebase onto `origin/<contract-branch>` instead. Cross-repo: stay on `origin/main`.
+  If your task is blocked-by a **same-repo** contract task whose PR isn't merged, rebase onto `origin/<contract-branch>` instead. If that contract task is in another repo, stay on `origin/main`.
   Resolve conflicts **by intent**: read the other side's PR and ticket; keep both behaviours unless the specs say otherwise; never drop the other side's change silently. Can't tell what the other side intended → ask tech-lead. Run all checks after resolving. Push your own branch with `--force-with-lease` only; plain `--force` is blocked.
-- Worktrees are disposable: the branch lives on the remote. Coordinator removes them at run end (coordinator §4). A later fix on an existing PR recreates one from the remote branch: `git -C <repo> fetch origin && git -C <repo> worktree add <path> -B <branch> origin/<branch>`.
+- Worktrees are disposable: the branch lives on the remote. Coordinator removes them at run end (coordinator §4). A later fix on an existing PR recreates the worktree from the remote branch: `git -C <repo> fetch origin && git -C <repo> worktree add <path> -B <branch> origin/<branch>`.
 
 ## 2. Mode rules
 Read the file for your mode once, at run start, and keep to it:
@@ -68,4 +68,4 @@ Critique (risk-area slices): <point> → changed: <how> | kept: <why>
 Tasks
 #<task> phase | owner | repo | branch | worktree path | blocked-by
 ```
-In workspace mode also: shared branch name, PR order, which PR closes the ticket.
+In workspace mode the comment also lists: shared branch name, PR order, which PR closes the ticket.

@@ -9,8 +9,8 @@ Precondition: the issue is labelled `ready-for-agent`. Label missing → ask the
 
 Create an agent team; spawn roles on demand per the `heinzelwerk:coordinator` skill.
 - Product skips the spec gate (the issue is the spec) but answers scope questions and gives the acceptance verdict.
-- Your spawn prompts for tech-lead, the owner, and validator tell them to follow `bugfix.md` in the `heinzelwerk:phased-workflow` skill.
+- Your spawn prompts for tech-lead, the owner (the implementer tech-lead picks), and validator tell them to follow `bugfix.md` in the `heinzelwerk:phased-workflow` skill.
 
 Phases: [bugfix.md](../skills/phased-workflow/bugfix.md) in the `heinzelwerk:phased-workflow` skill (analyze → implement red/green → validate). Read it before spawning.
 
-Then as in `/heinzelwerk:feature`: tech-lead's docs PR, product's acceptance verdict, your final report.
+Then the run ends as in `/heinzelwerk:feature`: tech-lead opens the docs PR, product gives the acceptance verdict, you post the final report.

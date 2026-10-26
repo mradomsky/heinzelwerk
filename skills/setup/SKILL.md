@@ -24,7 +24,7 @@ Read whatever exists; don't assume.
   - cwd is a git repo → single mode.
   - cwd is not a repo, but child dirs have `.git` → workspace mode (see the `heinzelwerk:team-modes` skill §0).
 - **Per repo**, read: `git remote -v`, `CLAUDE.md` / `AGENTS.md` (is there an existing `## Agent skills (heinzelwerk)` block?), `GLOSSARY.md`, `GLOSSARY-MAP.md`, `CONTEXT.md` (older name for the glossary), `docs/adr/`, `docs/agents/`, `CODING_STANDARDS.md`, `CONTRIBUTING.md`, existing design docs, build/test/lint scripts, CI config, `gh label list`.
-- **Map** each repo with parallel Haiku Explore subagents (effort low; `heinzelwerk:model-selection`). In single mode, map each top-level area instead. Each subagent returns at most 15 lines: purpose, entry points, how to build/test/run, patterns to follow, traps. In workspace mode, also what the repo calls and what calls it.
+- **Map** each repo with parallel Haiku Explore subagents at effort low, per the `heinzelwerk:model-selection` skill. In single mode, map each top-level area instead. Each subagent returns at most 15 lines: purpose, entry points, how to build/test/run, patterns to follow, traps. In workspace mode, each subagent also reports what the repo calls and what calls it.
 
 ## 2. Present findings and ask
 
@@ -41,10 +41,10 @@ Summarise what's present and what's missing. Then take the sections in order: on
 - Risk areas (see below).
 - E2E command: e2e or smoke tests, if any.
 - Worktree setup: the install command a fresh checkout needs, e.g. `npm ci` when a lockfile exists.
-- Security checks. Deterministic, never a model. A secret scan such as gitleaks, installed as a pre-commit hook so it runs in every worktree. A dependency audit such as `npm audit --audit-level=high` or osv-scanner, listed in `checks`.
-- Checks, from scripts/CI, in their quiet/summary form: flags that print failures only. Any check that scans the whole repo must ignore `.claude/worktrees/`, where task worktrees live; otherwise propose that ignore edit.
+- Security checks. Deterministic tools, never a model. A secret scan such as gitleaks, installed as a pre-commit hook so it runs in every worktree. A dependency audit such as `npm audit --audit-level=high` or osv-scanner, listed in `checks`.
+- Checks, from scripts/CI, in their quiet/summary form: flags that print failures only. Any check that scans the whole repo must ignore `.claude/worktrees/`, where task worktrees live; if one doesn't, propose the edit that adds the ignore.
 - Coding standards source.
-- Run cap: wall clock per run, e.g. 3h. None until the user knows a normal run's length.
+- Run cap: wall clock per run, e.g. 3h. Propose none until the user knows how long a normal run takes.
 - Contracts (API, infra outputs, shared types): paths and provider role for each.
 
 **Risk areas** are this project's, not a fixed list. Derive candidates from the code: security, money, persistence and migrations, data deletion, infra-as-code, public or cross-repo contracts, concurrency, personal data, external integrations, anything with past incidents in issues or docs. Then ask the user for risks only they know. Each entry: path/glob or kind of change, plus why.
@@ -55,13 +55,13 @@ Workspace mode: also propose each repo's role, and the integration command if on
 - Which environment dirs may agents auto-apply to? Recommend dev/sandbox only; never prod.
 - Protected resource types: start from [infra-policy.json](infra-policy.json), add project-specific ones (state backend, DNS, data stores, anything listed as a risk area).
 - Allowed deletes: recommend none to start.
-- `.gitignore`: `plan.bin`, `*.tfplan`, `*.tfstate*`. Saved plans carry sensitive values. The guard checks only explicit `git add` arguments, so `git add -A` must not see them.
-- Credentials: tell the user the real boundary is credential scope. Agents get credentials that can write only the auto-apply environments and read (plan) elsewhere. Prod write credentials never exist in the agent environment. Ask them to confirm this is set up; record the answer in `team.md`.
-- Post-merge apply for higher environments: a CI job if they have one (recommend). Otherwise tech-lead applies through the gate in the next run where policy allows.
+- `.gitignore`: `plan.bin`, `*.tfplan`, `*.tfstate*`. Saved plans carry sensitive values. The guard checks only the files named explicitly on `git add`, so the ignore lines must keep them out of `git add -A`.
+- Credentials: tell the user the real boundary is credential scope. Agents get credentials that can write only the auto-apply environments and read (plan) elsewhere. Prod write credentials never exist in the agent environment. Ask the user to confirm this is set up; record the answer in `team.md`.
+- Post-merge apply for higher environments: a CI job if they have one (recommended). Otherwise tech-lead applies through the gate in the next run where policy allows.
 
 **C3 — Frontend design and preview** (only if a UI exists). Propose:
 - `docs/agents/heinzelwerk/design.md` from [design.md](design.md): extract tokens, components, and style rules from the code, theme files, and existing style docs. Ask the user for rules only they know.
-- UI preview: the command that starts the app for screenshots (a dev server with a port argument, or a static build + preview) and the base URL. Playwright is the screenshot tool (`npx playwright screenshot`, no MCP needed). The plugin's `ui-shots` publishes the screenshots. Record both in `team.md`.
+- UI preview: the command that starts the app for screenshots (a dev server with a port argument, or a static build + preview) and the base URL. Playwright is the screenshot tool (`npx playwright screenshot`, no MCP needed). The plugin's `ui-shots` publishes the screenshots. Record the command and the base URL in `team.md`.
 
 **D — Domain docs.**
 - Default, single-context: `GLOSSARY.md` + `docs/adr/` at repo root.
@@ -74,17 +74,17 @@ Workspace mode: also propose each repo's role, and the integration command if on
 - Offer ADRs only for decisions the user confirms and that meet all three ADR criteria.
 - Never write a term or ADR the user didn't confirm.
 
-**F — Existing docs.** Exploration found docs outside the agent structure → recommend adopting them now: run the `heinzelwerk:adopt-docs` skill on this setup's branch, after section E. It can be rerun later whenever new docs appear.
+**F — Existing docs.** If exploration found docs outside the agent structure, recommend adopting them now: run the `heinzelwerk:adopt-docs` skill on this setup's branch, after section E. That skill can be rerun later whenever new docs appear.
 
-**G — Auto-merge** (single mode; workspace: off). Check first whether a merge to `main` deploys anywhere: look for workflows triggered on push to `main`.
+**G — Auto-merge** (single mode only; in workspace mode it stays off). Check first whether a merge to `main` deploys anywhere: look for workflows triggered on push to `main`.
 - Recommend **on** when a merge doesn't deploy, or when the project isn't production-critical.
 - Recommend **off** when `main` ships to users.
 
 When on:
-- Policy from [merge-policy.json](merge-policy.json) with `enabled: true`. `allow_paths: ["*"]`, unless the user names areas that must always wait for a human; those go in `deny_paths`. Risk areas still get Opus review either way. `merge_method` as the repo's history merges (merge commits vs squash). The gate and its policy always need a human. Say once: the `validated` line the gate trusts could be posted by any role (one `gh` login for all); acceptable while `main` is not production.
-- CI on pull requests: `require_checks` stays true. No workflow runs on `pull_request` → propose `.github/workflows/heinzelwerk-checks.yml` running the **Worktree setup** and every **Checks** command from `team.md`.
-- Permission: add `Bash(merge-gate *)` to `permissions.allow` in `.claude/settings.json` (committed; merge into an existing file). Without it, Claude Code's auto mode blocks the gate as "merge without review". The gate itself runs from the plugin's `bin/`, so updates arrive with the plugin and no PR can change it.
-- Docs PRs merge through the gate too; validator checks their formats. Terms, ADRs, or learnings that should wait for a human → their paths in `deny_paths`.
+- Policy from [merge-policy.json](merge-policy.json) with `enabled: true`. `allow_paths: ["*"]`, unless the user names areas that must always wait for a human; those go in `deny_paths`. Risk areas still get Opus review either way. `merge_method`: whichever the repo's history already uses (merge commits or squash). Changes to the gate itself and to its policy always wait for a human; the gate never merges them. Tell the user once: the `validated` line the gate trusts could be posted by any role, since all roles share one `gh` login; that is acceptable while `main` is not production.
+- CI on pull requests: `require_checks` stays true. If no workflow runs on `pull_request`, propose `.github/workflows/heinzelwerk-checks.yml` running the **Worktree setup** and every **Checks** command from `team.md`.
+- Permission: add `Bash(merge-gate *)` to `permissions.allow` in `.claude/settings.json` (the committed file; merge into it if it already exists). Without it, Claude Code's auto mode blocks the gate as "merge without review". The gate itself runs from the plugin's `bin/`, so updates arrive with the plugin and no PR can change it.
+- Docs PRs merge through the gate too; validator checks their formats. If terms, ADRs, or learnings should wait for a human, put their paths in `deny_paths`.
 
 ## 3. Confirm the drafts
 
@@ -92,18 +92,18 @@ Show drafts of the `## Agent skills (heinzelwerk)` block (below) and every file 
 
 ## 4. Write the files
 
-Per repo, on a fresh branch from main `docs/heinzelwerk-setup`:
+Per repo, on a fresh branch `docs/heinzelwerk-setup` cut from main:
 
 - `docs/agents/heinzelwerk/issue-tracker.md` from [issue-tracker-github.md](issue-tracker-github.md)
 - `docs/agents/heinzelwerk/triage-labels.md` from [triage-labels.md](triage-labels.md); create missing labels with `gh label create`
 - `docs/agents/heinzelwerk/domain.md` from [domain.md](domain.md)
 - `docs/agents/heinzelwerk/team.md` from [team.md](team.md)
-- UI found: `docs/agents/heinzelwerk/design.md` (C3)
-- infra found: `docs/agents/heinzelwerk/infra-policy.json` from [infra-policy.json](infra-policy.json) with the answers from C2, and the `.gitignore` lines from C2 (`tf-gate` needs `jq` on the machine)
+- UI found: `docs/agents/heinzelwerk/design.md` as drafted in C3
+- infra found: `docs/agents/heinzelwerk/infra-policy.json` from [infra-policy.json](infra-policy.json) with the answers from C2, and the `.gitignore` lines from C2. `tf-gate` needs `jq` installed on the machine.
 - `docs/agents/heinzelwerk/merge-policy.json` from [merge-policy.json](merge-policy.json) with the answers from G (off if G was skipped); G on → also the CI workflow and the `.claude/settings.json` permission
 - **Upgrade from an older plugin**: `scripts/merge-gate`, `scripts/tf-gate`, `scripts/ui-shots` in the repo are copies an earlier setup made. The plugin's `bin/` provides the scripts now. Delete the copies. Replace `Bash(scripts/merge-gate *)` with `Bash(merge-gate *)`. Drop `max_changed_lines` from the policy unless the user wants a cap.
 - `docs/agents/heinzelwerk/repo-map.md`: from the exploration, max 120 lines, facts only
-- `GLOSSARY.md` / `docs/adr/` only if section E produced resolved content (lazy otherwise)
+- `GLOSSARY.md` / `docs/adr/` only if section E produced resolved content; otherwise they are created later, when first needed
 
 **Pick the file to edit**: always `CLAUDE.md`; Claude Code ignores `AGENTS.md` whenever any `CLAUDE.md` exists in the folder or above it.
 - Only `AGENTS.md` exists → create `CLAUDE.md` with `@AGENTS.md` as its first line, then the block.

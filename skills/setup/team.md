@@ -1,6 +1,6 @@
 # Team rules
 
-How heinzelwerk agents work in this repo. Mode rules (single repo vs workspace) live in the `heinzelwerk:team-modes` skill; this file holds only what is specific to this repo.
+How heinzelwerk agents work in this repo. Mode rules (single repo vs workspace) live in the `heinzelwerk:team-modes` skill. This file holds only what is specific to this repo.
 
 - **Backend paths**: <e.g. services/>
 - **Frontend paths**: <e.g. command-interface/>
@@ -9,7 +9,7 @@ How heinzelwerk agents work in this repo. Mode rules (single repo vs workspace) 
 - **Infra paths**: <e.g. infra/> (environment dirs under it, e.g. infra/envs/dev)
 - **Infra checks**: <e.g. `terraform fmt -check -recursive`, `tflint`>
 - **Infra policy**: `docs/agents/heinzelwerk/infra-policy.json`, enforced by the plugin's `tf-gate`
-- **Shared paths** (only the task's named owner edits): <e.g. packages/types/>
+- **Shared paths** (only the owner named in the task edits them): <e.g. packages/types/>
 - **Worktree setup** (run once in every new task worktree; omit if none): <e.g. `npm ci --prefer-offline --no-audit --no-fund`>
 - **Checks** (validator runs every one, in order; quiet variants, failures only): <e.g. `npm run build --silent`, `npm run lint -- --quiet`, `npm test -- --reporter=dot`>
 - **Security**: <secret scan pre-commit hook, e.g. gitleaks> · <dependency audit in checks, e.g. `npm audit --audit-level=high`>
@@ -20,7 +20,7 @@ How heinzelwerk agents work in this repo. Mode rules (single repo vs workspace) 
   - <e.g. any DB migration: irreversible on prod data>
   - <e.g. calls to the payment provider: money moves>
   - infra paths: always a risk area
-- **Contracts** (team-modes **Contract changes**; validator checks every diff touching these):
+- **Contracts** (see team-modes **Contract changes**; validator checks every diff touching these):
   - API: <e.g. docs/api-contract.md> = single source of truth backend ↔ frontend · provider backend
   - Infra outputs: <e.g. infra/**/outputs.tf> · provider infra
   - Shared types: <e.g. packages/types/> · provider = the task's named owner

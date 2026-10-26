@@ -1,6 +1,6 @@
 # Design system
 
-What the UI must look and behave like. Frontend builds against it; validator reviews code (Standards axis) and screenshots against it. Facts and rules only; no aspirations.
+What the UI must look and behave like. Frontend builds against it. Validator reviews code (Standards axis) and screenshots against it. Facts and rules only; no aspirations.
 
 ## Tokens
 - Colors: <names → values, which to use for what>

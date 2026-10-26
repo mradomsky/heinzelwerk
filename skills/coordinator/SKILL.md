@@ -125,6 +125,28 @@ Every run ends with a final report. A run ends on one of:
 - a user stop.
 
 1. Ask product for the **acceptance verdict** and tech-lead for the **technical report** (skip what an early end makes moot).
+2. **Clean up** every worktree in tech-lead's list. The rule, also used at run start:
+
+   | Worktree | Action |
+   |---|---|
+   | detached (validator's `val-`, `red-`, `accept-`) | `git worktree remove <path>` |
+   | on a branch and pushed (`git -C <path> rev-list --count @{u}..HEAD` is `0`) | remove it, then `git branch -D <branch>` |
+   | not pushed, no upstream, or git refuses the remove (uncommitted work) | keep it, mention it in the final report |
+
+   Never `--force`.
+3. Post the final report on the ticket, starting with `## Heinzelwerk final report`. It holds:
+   - outcome;
+   - acceptance verdict (per criterion, with evidence);
+   - product's spec-drift comment;
+   - PRs (merged by the gate, or the gate's skip reasons);
+   - discovered issues;
+   - `left:` leftovers from the PR bodies' done notes;
+   - worktrees kept and why;
+   - your nudges and whether they changed anything;
+   - caps hit;
+   - tech-lead's suggested role-prompt changes.
+
+   End with the metrics block, every field filled from the run-state comment:
 ```
 <!-- heinzelwerk-metrics
 run: feature | bugfix

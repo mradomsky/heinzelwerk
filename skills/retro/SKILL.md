@@ -11,7 +11,7 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
 
 1. Call the Skill tool with `heinzelwerk:writing-for-agents` for the writing style guide.
 
-2. **Scope.** Default: everything since the last retro (newest file in `docs/agents/heinzelwerk/retros/`; workspace: in the tickets repo). The user may give a date or ticket list instead. Read the last retro's actions: did each one happen, and did it help?
+2. **Scope.** Default: everything since the last retro (newest file in `docs/agents/heinzelwerk/retros/`; workspace: in the tickets repo). The user may give a date or ticket list instead. Read the last retro's actions: did each one happen, and did it help? An action whose `remove when` condition has fired, or that never helped, is a finding: prune the rule, check, or risk area it added.
 
 3. **Gather primary sources** for runs in scope:
    - Final reports (posted by coordinator): `gh search issues "heinzelwerk-metrics in:comments" --repo <tickets repo>`, then read each report and its metrics block.
@@ -23,6 +23,7 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
    - Token usage: ask the user once; never estimate.
    - Human run notes: ask the user once for the path (usually `docs/runs/` in their heinzelwerk checkout), then read the notes for runs in scope. Their `broke:` lines and `For /retro` items are findings to check against the sources above.
    - Shortcut debt: run the `heinzelwerk:ponytail-debt` skill; compare with the ledger in the last retro record.
+   - **Post-merge outcomes**, since the last retro: reverts of agent PRs (`git log origin/main --grep '^Revert'`); CI runs that failed on `main` after an agent merge (`gh run list --branch main --status failure`), with the merge that preceded each; issues that reference a merged agent PR and report a bug (`gh api repos/{owner}/{repo}/issues/<PR>/timeline --jq '.[] | select(.event=="cross-referenced") | .source.issue.html_url'`). Each one is evidence that a `validated` PR was not good enough: trace it to the validator, a missing check, or the spec.
 
 4. **Look for candidates for improvement** in these categories.
 
@@ -44,7 +45,7 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
 - **Handoffs and phases**: did work stall between phases, or did a done note miss what the next agent needed? _Use when_ a teammate sat idle or redid work.
 - **Plan depth**: read the plan comments' Decisions, Pre-mortem, and Critique lines. Did an `obvious:` call turn out wrong? Did a chosen option cause fix rounds or human edits? Did critique points or pre-mortems catch something real, or only cost tokens? Move the "hard to reverse" list or the critique trigger accordingly. _Use when_ a run had fix rounds, diagnose rounds, or human edits.
 - **Spec gate**: did product pass slices that later failed on spec, or block runnable ones? _Use when_ validator's Spec axis found gaps product should have caught.
-- **Validator**: did merged PRs need human fixes the validator should have caught? Classify each: mechanical → a check (environment category), judgement → a coding-standards rule. _Use when_ human edits exist on validator-passed PRs.
+- **Validator**: did merged PRs need human fixes, reverts, or bug fixes the validator should have caught? Classify each: mechanical → a check (environment category), judgement → a coding-standards rule. _Use when_ human edits or post-merge outcomes exist on validator-passed PRs.
 - **Coordinator**: count nudges that changed what an agent did versus noise; were escalations to the user necessary, or answerable by product or tech-lead? _Use when_ nudges or escalations appear in metrics.
 - **Model choice**: did Opus escalations find what Sonnet missed? Did Haiku subagents produce work that later failed? Did a Sonnet review let something through in an area that should be a risk area? → propose adding it to `team.md`. Judge with the `heinzelwerk:model-selection` anti-patterns. _Use when_ escalations appear in metrics or human edits cluster in one role.
 - **Acceptance**: did slice acceptance fail on things per-PR validation passed? Did you find integration issues after merge it missed? _Use when_ `acceptance` appears in metrics.
@@ -60,10 +61,10 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
 5. **Present** findings to the user in order of severity, wins last; architecture candidates as their own group with the report path. Each: evidence, proposed change, where it goes. The user picks which to act on.
 
 6. **Write**, for the picked findings only:
-   - Retro record: `docs/agents/heinzelwerk/retros/<YYYY-MM-DD>.md` (workspace: tickets repo): metrics table summed over runs in scope, wins, problems, actions with owner, architecture candidates filed, shortcut ledger summary (count, no-trigger count, new since last retro), and the follow-up on last retro's actions. Max 60 lines.
+   - Retro record: `docs/agents/heinzelwerk/retros/<YYYY-MM-DD>.md` (workspace: tickets repo): metrics table summed over runs in scope, post-merge outcomes (reverts, red `main` runs, linked bugs), wins, problems, actions as a table `action | owner | evidence | remove when` (the condition that makes the added rule, check, or risk area unnecessary, e.g. "a CI job covers it" or "no hit in 3 retros"; `never` only for a safety rule), architecture candidates filed, shortcut ledger summary (count, no-trigger count, new since last retro), and the follow-up on last retro's actions. Max 60 lines.
    - **Environment actions**: doc changes (pointers, learnings prune and consolidate, team rules, coding standards) on a fresh branch from main `docs/retro-<YYYY-MM-DD>`, one PR with the retro record. Code changes (a new check, a hook, a CI job) become issues labelled `ready-for-agent` or `ready-for-human`, never edited here.
    - **Architecture candidates**: every **Strong** and **Worth exploring** candidate becomes an issue labelled `needs-triage` and `heinzelwerk-survey` (`gh label create heinzelwerk-survey -f` first; title in `heinzelwerk:codebase-design` vocabulary; body: problem, solution, benefits, files, strength), whether or not the user picked it now. Dedup against open issues; comment on an existing one instead. List them in the retro record.
-   - **Team actions**: issues in the heinzelwerk repo the user names (ask once: upstream `mradomsky/heinzelwerk`, or their fork): `gh issue create -R <repo>`, title `<role or skill>: <change>`, body = evidence + proposed wording.
+   - **Team actions**: issues in the heinzelwerk repo the user names (ask once: upstream `mradomsky/heinzelwerk`, or their fork): `gh issue create -R <repo>`, title `<role or skill>: <change>`, body = evidence + proposed wording + `remove when`.
    - Do not merge.
 
 7. **Explore one candidate** (optional): ask which architecture candidate to explore now. Picked → the `heinzelwerk:improve-codebase-architecture` grilling loop. Otherwise the user shapes it later with `/heinzelwerk:shape <issue>`.

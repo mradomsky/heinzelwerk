@@ -50,4 +50,4 @@ For any non-obvious choice, say in one clause which tier and why ("Haiku finders
 ## Heinzelwerk defaults
 
 - **Haiku effort per subtask**: low for searches and mechanical edits; medium for batches with local judgement; high for a summary or classification that feeds a decision.
-- **Accepted trade-off in team runs**: outside the risk areas in `docs/agents/heinzelwerk/team.md`, Sonnet reviews what Sonnet built and the human PR review is the final check. Risk areas get Opus review. Retro adds an area wherever Sonnet let something through.
+- Outside the risk areas in `docs/agents/heinzelwerk/team.md`, a Sonnet or a low-effort Opus reviews what Sonnet built. Risk areas get a normal-/high-effort Opus review. Effort setting depends on the complexity of the reviewed work. Retro adds an area wherever Sonnet let something through.

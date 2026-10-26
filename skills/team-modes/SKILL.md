@@ -39,6 +39,7 @@ Contracts are the paths under **Contracts** in `docs/agents/heinzelwerk/team.md`
   git -C <repo> worktree add <repo>/.claude/worktrees/heinzelwerk/<branch> -b <branch> origin/main
   ```
   Then run the **Worktree setup** command from `team.md` inside it (e.g. `npm ci`): a fresh worktree has no dependencies. Work only inside that path. One task = one branch = one worktree = one PR.
+  Temp files go in your own scratchpad directory (`/tmp` is shared with every agent on the machine). Unfinished work waits as a WIP commit on your branch (the stash is one per repo, shared by every worktree and by the user; a pop has already landed the user's own stash in an agent's worktree).
 - **Branch name**: `<type>/<ticket-number>-<topic>`, type from conventional commits (`feat`, `fix`, `docs`, `test`, `refactor`, `chore`). Example: `feat/19-anomaly-webhook`.
 - **Commits**: conventional, reference ticket, keep Claude Code's `Co-Authored-By` trailer (one of retro's signals for agent vs human commits). `feat: add anomaly webhook (#19)` / `(owner/repo#19)` in workspace mode.
 - **Stay current with main.** Before moving a task to under review, and whenever validator reports a conflict or a merged PR touched your files: `git fetch origin && git rebase origin/main` in your worktree. Task blocked-by a **same-repo** contract task whose PR isn't merged: rebase onto `origin/<contract-branch>` instead (cross-repo: stay on `origin/main`).

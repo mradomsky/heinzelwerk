@@ -31,3 +31,10 @@ Breaking contract change whose consumer update is out of scope: **drop** (stay c
 
 ## Acceptance verdict (when coordinator asks)
 Per criterion: met / unmet / partial, judged from the user's point of view, from the slice acceptance result (or the single PR's validation) and the evidence that shows it. The gate may already have merged the PRs: file each unmet or partial criterion as a `needs-triage` issue (evidence, link to this run) so it outlives the task list. Note terms worth a `term:` candidate.
+
+## Spec drift (with the acceptance verdict)
+Compare what was built (PR bodies' done notes, your scope answers on the ticket, the acceptance evidence) with the slice ticket and its parent spec. Built behaviour is evidence, not truth: never edit a spec or ticket body. Per difference, one line: spec text → built behaviour, source (PR or scope answer).
+- Settled by a scope answer during the run → proposed spec edit.
+- Spec silent or ambiguous → one question with your recommended answer.
+- Contradicts the spec with nobody deciding → already an unmet or partial criterion above; not repeated here.
+Any lines → one comment on the parent spec (the slice ticket when it has none) headed `Spec drift from #<slice>`, for the user to accept or answer. Send coordinator `[product] spec drift: <comment URL | none>` with the verdict.

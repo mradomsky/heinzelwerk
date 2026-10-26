@@ -13,6 +13,7 @@ How heinzelwerk agents work in this repo. Mode rules (single repo vs workspace) 
 - **Worktree setup** (run once in every new task worktree; omit if none): <e.g. `npm ci --prefer-offline --no-audit --no-fund`>
 - **Checks** (validator runs every one, in order; quiet variants, failures only): <e.g. `npm run build --silent`, `npm run lint -- --quiet`, `npm test -- --reporter=dot`>
 - **Security**: <secret scan pre-commit hook, e.g. gitleaks> · <dependency audit in checks, e.g. `npm audit --audit-level=high`>
+- **Run cap** (wall clock per run; coordinator stops the run past it; omit for none): <e.g. 3h>
 - **Coding standards**: <path to CODING_STANDARDS.md / CONTRIBUTING.md, or "none: smell baseline only">; UI repos also `docs/agents/heinzelwerk/design.md`
 - **Risk areas** (validator reviews diffs touching these on Opus). Project-specific; each entry is a path/glob or a described kind of change, plus why it is risky:
   - <e.g. `services/auth/**`: authorization decisions>

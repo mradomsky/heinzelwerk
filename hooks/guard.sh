@@ -16,8 +16,9 @@ fi
 [ $read_ok = yes ] || ! grep -q '"command"' <<<"$input" || block "the guard could not read the command (no jq or node, and the fallback parser failed)"
 # Heredoc bodies and quoted -m/-b/-t/body= "..." arguments are text (commit messages, PR bodies, comments), never
 # commands: dropped before any rule runs, so a verdict quoting "gh pr merge" or containing "|" never trips a rule.
-text=$(awk 'h { if ($0 ~ "^[ \t]*" t "[ \t]*$") h=0; next }
-  { print; if (match($0, /<<-?[ ]*["'\'']?[A-Za-z_]+/)) { t=substr($0, RSTART, RLENGTH); sub(/<<-?[ ]*["'\'']?/, "", t); h=1 } }' <<<"$raw")
+# [<][<], not two literal angle brackets: the directory validator reads those as an unclosed here-document
+text=$(awk -v q="'" 'h { if ($0 ~ "^[ \t]*" t "[ \t]*$") h=0; next }
+  { print; op = "[<][<]-?[ ]*[\"" q "]?"; if (match($0, op "[A-Za-z_]+")) { t=substr($0, RSTART, RLENGTH); sub(op, "", t); h=1 } }' <<<"$raw")
 opt='((-m|--message|-b|--body|-t|--title)(=| +)|(-f|-F|--field|--raw-field) +body=)'
 msgfree=$(sed -E "s/$opt\"([^\"\\\\]|\\\\.)*\"//g; s/$opt'[^']*'//g" <<<"$text")
 # One line per command: continuation lines joined, split on newline && || ; |, whitespace collapsed, quotes, backticks,

@@ -54,7 +54,7 @@ All cases from the earlier reviews behave. New:
 5. Fix-task numbering `k` after an acceptance failure (`tech-lead.md:23`): say it continues validator's count for that PR.
 6. Bugfix validator: no separate `test:` commit (implementer squashed) → red proof impossible → name it as a fail reason.
 7. `validator.md:7` "remove it after the verdict" vs merge gate "from your worktree": order is gate, then remove.
-8. UI validation (`validator.md:17`) reads screenshots from the `heinzelwerk-screenshots` branch; say how (`gh api … --jq` or `curl` to a temp file), the model otherwise guesses.
+8. UI validation (`validator.md:17`) reads screenshots from the `heinzelwerk-screenshots` branch; say how (`gh api … --jq`, or a download to a temp file), the model otherwise guesses.
 9. `tech-lead.md:5` "Never merges" is still true but `README:16` and the guard message should both point at the gate.
 
 ## 6. Solid, keep

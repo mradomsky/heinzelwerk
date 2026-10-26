@@ -33,7 +33,7 @@ Every pointer resolves (team-modes §0/§3/§4, **Contract changes**, **Routing*
 
 1. **Gate skips PR 2 of 3** (`mergeable` or CI reason): validator stops (`validator.md:40`), `tech-lead.md:29` goes straight to the docs PR, the slice stays half-merged, the final report lists the skip. Conflicts after a squash are unlikely when the integration merge was clean, but CI on PR 2 ran against the old `main`. Fix: on a `mergeable` or CI skip tech-lead opens `<role> fix k: rebase` for that PR, the owner re-validates, and `validate: merge 2` covers the rest; one round, then the human.
 2. **Gate crash**: a `gh` or network error under `set -e` (`merge-gate:29,40`) exits with no verdict line; `validator.md:40` handles skips only. Fix: `trap 'echo "MERGE SKIP: gate error (line $LINENO)"; exit 0' ERR` in the script; validator reruns once.
-3. **Screenshots on a private repo**: `validator.md:17` `curl -sL "<blob…?raw=true>"` returns the login page. Fix: `gh api repos/{owner}/{repo}/contents/<path>?ref=heinzelwerk-screenshots -H 'Accept: application/vnd.github.raw+json' > <file>`.
+3. **Screenshots on a private repo**: `validator.md:17` downloading the blob's `?raw=true` URL returns the login page. Fix: `gh api repos/{owner}/{repo}/contents/<path>?ref=heinzelwerk-screenshots -H 'Accept: application/vnd.github.raw+json' > <file>`.
 4. **`plan.bin` is never ignored** (`infra.md:17`, setup C2); `git add -A` passes the guard by design, so a plan with sensitive values lands in the PR. Fix: setup C2 adds `plan.bin` and `*.tfplan` to `.gitignore`.
 5. Crash, compaction, flaky check, no answer, usage cap: covered.
 

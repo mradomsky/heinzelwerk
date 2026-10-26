@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # heinzelwerk auto-merge gate. Deterministic: decides from the PR + policy, nothing else. Off unless enabled.
 # Usage: merge-gate <pr-number>   (run inside the repo; prints MERGED or MERGE SKIP: <reasons>; exit 0 either way)
-# Lives in the plugin's bin/, so no PR can change it. Policy: docs/agents/heinzelwerk/merge-policy.json as on main
+# Lives in the plugin's scripts/, so no PR can change it. Policy: docs/agents/heinzelwerk/merge-policy.json as on main
 # on GitHub, never the branch's copy. A PR that touches a heinzelwerk policy file, the project's Claude Code settings,
 # or a workflow always waits for a human. A PR stacked on another PR's branch is retargeted to main once that PR merged.
 # Waits up to MERGE_GATE_WAIT seconds (default 450) for CI: run it with a ten-minute Bash timeout.

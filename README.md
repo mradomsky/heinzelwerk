@@ -13,7 +13,7 @@ Claude Code plugin: a lean autonomous dev team (coordinator / product / tech-lea
 - **Phases, not pipelines.** Every task carries one phase: analyze / implement / validate. Any agent may create work in any phase; every task leaves a handoff.
 - **Tickets are durable, tasks are disposable.** Everything the next run needs lives on GitHub.
 - **Pointers, not imports.** `CLAUDE.md` holds a short `## Agent skills (heinzelwerk)` block; agents read `docs/agents/heinzelwerk/*` when the pointer fires.
-- **Humans merge, unless a deterministic gate allows it.** Agents open PRs and never push main. `merge-gate` lives in the plugin's `bin/`, so no PR can change it. It merges a PR only when `merge-policy.json` on main allows it, which means all of:
+- **Humans merge, unless a deterministic gate allows it.** Agents open PRs and never push main. `merge-gate` lives in the plugin's `scripts/`, so no PR can change it. It merges a PR only when `merge-policy.json` on main allows it, which means all of:
   - the validator's `heinzelwerk: validated <sha>` line names the PR's current head
   - every changed file is allowed by the policy
   - CI green
@@ -21,7 +21,7 @@ Claude Code plugin: a lean autonomous dev team (coordinator / product / tech-lea
   - no unchecked manual check left (the validator does the ones it can)
 
   Policy files, `.claude/settings*.json`, and workflows always wait for a human. The gate runs after tech-lead's diagnose finds no gap, and it covers the docs PR too. A PR stacked on a merged PR is retargeted to main first: closed and reopened once, so CI runs on the new base. Setup section G turns the gate on: policy, a PR CI workflow, and the `Bash(merge-gate *)` permission that auto mode needs. Recommended off when `main` deploys to production. One reason: the `validated` line is a protocol marker, not an authorization. Every role shares one `gh` login, so a teammate, or text a teammate reads in the repo, could post it.
-- **Infra auto-applies only through a deterministic gate.** `tf-gate` lives in the plugin's `bin/`. It checks the saved plan against `infra-policy.json` on main: environment allowlist, no destroys, protected types, change limit. Tech-lead applies on pass and escalates on fail or doubt. Credential scope is the real boundary: agents never hold prod write credentials.
+- **Infra auto-applies only through a deterministic gate.** `tf-gate` lives in the plugin's `scripts/`. It checks the saved plan against `infra-policy.json` on main: environment allowlist, no destroys, protected types, change limit. Tech-lead applies on pass and escalates on fail or doubt. Credential scope is the real boundary: agents never hold prod write credentials.
 
 ## Install
 
@@ -47,7 +47,7 @@ Needs Claude Code 2.1.295 or later (for hook `onFailure`).
 - `tf-gate` needs `jq` on infra repos.
 - The tracker and `merge-gate` need `gh`.
 
-The plugin's `bin/` (`merge-gate`, `tf-gate`, `ui-shots`) is on the Bash tool's PATH while the plugin is enabled. So target repos carry no copies, and every plugin update reaches every repo at once. The default branch must be `main`: both gates read their policy from it, and every worktree starts from `origin/main`.
+The plugin's `scripts/` (`merge-gate`, `tf-gate`, `ui-shots`) is on the Bash tool's PATH while the plugin is enabled: a SessionStart hook adds it. It is `scripts/`, not `bin/`, because claude.ai and Cowork refuse a plugin with a top-level `bin/`. So target repos carry no copies, and every plugin update reaches every repo at once. The default branch must be `main`: both gates read their policy from it, and every worktree starts from `origin/main`.
 
 Start every shaping or run session with `--model opus`: a command's `model:` covers only its first turn, and shape, feature, bugfix, and retro span many.
 
@@ -125,9 +125,9 @@ Model-invoked (reusable discipline, agents reach for them):
 - `skills/tdd`, `skills/code-review`, `skills/codebase-design`, `skills/domain-modeling`, `skills/grilling`, `skills/writing-for-agents`, `skills/prototype`, `skills/diagnosing-bugs`, `skills/improve-codebase-architecture`, `skills/to-spec`, `skills/to-tickets`: adapted copies of mattpocock/skills. Their descriptions say "heinzelwerk copy … Use inside heinzelwerk …". So with the mattpocock plugin also installed, your own sessions pick the upstream skill and runs pick ours. Both are namespaced (`heinzelwerk:tdd` vs `mattpocock-skills:tdd`); no rename needed.
 
 Other:
-- `bin/` — `merge-gate`, `tf-gate`, `ui-shots`: on the Bash tool's PATH while the plugin is enabled; policy stays in the target repo, the code stays here
+- `scripts/` — `merge-gate` (gh: reads policy, CI, and the PR; merges), `tf-gate` (terraform plan check and apply against the policy), `ui-shots` (pushes screenshots to the orphan branch `heinzelwerk-screenshots`): on the Bash tool's PATH while the plugin is enabled; policy stays in the target repo, the code stays here
 - `agents/` — roles, usable as subagents or teammates
-- `hooks/` — `guard.sh` blocks:
+- `hooks/` — `path.sh` (SessionStart) appends `scripts/` to PATH through `CLAUDE_ENV_FILE`, nothing else. `guard.sh` (PreToolUse) blocks:
   - pushing, checking out, or moving main
   - `gh pr merge` (also through the API)
   - plain `--force`

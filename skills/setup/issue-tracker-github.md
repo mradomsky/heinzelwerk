@@ -14,6 +14,10 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 
 Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone.
 
+## Workspace
+
+Tickets live in one repo for the whole workspace: **<owner/tickets-repo>**. Every `gh issue` command above takes `--repo <owner/tickets-repo>`, from whichever repo you are in. References are always `owner/repo#N` (`Refs`, `Closes`, `Blocked by`, `Part of`, commit messages), never a bare `#N`: the number space differs per repo.
+
 GitHub shares one number space across issues and PRs, so a bare `#42` may be either: resolve with `gh pr view 42` and fall back to `gh issue view 42`.
 
 ## When a skill says "publish to the issue tracker"

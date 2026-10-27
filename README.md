@@ -64,7 +64,7 @@ Need one MCP server for a run (e.g. an issue tracker without `gh`)? Pass only th
 
 ## Workflow
 
-1. **Once per repo or workspace**: `/heinzelwerk:setup` interviews you, then opens one PR per repo with `docs/agents/heinzelwerk/*`, optional seeded `GLOSSARY.md`/ADRs, and the `## Agent skills (heinzelwerk)` block. Review, merge. In a multi-repo folder, run it from the parent folder; it also writes the workspace docs into the tickets repo.
+1. **Once per repo or workspace**: `/heinzelwerk:setup` interviews you, then opens one PR per repo with `docs/agents/heinzelwerk/*`, optional seeded `GLOSSARY.md`/ADRs, and the `## Agent skills (heinzelwerk)` block. Its first question is the autonomy setting: **full** (agents merge and apply on their own; breakages are learnings) or **guarded** (humans merge risky changes; agents never read secrets). Review, merge. In a multi-repo folder, run it from the parent folder; one repo (usually `meta`) is the source of truth for tickets and workspace docs, and setup creates it when none exists.
 2. **Shape (you + product)**: `/heinzelwerk:shape [issue | idea]`. Product grills you, writes the spec, slices it into `ready-for-agent` tickets with blocking edges, and lists the frontier. This is also the way back in after a run stops on `needs-info`. Want only the interview? Stop after the grill. `/heinzelwerk:to-spec` and `/heinzelwerk:to-tickets` stay typeable for odd cases (e.g. slicing a spec written elsewhere).
 3. **Build (you + coordinator)**: `/heinzelwerk:feature <slice>` or `/heinzelwerk:bugfix <issue>`. Your session becomes coordinator: your single point of contact. It routes scope questions to product and technical ones to tech-lead, watches the team, and posts the final report.
 4. **Review** what the gate skipped, or everything when the gate is off. With the gate on, the docs PR merges too. Want to approve `GLOSSARY.md`, `docs/adr/`, or `learnings.md` by hand? Keep them in `deny_paths`. Otherwise read them at the retro.
@@ -135,7 +135,7 @@ Other:
   - adding secret, state, or plan files
   - raw `terraform apply/destroy/import/state`, `-auto-approve`
 
-  Rules anchor on the command and ignore quoted text, so a verdict quoting a rule never trips it. By design it does not block a bare `git push` or `git push origin HEAD`, which push main from the main checkout: agents work in worktrees. `guard-test.sh` runs the regression cases (needs node). The secret-file rule is a tripwire: the secret defence is the gitleaks pre-commit hook that setup recommends
+  Rules anchor on the command and ignore quoted text, so a verdict quoting a rule never trips it. By design it does not block a bare `git push` or `git push origin HEAD`, which push main from the main checkout: agents work in worktrees. `guard-test.sh` runs the regression cases (needs node). The secret-file rule checks file names only; a secret pasted inside a source file is not caught. Add a secret scanner (gitleaks, GitHub push protection) yourself if the repo needs one
 - `docs/test-run-plan.md` — staged plan for the first runs; `docs/reviews/` — review records
 - `prompts/` — loose prompts, staging area before `skills/` or `commands/` (e.g. `review-plugin.md`: independent review of this plugin)
 

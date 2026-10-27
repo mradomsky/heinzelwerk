@@ -50,10 +50,10 @@ while IFS= read -r seg; do
   grep -qE '^(terraform|tofu)( +-chdir=[^ ]+)? +(apply|destroy|import|state +(rm|mv|push|replace-provider)|force-unlock|workspace +delete)\b' <<<"$cmd" \
     && block "raw terraform apply/destroy/import/state changes are not allowed; use tf-gate apply <dir> <plan>"
   grep -qE "${git}push\b.*( -[a-zA-Z]*f[a-zA-Z]*\b|--force( |$))" <<<"$cmd" && block "use --force-with-lease, never plain --force"
-  grep -qE "${git}push\b.*--no-verify\b" <<<"$cmd" && block "--no-verify skips the secret scan"
-  grep -qE "${git}commit\b.*( -[a-zA-Z]*n[a-zA-Z]*\b|--no-verify\b)" <<<"$cmd" && block "--no-verify skips the secret scan"
-  [ $hookskip = yes ] && grep -qE "${git}commit\b" <<<"$cmd" && block "hook-skipping variables disable the secret scan"
-  grep -qiE 'core\.hookspath' <<<"$seg" && block "core.hooksPath moves the secret-scan hook; leave it"
+  grep -qE "${git}push\b.*--no-verify\b" <<<"$cmd" && block "--no-verify skips the pre-commit hooks"
+  grep -qE "${git}commit\b.*( -[a-zA-Z]*n[a-zA-Z]*\b|--no-verify\b)" <<<"$cmd" && block "--no-verify skips the pre-commit hooks"
+  [ $hookskip = yes ] && grep -qE "${git}commit\b" <<<"$cmd" && block "hook-skipping variables disable the pre-commit hooks"
+  grep -qiE 'core\.hookspath' <<<"$seg" && block "core.hooksPath moves the pre-commit hooks; leave it"
   grep -qE -- '-auto-approve' <<<"$seg" && block "-auto-approve is not allowed"
   # git add (and commit -i/--include): judge every argument on its own, so one safe file cannot whitelist a secret beside it.
   args=$(grep -oE "${git}(add|stage|update-index)\b.*" <<<"$cmd" | sed -E "s/^${git}(add|stage|update-index)//")

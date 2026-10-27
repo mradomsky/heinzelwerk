@@ -50,4 +50,5 @@ For any non-obvious choice, say in one clause which tier and why ("Haiku finders
 ## Heinzelwerk defaults
 
 - **Haiku effort per subtask**: low for searches and mechanical edits; medium for batches with local judgement; high for a summary or classification that feeds a decision.
+- **Docs written from code** (setup's repo map and team rules, adopt-docs' stale verdicts): Sonnet medium with `path:line` per fact, then an Opus medium pass over the citations. Measured 2026-10-27 on three repos: Opus > Sonnet > Haiku in every one, and Haiku used the most tokens.
 - Outside the risk areas in `docs/agents/heinzelwerk/team.md`, a Sonnet or a low-effort Opus reviews what Sonnet built. Risk areas get a normal-/high-effort Opus review. Effort setting depends on the complexity of the reviewed work. Retro adds an area wherever Sonnet let something through.

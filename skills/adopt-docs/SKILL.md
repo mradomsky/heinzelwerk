@@ -22,7 +22,7 @@ Follow `heinzelwerk:writing-for-agents` for anything you write. Terms and ADRs g
 
 ## 2. Classify
 
-Run Haiku subagents in parallel, 8–10 docs each, at effort medium. Medium because classifying feeds your decisions; 8–10 per subagent because one subagent per doc would pay the start-up context once per doc. Each returns, per doc, its content split into these classes, quoting the source heading for every item:
+Run Haiku subagents in parallel, 8–10 docs each, at effort medium. Medium because classifying feeds your decisions; 8–10 per subagent because one subagent per doc would pay the start-up context once per doc. Each returns, per doc, its content split into these classes, quoting the source heading for every item and, for a **stale** verdict, the `path:line` in the code that contradicts it:
 
 | Class | Destination |
 |---|---|
@@ -37,23 +37,25 @@ Run Haiku subagents in parallel, 8–10 docs each, at effort medium. Medium beca
 
 Cross-check claims against the code. A doc that disagrees with the code is **stale** for that item, even if the rest is fine.
 
+A Haiku verdict is a candidate, not a finding (`heinzelwerk:model-selection`: a cheap tier is never the final check). Before §3, verify every stale item: a claim about files matching or differing is settled by `git hash-object` or `diff`, never by reading; every other stale claim is checked by one Opus subagent at effort medium that opens the cited `path:line` on `origin/main`. Drop what it cannot confirm.
+
 ## 3. Resolve with the user
 
 Present per class, one class per round, recommended answer first (`heinzelwerk:grilling` format):
 
 - **ADRs**: draft each in ADR format: 1–3 sentences, plus a `Source: <path>#<heading>` line. User accepts, edits, or drops each.
-- **Terms**: run `heinzelwerk:domain-modeling` with the `heinzelwerk:grilling` skill on the candidates. Pick canonical words, list `_Avoid_` synonyms, challenge against existing `GLOSSARY.md` and the code. Write only resolved terms.
+- **Terms**: run `heinzelwerk:domain-modeling` with the `heinzelwerk:grilling` skill on the candidates. Pick canonical words, list `_Avoid_` synonyms, challenge against existing `GLOSSARY.md` and the code. Before a new `_Avoid_` word is written, grep the adopted docs for it; where it appears in headings, tell the user which docs, since those stay as they are and readers will meet both words. Write only resolved terms.
 - **Planned work**: one line each. Accepted items become issues labelled `needs-triage`, body = summary + link to the source section. The user shapes them later with `/heinzelwerk:shape <issue>`.
 - **Design rules**: proposed additions to `docs/agents/heinzelwerk/design.md`. Contradictions with the code are flagged like stale items.
 - **How-to, reference, gotchas**: show the proposed edits to repo map, team rules, and learnings. Reference docs get a pointer line under `## Reference docs` in the repo map, worded as a trigger: `- <path>: read when <condition>.`
-- **Stale**: list item, source, and what contradicts it. User decides: fix the doc, mark it, or ignore. Never fix a source doc silently.
+- **Stale**: list item, source, and what contradicts it (the verified `path:line`). User decides: correct the doc, mark it, or ignore. **Correct** means append, never rewrite: a dated correction right below the stale item, in the doc's own convention (a dated note where the doc keeps dated notes, otherwise one line `Correction (<date>): <fact>, see <path:line>`). The stale line itself stays as it is: it is a record. Never correct a source doc silently.
 
 **Workspace**: a decision or term that spans repos goes to the tickets repo: decisions as workspace ADRs, terms as `GLOSSARY-MAP.md` relationships. Everything else stays in its own repo.
 
 ## 4. Write
 
-- Branch: when called from setup, reuse setup's branch and PR. Otherwise, per repo, a fresh branch from main named `docs/adopt-docs`.
+- Branch: when called from setup, reuse setup's branch; setup runs this skill after its own commit and before it opens the PR, so the PR carries both commits. Otherwise, per repo, a fresh branch from `origin/main` named `docs/adopt-docs`. Before pushing to a branch that already has a PR, check `gh pr view <branch> --json state`: anything but `OPEN` → cut a fresh `docs/adopt-docs` from `origin/main` and open a new PR; a commit pushed to a merged branch never reaches main.
 - Write resolved ADRs, glossary terms, repo-map/team/learnings edits; create accepted issues.
 - Update `docs/agents/heinzelwerk/adopted.md` (create if missing): one line per processed doc, `- <path> @ <hash>: <classes found> → <where content went>`. `<hash>` is `git hash-object <path>`: a content hash, not a commit SHA, because it survives squash and rebase merges.
-- Never delete, move, or rewrite original docs.
-- Commit `docs: adopt existing docs into agent structure`, then open a PR, or add the commit to setup's PR when called from setup. PR body lists stale items and anything the user dropped. Do not merge.
+- Never delete, move, or rewrite original docs. The only edit to an original is the appended dated correction from §3.
+- Commit `docs: adopt existing docs into agent structure`, then open a PR, or leave the commit on setup's branch for setup to open the PR. PR body lists stale items, corrections appended, and anything the user dropped. Do not merge.

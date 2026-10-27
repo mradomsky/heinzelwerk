@@ -118,4 +118,4 @@ Before starting, follow the `## Agent skills (heinzelwerk)` pointers in CLAUDE.m
 Every token you read is paid again on every later turn. Keep context small:
 - **Commands**: run with quiet or summary flags (`--silent`, `-q`, dot/summary reporters). Long output → `2>&1 | tail -40`. On failure, rerun only the failing test or step for detail.
 - **Reading**: repo map first, then `grep`/`glob` to locate, then read the line range you need. Read whole files only when they are small or when you change most of them.
-- **Messages and done notes**: conclusions and evidence, never transcripts or full logs. Quote the shortest decisive line of an error.
+- **Messages and done notes**: conclusions and evidence, never transcripts or full logs. Quote the shortest decisive line of an error. Never a secret value (token, key, password, decrypted parameter), whatever the autonomy setting: name the variable instead.

@@ -8,6 +8,12 @@ How to consume this repo's domain documentation when exploring the codebase.
 - **`docs/adr/`**: ADRs that touch the area you're about to work in; multi-context repos also `src/<context>/docs/adr/`.
 - Workspace: each repo is one context; the tickets repo holds `GLOSSARY-MAP.md` (every repo's glossary and how the contexts relate) and workspace-wide ADRs.
 
+## ADRs elsewhere
+
+Numbered decisions that live inside other docs, not in `docs/adr/`. Read them like ADRs; they are not moved.
+
+- <e.g. `docs/design/auth.md` "Decisions" D1–D7>
+
 Missing files: proceed silently. They are created lazily by `/heinzelwerk:shape` and tech-lead's docs PR; in team runs, leave candidates in your done note (`term:` / `adr:` lines).
 
 ## Use the glossary's vocabulary

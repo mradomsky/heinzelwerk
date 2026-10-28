@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# heinzelwerk reference check. Deterministic: every `path:line` and every backticked path in the agent docs
+# must exist in the working tree, and the line must be inside the file. Prints each miss; exit 2 on any.
+# Usage: check-refs [repo-root]   (default: the current repo). Skips globs, URLs, owner/repo#N, placeholders.
+set -uo pipefail
+cd "${1:-$(git rev-parse --show-toplevel)}" || exit 1
+docs=$(ls docs/agents/heinzelwerk/*.md GLOSSARY*.md docs/adr/*.md CLAUDE.md 2>/dev/null)
+[ -n "$docs" ] || { echo "check-refs: no agent docs found"; exit 0; }
+bad=0
+while IFS=: read -r file ref; do
+  ref=${ref#\`}; ref=${ref%\`}
+  case $ref in *'*'*|*http*|*'#'*|*'<'*|*'$'*|*'{'*|'') continue ;; esac
+  path=${ref%%:*}; line=${ref#*:}; [ "$line" = "$ref" ] && line=""
+  line=${line%%[-,]*}
+  [ -e "$path" ] || { echo "$file: missing $ref"; bad=1; continue; }
+  if [ -n "$line" ] && [ -f "$path" ]; then
+    n=$(wc -l <"$path"); (( line <= n + 1 )) || { echo "$file: $ref beyond end ($n lines)"; bad=1; }
+  fi
+done < <(grep -oHE '`[A-Za-z0-9_./-]*/[A-Za-z0-9_./-]+(:[0-9]+([-,][0-9]+)*)?`|[A-Za-z0-9_./-]+\.[A-Za-z]+:[0-9]+' $docs | sort -u)
+[ $bad = 0 ] && echo "check-refs: all references resolve"
+exit $(( bad ? 2 : 0 ))

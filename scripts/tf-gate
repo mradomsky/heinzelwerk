@@ -26,9 +26,12 @@ changes=$(jq -c '[.resource_changes[]? | select(.change.actions != ["no-op"] and
 # 2. change-count limit
 max=$(jq -r '.max_changes // 20' "$policy"); n=$(jq length <<<"$changes")
 (( n <= max )) || reasons+=("$n changes > max_changes $max")
-# 3. deletes / replacements only for allowed types
-while IFS= read -r a; do [ -n "$a" ] && reasons+=("delete/replace: $a"); done < <(jq -r --slurpfile p "$policy" '
-  .[] | select(.x | index("delete")) | select(.t as $t | ($p[0].allowed_delete_types // []) | index($t) | not) | .a' <<<"$changes")
+# 3. deletes / replacements only for allowed types (glob patterns; "*" allows every type that step 4 does not protect)
+while IFS= read -r line; do
+  [ -z "$line" ] && continue; t=${line%% *}; ok=no
+  while IFS= read -r pat; do [[ -n $pat && $t == $pat ]] && ok=yes; done < <(jq -r '.allowed_delete_types[]?' "$policy")
+  [ $ok = yes ] || reasons+=("delete/replace: ${line#* }")
+done < <(jq -r '.[] | select(.x | index("delete")) | "\(.t) \(.a)"' <<<"$changes")
 # 4. protected types (glob patterns, e.g. aws_iam_*)
 while IFS= read -r pat; do
   [ -z "$pat" ] && continue

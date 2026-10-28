@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Puts the plugin's scripts/ (merge-gate, tf-gate, ui-shots) on the Bash tool's PATH for this session.
+# Puts the plugin's scripts/ (merge-gate, tf-gate, ui-shots, check-refs) on the Bash tool's PATH for this session.
 # scripts/, not bin/: claude.ai and Cowork refuse to install a plugin that has a top-level bin/.
 [ -n "${CLAUDE_ENV_FILE:-}" ] || exit 0
 dir="$CLAUDE_PLUGIN_ROOT/scripts"

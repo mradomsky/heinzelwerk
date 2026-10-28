@@ -30,16 +30,16 @@ Read whatever exists; don't assume.
   2. entry points: routes with method, path, and the auth they require;
   3. unauthenticated routes, listed on their own;
   4. money or spend paths: code that moves game or real credits, calls to paid external APIs, anything with a bill;
-  5. what the repo calls and what calls it (workspace mode);
-  6. how to build, test, run: exact commands;
-  7. CI jobs and their steps, in order, with arguments, so checks are copied, not guessed;
+  5. what the repo calls and what calls it (workspace mode), including vendored copies of another repo's fixtures or schemas and the file that pins them;
+  6. how to build, test, run: exact commands, plus any git-ignored file the app needs to start (`.env.local`);
+  7. CI jobs and their steps, in order, with arguments, so checks are copied, not guessed; which jobs deploy or release, on which trigger;
   8. persistence and migrations;
   9. patterns to follow;
   10. traps not visible from one file;
   11. existing docs outside the agent structure (for section F).
-  A fact the code can't confirm is left out, not guessed.
+  A fact the code can't confirm is left out, not guessed. Evidence is a `path:line` or a command and its output, never the conversation, a memory, or another repo's generalisation.
 - **Verify** each map with one Opus subagent at effort medium before you draft anything from it: it opens every cited `path:line` on `origin/main`, deletes or corrects what the code contradicts, and adds unauthenticated routes or money paths the mapper missed. Haiku finders with no stronger pass after them are what `model-selection` forbids ("a cheap tier as the final check"); this is that pass.
-- **Start the checks now**, so they run while the user answers §2. Per repo, in the detached `origin/main` worktree: run the **Worktree setup** command, then every check CI runs, exactly as CI invokes it, one repo after another in a single background script. Write exit code and the last 20 lines per check to `<scratchpad>/checks-<repo>.txt`. A check whose tool is missing is recorded as `unverified locally`, and the script goes on. §3 reads these files.
+- **Start the checks now**, so they run while the user answers §2. Per repo, in the detached `origin/main` worktree: run the **Worktree setup** command, then every check CI runs, exactly as CI invokes it, one repo after another in a single background script. Build steps inside deploy or release jobs count as checks: a merge triggers them. A multi-line CI step is written to a temp script file and run from there, never pasted inline (quoting mangles heredocs). A step that needs CI-only state (`$RUNNER_TEMP`, `GITHUB_*`, an `actions/*` download) is recorded as `CI only` unless a local equivalent is obvious. Write exit code and the last 20 lines per check to `<scratchpad>/checks-<repo>.txt`. A check whose tool is missing is recorded as `unverified locally`, and the script goes on. §3 reads these files.
 
 ## 2. Present findings and ask
 
@@ -56,18 +56,18 @@ Summarise what's present and what's missing. Then take the sections in order: on
 
 **B — Triage labels.** Ask exactly one question: keep the default five (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`)? Recommended: yes. Only if the answer is no: collect overrides, so existing labels are reused instead of duplicated.
 
-**C — Team rules** (per repo). Propose each of these:
+**C — Team rules** (per repo). Every line comes from that repo's verified map, with its evidence; the template's examples are examples. A sentence about "every repo" is written only when each repo's map shows it. Propose each of these:
 - Backend paths, frontend paths, shared paths.
 - Risk areas (see below).
 - E2E command: e2e or smoke tests, if any.
-- Worktree setup: the install command a fresh checkout needs, e.g. `npm ci` when a lockfile exists.
+- Worktree setup: the install command a fresh checkout needs, e.g. `npm ci` when a lockfile exists, plus a copy of each git-ignored file the app needs from the main checkout (`cp ../../.env.local .`), or a preview route that needs none.
 - Dependency audit, a deterministic tool, never a model: `npm audit --audit-level=high`, osv-scanner, or whatever CI runs, listed in `checks`.
-- Checks, copied from CI: the same steps, in the same order, with the same arguments and the same preceding steps (an `npm pack` before a script that takes the tarball). Add only flags that drop output without changing the exit code (`--silent`, `-q`); never a reporter or filter flag, which can hide the failure the validator needs. Any check that scans the whole repo must ignore `.claude/worktrees/`, where task worktrees live; if one doesn't, the ignore edit goes into this setup's PR (§4).
-- Coding standards source.
+- Checks, copied from CI: the same steps, in the same order, with the same arguments and the same preceding steps (an `npm pack` before a script that takes the tarball), including build steps from deploy jobs. Add only flags that drop output without changing the exit code (`--silent`, `-q`); never a reporter or filter flag, which can hide the failure the validator needs. A step the runner marked `CI only` keeps that suffix, or gets the local equivalent. Any check that scans the whole repo must ignore `.claude/worktrees/`, where task worktrees live; if one doesn't, the ignore edit goes into this setup's PR (§4).
+- Coding standards source: only what this repo's own config and dependencies use, cited (`package.json:<line>`); a shared config another repo uses is not this repo's standard.
 - Run cap: wall clock per run, e.g. 3h. Propose none until the user knows how long a normal run takes.
-- Contracts (API, infra outputs, shared types): paths and provider role for each. Infra outputs are a contract by default whenever `outputs.tf` files exist.
+- Contracts (API, infra outputs, shared types): paths and provider role for each, both what this repo provides and what it consumes from another repo, and every vendored copy of another repo's fixture or schema with its pin file. Infra outputs are a contract by default whenever `outputs.tf` files exist.
 
-**Risk areas** are this project's, not a fixed list. Start from the verified map: every unauthenticated route and every money or spend path is a candidate. Add from the code: security, persistence and migrations, data deletion, infra-as-code, public or cross-repo contracts, concurrency, personal data, external integrations, anything with past incidents in issues or docs. Then ask the user for risks only they know. Each entry: path/glob or kind of change, plus why.
+**Risk areas** are this project's, not a fixed list. Start from the verified map: every unauthenticated route and every money or spend path is a candidate. Add from the code: security, persistence and migrations, data deletion, infra-as-code, public or cross-repo contracts, concurrency, personal data, external integrations, anything with past incidents in issues or docs; what `CLAUDE.md` or the README marks as dangerous or production-touching. "A merge to `main` deploys" is an entry only where a workflow does that, cited by `path:line`. Then ask the user for risks only they know. Each entry: path/glob or kind of change, plus why.
 
 Workspace mode: also propose each repo's role, and the integration command if one exists (compose file, smoke script).
 
@@ -105,7 +105,7 @@ Workspace mode: also propose each repo's role, and the integration command if on
 
 When on:
 - Policy from [merge-policy.json](merge-policy.json) with `enabled: true`. `allow_paths: ["*"]`, unless the user names areas that must always wait for a human; those go in `deny_paths` (guarded: the risk areas, by default). Risk areas still get Opus review either way. `merge_method`: whichever the repo's history already uses (merge commits or squash). Changes to the gate itself and to its policy always wait for a human; the gate never merges them. Tell the user once: the `validated` line the gate trusts could be posted by any role, since all roles share one `gh` login; that is acceptable while `main` is not production.
-- CI on pull requests: `require_checks` stays true. If no workflow runs on `pull_request`, propose `.github/workflows/heinzelwerk-checks.yml` running the **Worktree setup** and every **Checks** command from `team.md`.
+- CI on pull requests: `require_checks` stays true. If no workflow runs on `pull_request`, propose `.github/workflows/heinzelwerk-checks.yml` running the **Worktree setup** and every **Checks** command from `team.md`, with the action versions the repo's (or workspace's) other workflows pin.
 - Permission: add `Bash(merge-gate *)` to `permissions.allow` in `.claude/settings.json` (the committed file; merge into it if it already exists). Without it, Claude Code's auto mode blocks the gate as "merge without review". The gate itself runs from the plugin's `scripts/`, so updates arrive with the plugin and no PR can change it.
 - Docs PRs merge through the gate too; validator checks their formats. If terms, ADRs, or learnings should wait for a human, put their paths in `deny_paths`.
 
@@ -114,7 +114,8 @@ When on:
 First read `<scratchpad>/checks-<repo>.txt` for every repo:
 - Red on `origin/main` → the user keeps the check with the suffix `(red on main: <ticket>)`, where the ticket is opened `ready-for-human` in the tickets repo, or drops it. A red check stays in the list only with that suffix; the validator reads it (validator §1).
 - Invocation differs from CI (argument, preceding step) → fix the check line, not the check.
-- `unverified locally` → the line keeps that suffix; the user may install the tool and rerun.
+- Red locally but green on `origin/main` in CI → the runner is the suspect, not the check: write `unverified locally (<reason>)`, never "fails on <OS>".
+- `unverified locally` or `CI only` → the line keeps that suffix; the user may install the tool and rerun.
 - Still running → wait, or write `unverified locally` and go on; the user decides.
 - The user changed a check in C → rerun only that one.
 
@@ -129,7 +130,7 @@ Per repo, on a fresh branch `docs/heinzelwerk-setup` cut from `origin/main`:
 - `docs/agents/heinzelwerk/domain.md` from [domain.md](domain.md)
 - `docs/agents/heinzelwerk/team.md` from [team.md](team.md), including the `Autonomy` line and `Checks verified on main <sha> <date>`
 - UI found: `docs/agents/heinzelwerk/design.md` as drafted in C3
-- infra found: `docs/agents/heinzelwerk/infra-policy.json` from [infra-policy.json](infra-policy.json) with the answers from C2, and the `.gitignore` lines from C2. `tf-gate` needs `jq` installed on the machine.
+- infra found: `docs/agents/heinzelwerk/infra-policy.json` from [infra-policy.json](infra-policy.json) with the answers from C2, and the `.gitignore` lines from C2. Keep only `protected_types` of providers the stacks use; `allowed_delete_types` takes globs, `"*"` for every unprotected type. `tf-gate` needs `jq` installed on the machine.
 - `docs/agents/heinzelwerk/merge-policy.json` from [merge-policy.json](merge-policy.json) with the answers from G (off if G was skipped); G on → also the CI workflow and the `.claude/settings.json` permission
 - the `.claude/worktrees/` ignore edit for every whole-repo check that lacked it (C)
 - **Upgrade from an older plugin**: `scripts/merge-gate`, `scripts/tf-gate`, `scripts/ui-shots` in the repo are copies an earlier setup made. The plugin's `scripts/` provides them now (on PATH through its SessionStart hook). Delete the copies. Replace `Bash(scripts/merge-gate *)` with `Bash(merge-gate *)`. Drop `max_changed_lines` from the policy unless the user wants a cap.
@@ -168,13 +169,14 @@ Then tell the user to create, in the unversioned workspace folder, a `CLAUDE.md`
 
 Single mode: `docs/agents/heinzelwerk/learnings.md` from [learnings.md](learnings.md) in the repo itself.
 
-Commit `docs: set up agent docs`. **F said yes → run `heinzelwerk:adopt-docs` now**, on the same branch; it adds its own commit. Only then open one PR per repo. Remove the detached worktrees from §1. Do not merge.
+Run `check-refs` (plugin script, on PATH) and fix every line it prints, then commit `docs: set up agent docs`. **F said yes → run `heinzelwerk:adopt-docs` now**, on the same branch; it adds its own commit and reconciles the refs its corrections moved. Only then open one PR per repo. Remove the detached worktrees from §1. Do not merge.
 
 ## 5. Done: tell the user
 
 Tell the user:
-- Which PRs are open.
-- Which checks are red on main (with their tickets) and which are `unverified locally` (with the missing tool).
+- Which PRs are open. Workspace mode: the tickets repo's PR merges first, since every other PR points at its files.
+- Which checks are red on main (with their tickets), `unverified locally` (with the missing tool), or `CI only`.
+- Tools the gates still need on this machine (`jq` for `tf-gate`), before any auto-apply.
 - `/heinzelwerk:adopt-docs` absorbs docs added later; `/heinzelwerk:retro` reviews runs (weekly works well).
 - The next step: review and merge the PRs, then shape work with `/heinzelwerk:shape`, and run `/heinzelwerk:feature <ticket>` on a `ready-for-agent` ticket.
 - The `docs/agents/heinzelwerk/*.md` files can be edited directly later. Re-run setup only to add a repo or start over.

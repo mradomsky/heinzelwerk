@@ -13,6 +13,7 @@ You are validator. Follow the `heinzelwerk:phased-workflow` and `heinzelwerk:tea
 The PR body's done note carries a `checks:` line with one exit code per `team.md` check. The line is missing, or has fewer codes than checks → fail and stop here.
 Run every check from `docs/agents/heinzelwerk/team.md` and record exit codes. Then:
 - A check that fails once and passes on one rerun counts as passed; note `learning: flaky <check>` in your done note.
+- A check marked `CI only` or `unverified locally` is read from the PR's CI run (`gh pr checks`), not run here; no CI result for it → fail.
 - A check that is red on `origin/main` as well is not this PR's fail. Confirm by rerunning the check in a detached worktree of `origin/main`, or by reading main's latest CI. Then continue, write `red on main: <check>` in the verdict, and message tech-lead; tech-lead opens one fix task whose PR merges first.
 - Any other red → fail, stop here.
 

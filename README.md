@@ -47,7 +47,7 @@ Needs Claude Code 2.1.295 or later (for hook `onFailure`).
 - `tf-gate` needs `jq` on infra repos.
 - The tracker and `merge-gate` need `gh`.
 
-The plugin's `scripts/` (`merge-gate`, `tf-gate`, `ui-shots`) is on the Bash tool's PATH while the plugin is enabled: a SessionStart hook adds it. It is `scripts/`, not `bin/`, because claude.ai and Cowork refuse a plugin with a top-level `bin/`. So target repos carry no copies, and every plugin update reaches every repo at once. The default branch must be `main`: both gates read their policy from it, and every worktree starts from `origin/main`.
+The plugin's `scripts/` (`merge-gate`, `tf-gate`, `ui-shots`, `check-refs`) is on the Bash tool's PATH while the plugin is enabled: a SessionStart hook adds it. It is `scripts/`, not `bin/`, because claude.ai and Cowork refuse a plugin with a top-level `bin/`. So target repos carry no copies, and every plugin update reaches every repo at once. The default branch must be `main`: both gates read their policy from it, and every worktree starts from `origin/main`.
 
 Start every shaping or run session with `--model opus`: a command's `model:` covers only its first turn, and shape, feature, bugfix, and retro span many.
 
@@ -125,7 +125,7 @@ Model-invoked (reusable discipline, agents reach for them):
 - `skills/tdd`, `skills/code-review`, `skills/codebase-design`, `skills/domain-modeling`, `skills/grilling`, `skills/writing-for-agents`, `skills/prototype`, `skills/diagnosing-bugs`, `skills/improve-codebase-architecture`, `skills/to-spec`, `skills/to-tickets`: adapted copies of mattpocock/skills. Their descriptions say "heinzelwerk copy … Use inside heinzelwerk …". So with the mattpocock plugin also installed, your own sessions pick the upstream skill and runs pick ours. Both are namespaced (`heinzelwerk:tdd` vs `mattpocock-skills:tdd`); no rename needed.
 
 Other:
-- `scripts/` — `merge-gate` (gh: reads policy, CI, and the PR; merges), `tf-gate` (terraform plan check and apply against the policy), `ui-shots` (pushes screenshots to the orphan branch `heinzelwerk-screenshots`): on the Bash tool's PATH while the plugin is enabled; policy stays in the target repo, the code stays here
+- `scripts/` — `merge-gate` (gh: reads policy, CI, and the PR; merges), `tf-gate` (terraform plan check and apply against the policy), `ui-shots` (pushes screenshots to the orphan branch `heinzelwerk-screenshots`), `check-refs` (every `path:line` in the agent docs exists): on the Bash tool's PATH while the plugin is enabled; policy stays in the target repo, the code stays here
 - `agents/` — roles, usable as subagents or teammates
 - `hooks/` — `path.sh` (SessionStart) appends `scripts/` to PATH through `CLAUDE_ENV_FILE`, nothing else. `guard.sh` (PreToolUse) blocks:
   - pushing, checking out, or moving main

@@ -37,14 +37,14 @@ Run Haiku subagents in parallel, 8–10 docs each, at effort medium. Medium beca
 
 Cross-check claims against the code. A doc that disagrees with the code is **stale** for that item, even if the rest is fine.
 
-A Haiku verdict is a candidate, not a finding (`heinzelwerk:model-selection`: a cheap tier is never the final check). Before §3, verify every stale item: a claim about files matching or differing is settled by `git hash-object` or `diff`, never by reading; every other stale claim is checked by one Opus subagent at effort medium that opens the cited `path:line` on `origin/main`. Drop what it cannot confirm.
+A Haiku verdict is a candidate, not a finding (`heinzelwerk:model-selection`: a cheap tier is never the final check). Before §3, verify every stale item, every ADR candidate, and every gotcha: a claim about files matching or differing is settled by `git hash-object` or `diff`, never by reading; everything else is checked by one Opus subagent at effort medium that opens the cited `path:line` on `origin/main`. For an ADR or gotcha it also names the `path:line` where the code does what the doc says. Drop what it cannot confirm.
 
 ## 3. Resolve with the user
 
 Present per class, one class per round, recommended answer first (`heinzelwerk:grilling` format):
 
-- **ADRs**: draft each in ADR format: 1–3 sentences, plus a `Source: <path>#<heading>` line. User accepts, edits, or drops each.
-- **Terms**: run `heinzelwerk:domain-modeling` with the `heinzelwerk:grilling` skill on the candidates. Pick canonical words, list `_Avoid_` synonyms, challenge against existing `GLOSSARY.md` and the code. Before a new `_Avoid_` word is written, grep the adopted docs for it; where it appears in headings, tell the user which docs, since those stay as they are and readers will meet both words. Write only resolved terms.
+- **ADRs**: draft each in ADR format: 1–3 sentences that say only what the source says (no rationale the source lacks), the verified `path:line` of the code, and a `Source: <path>#<heading>` line, or `Source: <path>:<line>` when the item sits under no heading. User accepts, edits, or drops each.
+- **Terms**: run `heinzelwerk:domain-modeling` with the `heinzelwerk:grilling` skill on the candidates. Pick canonical words, list `_Avoid_` synonyms, challenge against existing `GLOSSARY.md` and the code. Before a new `_Avoid_` word is written, grep the adopted docs and the code for it: where it appears in doc headings, tell the user which docs, since those stay as they are; where code identifiers use it, list them next to the term as exempt (`_Avoid_` governs prose and new names; an existing identifier keeps its name). Write only resolved terms.
 - **Planned work**: one line each. Accepted items become issues labelled `needs-triage`, body = summary + link to the source section. The user shapes them later with `/heinzelwerk:shape <issue>`.
 - **Design rules**: proposed additions to `docs/agents/heinzelwerk/design.md`. Contradictions with the code are flagged like stale items.
 - **How-to, reference, gotchas**: show the proposed edits to repo map, team rules, and learnings. Reference docs get a pointer line under `## Reference docs` in the repo map, worded as a trigger: `- <path>: read when <condition>.`
@@ -58,4 +58,8 @@ Present per class, one class per round, recommended answer first (`heinzelwerk:g
 - Write resolved ADRs, glossary terms, repo-map/team/learnings edits; create accepted issues.
 - Update `docs/agents/heinzelwerk/adopted.md` (create if missing): one line per processed doc, `- <path> @ <hash>: <classes found> → <where content went>`. `<hash>` is `git hash-object <path>`: a content hash, not a commit SHA, because it survives squash and rebase merges.
 - Never delete, move, or rewrite original docs. The only edit to an original is the appended dated correction from §3.
+- **Reconcile the agent docs with this commit.** Setup verified its `path:line` refs against `origin/main`; the corrections above moved lines, and nothing else re-checks the branch head. So, before committing:
+  - for every corrected file, shift each `path:line` in `docs/agents/heinzelwerk/*.md` that points past an insertion by the lines inserted, and update any "N lines" count. This is arithmetic, not a model's job;
+  - a fact established in §2 or §3 that contradicts a line in `docs/agents/heinzelwerk/*.md`, `GLOSSARY.md` or an ADR fixes that line (those files are new on this branch, so rewriting them is fine); a renamed file (`CONTEXT.md` → `GLOSSARY.md`) is fixed in every pointer;
+  - run `check-refs` (plugin script, on PATH): every cited path must exist at the branch head and every line must be inside its file. Fix or justify each line it prints.
 - Commit `docs: adopt existing docs into agent structure`, then open a PR, or leave the commit on setup's branch for setup to open the PR. PR body lists stale items, corrections appended, and anything the user dropped. Do not merge.

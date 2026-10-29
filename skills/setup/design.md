@@ -1,6 +1,6 @@
 # Design system
 
-What the UI must look and behave like. Frontend builds against it. Validator reviews code (Standards axis) and screenshots against it. Facts and rules only; no aspirations.
+What the UI must look and behave like. Frontend builds against it. Validator reviews code (Standards axis) and screenshots against it. Facts and rules only, each with the `path:line` of the token or component it comes from; no aspirations. Verified against <sha> <date>.
 
 ## Tokens
 - Colors: <names → values, which to use for what>

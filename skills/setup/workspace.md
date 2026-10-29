@@ -1,6 +1,6 @@
 # Workspace
 
-This repo is the **tickets repo** of a multi-repo workspace. Mode rules live in the `heinzelwerk:team-modes` skill.
+This repo is the **tickets repo** of a multi-repo workspace. Mode rules live in the `heinzelwerk:team-modes` skill. Verified against <sha> <date>.
 
 - **Tickets**: <owner/name>, the source of truth for the workspace: tickets, this file, `GLOSSARY-MAP.md`, workspace-wide ADRs, learnings
 - **Autonomy**: <full | guarded> (see each repo's `team.md`)

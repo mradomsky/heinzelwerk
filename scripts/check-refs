@@ -1,21 +1,72 @@
 #!/usr/bin/env bash
-# heinzelwerk reference check. Deterministic: every `path:line` and every backticked path in the agent docs
-# must exist in the working tree, and the line must be inside the file. Prints each miss; exit 2 on any.
-# Usage: check-refs [repo-root]   (default: the current repo). Skips globs, URLs, owner/repo#N, placeholders.
+# heinzelwerk reference check. Deterministic, three checks over the agent docs:
+#   refs      every `path:line` and backticked path exists, and the line is inside the file;
+#   claims    every bullet or table row in repo-map, workspace, design, learnings carries evidence
+#             (a path, a `path:line`, `adopted:`) or a tag (`(unverified)`, `(verified <date> …)`);
+#   header    with --since-header: each doc's `verified against <sha> <date>` line is present, and every
+#             in-repo ref whose file changed since <sha> is printed (the list retro re-verifies).
+# Prints each miss; exit 2 on any. Usage: check-refs [--since-header] [repo-root]
+# Scope: docs/agents/heinzelwerk/*.md, GLOSSARY*.md, docs/adr/*.md, and the `## Agent skills (heinzelwerk)`
+# block of CLAUDE.md (the rest of CLAUDE.md is the user's prose, not a path list).
+# `../x` resolves against the workspace folder (the parent of the main checkout), so the check works from a
+# worktree anywhere. Skips `/routes`, globs, URLs, owner/repo#N, placeholders.
 set -uo pipefail
+since=no; [ "${1:-}" = --since-header ] && { since=yes; shift; }
 cd "${1:-$(git rev-parse --show-toplevel)}" || exit 1
-docs=$(ls docs/agents/heinzelwerk/*.md GLOSSARY*.md docs/adr/*.md CLAUDE.md 2>/dev/null)
+common=$(cd "$(git rev-parse --git-common-dir)" && pwd)   # the main checkout's .git, even from a worktree
+ws=$(dirname "$(dirname "$common")")                        # <workspace>/<repo>/.git → <workspace>
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+docs=$(ls docs/agents/heinzelwerk/*.md GLOSSARY*.md docs/adr/*.md 2>/dev/null)
+if [ -f CLAUDE.md ]; then
+  mkdir -p "$tmp/CLAUDE.md.d"
+  awk '/^## Agent skills \(heinzelwerk\)/{p=1; print; next} /^## /{p=0} p' CLAUDE.md >"$tmp/CLAUDE.md.d/CLAUDE.md"
+  [ -s "$tmp/CLAUDE.md.d/CLAUDE.md" ] && docs="$docs $tmp/CLAUDE.md.d/CLAUDE.md"
+fi
 [ -n "$docs" ] || { echo "check-refs: no agent docs found"; exit 0; }
 bad=0
+refre='`[A-Za-z0-9_./-]*/[A-Za-z0-9_./-]+(:[0-9]+([-,][0-9]+)*)?`|[A-Za-z0-9_./-]+\.[A-Za-z]+:[0-9]+'
+
+# refs
 while IFS=: read -r file ref; do
+  file=${file#"$tmp/CLAUDE.md.d/"}
   ref=${ref#\`}; ref=${ref%\`}
-  case $ref in *'*'*|*http*|*'#'*|*'<'*|*'$'*|*'{'*|'') continue ;; esac
+  case $ref in /*|*'*'*|*http*|*'#'*|*'<'*|*'$'*|*'{'*|'') continue ;; esac
   path=${ref%%:*}; line=${ref#*:}; [ "$line" = "$ref" ] && line=""
   line=${line%%[-,]*}
+  case $path in ../*) path="$ws/${path#../}" ;; esac
   [ -e "$path" ] || { echo "$file: missing $ref"; bad=1; continue; }
   if [ -n "$line" ] && [ -f "$path" ]; then
     n=$(wc -l <"$path"); (( line <= n + 1 )) || { echo "$file: $ref beyond end ($n lines)"; bad=1; }
   fi
-done < <(grep -oHE '`[A-Za-z0-9_./-]*/[A-Za-z0-9_./-]+(:[0-9]+([-,][0-9]+)*)?`|[A-Za-z0-9_./-]+\.[A-Za-z]+:[0-9]+' $docs | sort -u)
+done < <(grep -oHE "$refre" $docs | sort -u)
+
+# claims: bullets and table rows without evidence or tag
+for f in docs/agents/heinzelwerk/{repo-map,workspace,design,learnings}.md; do
+  [ -f "$f" ] || continue
+  while IFS=: read -r ln text; do
+    case $text in *'<'*'>'*) continue ;; esac                                  # template placeholders
+    [ "$f" = docs/agents/heinzelwerk/workspace.md ] && [[ $text =~ ^[[:space:]]*-\ \*\* ]] && continue   # its settings lines
+    grep -qE "$refre|[A-Za-z0-9_./-]+/[A-Za-z0-9_.-]+\.[A-Za-z0-9]+|adopted: |\(unverified\)|\(verified [0-9]{4}-[0-9]{2}-[0-9]{2}" <<<"$text" && continue
+    echo "$f:$ln: untagged claim: ${text:0:70}"; bad=1
+  done < <(awk '/^\|[ :-]*-[ :|-]*$/{sep=1; next} {if (sep && prev!="") buf=""; sep=0}
+               {if (buf!="") print buf; buf=""} /^[ \t]*[-*] |^\|/{buf=NR":"$0} {prev=$0} END{if (buf!="") print buf}' "$f")
+done
+
+# header
+if [ $since = yes ]; then
+  for f in docs/agents/heinzelwerk/{repo-map,team,workspace,design,learnings}.md; do
+    [ -f "$f" ] || continue
+    sha=$(grep -oiE 'verified against\**:? *[0-9a-f]{7,40}' "$f" | head -1 | grep -oE '[0-9a-f]{7,40}$')
+    [ -n "$sha" ] || { echo "$f: no 'verified against <sha> <date>' line"; bad=1; continue; }
+    git rev-parse -q --verify "$sha^{commit}" >/dev/null || { echo "$f: verified against $sha, not a commit here"; bad=1; continue; }
+    changed=$(git diff --name-only "$sha" HEAD)
+    while IFS= read -r ref; do
+      ref=${ref#\`}; ref=${ref%\`}; path=${ref%%:*}
+      case $path in /*|../*|*'*'*|*http*|'') continue ;; esac
+      grep -qxF "$path" <<<"$changed" && { echo "$f: $ref changed since $sha"; bad=1; }
+    done < <(grep -oE "$refre" "$f" | sort -u)
+  done
+fi
+
 [ $bad = 0 ] && echo "check-refs: all references resolve"
 exit $(( bad ? 2 : 0 ))

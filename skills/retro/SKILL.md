@@ -25,6 +25,7 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
    - Token usage: ask the user once; never estimate.
    - Human run notes: ask the user once for the path (usually `docs/runs/` in their heinzelwerk checkout), then read the notes for runs in scope. Their `broke:` lines and `For /retro` items are findings to check against the sources above.
    - Shortcut debt: run the `heinzelwerk:ponytail-debt` skill; compare its output with the ledger in the last retro record.
+   - **Doc freshness** (per repo): `check-refs --since-header` prints every ref whose file changed since the doc's `Verified against` commit. Hand those, every `(unverified)` item, and every `(verified <date> …)` dated before the last retro to one Opus subagent at effort medium (`heinzelwerk:setup` **Evidence** for the kinds). It opens each ref on `origin/main` and returns, per item: still true with the ref, true with a new ref, or false with the `path:line` that contradicts it. A ref it confirms makes a tagged item evidenced; a false item is a finding.
    - **Post-merge outcomes**, since the last retro:
      - reverts of agent PRs: `git log origin/main --grep '^Revert'`;
      - CI runs that failed on `main` after an agent merge: `gh run list --branch main --status failure`, with the merge that preceded each;
@@ -101,7 +102,7 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
      - the follow-up on last retro's actions.
 
      Max 60 lines.
-   - **Environment actions**: doc changes (pointers, learnings prune and consolidate, team rules, coding standards) go on a fresh branch from main named `docs/retro-<YYYY-MM-DD>`, in one PR together with the retro record. Code changes (a new check, a hook, a CI job) become issues labelled `ready-for-agent` or `ready-for-human`, never made here.
+   - **Environment actions**: doc changes (pointers, learnings prune and consolidate, team rules, coding standards) go on a fresh branch from main named `docs/retro-<YYYY-MM-DD>`, in one PR together with the retro record. The doc-freshness results go in the same PR, whether or not the user picked a finding: shifted refs fixed, confirmed items untagged or re-dated, false items corrected, and each doc's `Verified against` line set to the `origin/main` sha the subagent read. `check-refs --since-header` prints nothing before the PR opens. Code changes (a new check, a hook, a CI job) become issues labelled `ready-for-agent` or `ready-for-human`, never made here.
    - **Architecture candidates**: every **Strong** and **Worth exploring** candidate becomes an issue, whether or not the user picked it now. Labels: `needs-triage` and `heinzelwerk-survey` (`gh label create heinzelwerk-survey -f` first). Title in `heinzelwerk:codebase-design` vocabulary. Body: problem, solution, benefits, files, strength. Dedup against open issues: when one already covers the candidate, comment on it instead of creating a new issue. List them in the retro record.
    - **Team actions**: issues in the heinzelwerk repo the user names. Ask once which repo: upstream `mradomsky/heinzelwerk`, or their fork. `gh issue create -R <repo>`, title `<role or skill>: <change>`, body = evidence + proposed wording + `remove when`.
    - Do not merge.

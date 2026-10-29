@@ -15,7 +15,7 @@ How heinzelwerk agents work in this repo. Mode rules (single repo vs workspace) 
 - **Shared paths** (only the owner named in the task edits them): <e.g. packages/types/>
 - **Worktree setup** (run once in every new task worktree; omit if none): <e.g. `npm ci --prefer-offline --no-audit --no-fund && cp ../../.env.local .`>
 - **Checks** (validator runs every one, in order; copied from CI, quiet flags only): <e.g. `npm run build --silent`, `npm run lint -- --quiet`, `npm test -- --reporter=dot`, `npm audit --audit-level=high (red on main: #12)`, `docker build -q . (unverified locally: docker)`, `actionlint (CI only: needs $RUNNER_TEMP)`>
-- **Checks verified on main**: <sha> <date>
+- **Verified against**: <sha> <date> (checks and every ref in this file; retro bumps it)
 - **Run cap** (wall clock per run; coordinator stops the run past it; omit for none): <e.g. 3h>
 - **Coding standards**: <path to CODING_STANDARDS.md / CONTRIBUTING.md, or the lint config this repo's `package.json` names, or "none: smell baseline only">; UI repos also `docs/agents/heinzelwerk/design.md`
 - **Risk areas** (validator reviews diffs touching these on Opus). Project-specific; each entry is a path/glob or a described kind of change, plus why it is risky:
@@ -26,7 +26,8 @@ How heinzelwerk agents work in this repo. Mode rules (single repo vs workspace) 
   - infra paths: always a risk area
 - **Contracts** (see team-modes **Contract changes**; validator checks every diff touching these):
   - API: <e.g. docs/api-contract.md> = single source of truth backend ↔ frontend · provider backend
+  - Provided (omit if none): <e.g. `POST /webhooks/anomaly` in `src/server.ts:16-26`, called by automation-service> · consumers <repos>
   - Consumed: <e.g. `POST /auth/v1/m2m-token` of auth-service, called from `src/auth.ts:40`> · provider <repo>
-  - Vendored: <e.g. `contract/fixtures/introspection.json`, copy of meta `fixtures/introspection.json`, pinned in `contract/fixtures/SOURCE.txt`> · provider <repo>; a provider change means a re-vendor here
+  - Vendored: <e.g. `contract/fixtures/introspection.json`, copy of meta `fixtures/introspection.json`, pinned in `contract/fixtures/SOURCE.txt`; or `src/generated/` from meta `openapi/x.json`, unpinned> · provider <repo>; a provider change means a re-vendor or regenerate here
   - Infra outputs: <e.g. infra/**/outputs.tf> · provider infra
   - Shared types: <e.g. packages/types/> · provider = the task's named owner

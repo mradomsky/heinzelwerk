@@ -51,7 +51,8 @@ Tech-lead's docs PR. No checks, no review subagents. Check that:
 - glossary entries and ADRs follow the `heinzelwerk:domain-modeling` formats;
 - ADR numbers are unique (`ls docs/adr | cut -d- -f1 | sort | uniq -d` prints nothing);
 - learnings stay within 80 lines;
-- `team.md` edits add risk areas only.
+- `check-refs` prints nothing: every ref resolves and every claim in repo-map, workspace, design, and learnings carries evidence or a tag (`heinzelwerk:setup` **Evidence**);
+- `team.md` edits add risk areas or move the `Verified against` line only.
 Anything else → fail: create `#N tech-lead fix <k>: docs` with the reason. Pass → post the `heinzelwerk: validated <sha>` review comment, write the done note, complete the task.
 
 ## Merge (`#N validate: merge`)

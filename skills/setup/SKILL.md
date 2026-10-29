@@ -128,14 +128,20 @@ Per repo, on a fresh branch `docs/heinzelwerk-setup` cut from `origin/main`:
 - `docs/agents/heinzelwerk/issue-tracker.md` from [issue-tracker-github.md](issue-tracker-github.md); workspace mode: keep its **Workspace** paragraph and fill the tickets repo in
 - `docs/agents/heinzelwerk/triage-labels.md` from [triage-labels.md](triage-labels.md); create missing labels with `gh label create` (workspace mode: in the tickets repo only)
 - `docs/agents/heinzelwerk/domain.md` from [domain.md](domain.md)
-- `docs/agents/heinzelwerk/team.md` from [team.md](team.md), including the `Autonomy` line and `Checks verified on main <sha> <date>`
+- `docs/agents/heinzelwerk/team.md` from [team.md](team.md), including the `Autonomy` line and `Verified against <sha> <date>`
 - UI found: `docs/agents/heinzelwerk/design.md` as drafted in C3
 - infra found: `docs/agents/heinzelwerk/infra-policy.json` from [infra-policy.json](infra-policy.json) with the answers from C2, and the `.gitignore` lines from C2. Keep only `protected_types` of providers the stacks use; `allowed_delete_types` takes globs, `"*"` for every unprotected type. `tf-gate` needs `jq` installed on the machine.
 - `docs/agents/heinzelwerk/merge-policy.json` from [merge-policy.json](merge-policy.json) with the answers from G (off if G was skipped); G on → also the CI workflow and the `.claude/settings.json` permission
 - the `.claude/worktrees/` ignore edit for every whole-repo check that lacked it (C)
 - **Upgrade from an older plugin**: `scripts/merge-gate`, `scripts/tf-gate`, `scripts/ui-shots` in the repo are copies an earlier setup made. The plugin's `scripts/` provides them now (on PATH through its SessionStart hook). Delete the copies. Replace `Bash(scripts/merge-gate *)` with `Bash(merge-gate *)`. Drop `max_changed_lines` from the policy unless the user wants a cap.
-- `docs/agents/heinzelwerk/repo-map.md`: from the verified map, max 120 lines, facts only. No "N lines" counts: they rot with the next commit, and `path:line` already says where to look
+- `docs/agents/heinzelwerk/repo-map.md`: from the verified map, max 120 lines, facts only, second line `Verified against <sha> <date>.` No "N lines" counts: they rot with the next commit, and `path:line` already says where to look
 - Write every file with the Write or Edit tool: a shell `echo` or heredoc expands `**/dist/` and `$VAR` into something else
+
+**Evidence.** Every claim in `repo-map.md`, `workspace.md`, `design.md`, and `learnings.md` (each bullet, each table row) is one of three kinds, and `check-refs` tells them apart:
+- **evidenced**: ends with a `path:line`, a backticked path, or `adopted: <doc>`. No tag. Its freshness is the file's `Verified against <sha> <date>` line: every ref in the file was checked at that commit.
+- **unverified**: ends with `(unverified)`. Written from a doc, a conversation, or inference; nobody has shown it in code or by running something. Better than dropping it, and better than stating it as fact.
+- **verified by observation**: ends with `(verified <date> @ <sha>: <how>)`, for facts that cannot become a ref: a daemon must run, a port is taken, a step is CI-only. `<how>` is the command or observation.
+When verification produces a ref, the tag goes away and the ref goes in. Retro re-verifies: it runs `check-refs --since-header`, re-checks the printed refs, every `(unverified)` item, and every `(verified …)` dated before the previous retro, then bumps the file's line.
 - `GLOSSARY.md` / `docs/adr/` only if section E produced resolved content; otherwise they are created later, when first needed
 
 **Pick the file to edit**: always `CLAUDE.md`; Claude Code ignores `AGENTS.md` whenever any `CLAUDE.md` exists in the folder or above it.

@@ -1,15 +1,20 @@
 #!/usr/bin/env bash
-# heinzelwerk reference check. Deterministic, three checks over the agent docs:
-#   refs      every `path:line` and backticked path exists, and the line is inside the file;
+# heinzelwerk reference check. Deterministic, over the agent docs:
+#   refs      every `path:line` and backticked path exists, and the line is inside the file; also in every
+#             `Correction (<date>)` line adopt-docs appended to an original doc;
 #   claims    every bullet or table row in repo-map, workspace, design, learnings carries evidence
 #             (a path, a `path:line`, `adopted:`) or a tag (`(unverified)`, `(verified <date> …)`);
+#             the word "unverified" appears only as that tag; repo-map has no "N lines" count;
+#   ledger    every line of adopted.md keeps `- <path> @ <hash>: … ; stale: <n> corrected, <n> marked, <n> ignored`;
 #   header    with --since-header: each doc's `verified against <sha> <date>` line is present, and every
-#             in-repo ref whose file changed since <sha> is printed (the list retro re-verifies).
+#             in-repo `path:line` whose line no longer reads as it did at <sha> is printed (the list retro
+#             re-verifies; a ref that only shifted is not printed).
 # Prints each miss; exit 2 on any. Usage: check-refs [--since-header] [repo-root]
-# Scope: docs/agents/heinzelwerk/*.md, GLOSSARY*.md, docs/adr/*.md, and the `## Agent skills (heinzelwerk)`
-# block of CLAUDE.md (the rest of CLAUDE.md is the user's prose, not a path list).
+# Scope: docs/agents/heinzelwerk/*.md, GLOSSARY*.md, docs/adr/*.md, the `## Agent skills (heinzelwerk)`
+# block of CLAUDE.md (the rest of CLAUDE.md is the user's prose, not a path list), and correction lines.
 # `../x` resolves against the workspace folder (the parent of the main checkout), so the check works from a
-# worktree anywhere. Skips `/routes`, globs, URLs, owner/repo#N, placeholders.
+# worktree anywhere. Skips `/routes`, globs, URLs, owner/repo#N, placeholders, and `<owner>/<repo> <path>:<line>`
+# (another repo's file, named by repo: not checkable here).
 set -uo pipefail
 since=no; [ "${1:-}" = --since-header ] && { since=yes; shift; }
 cd "${1:-$(git rev-parse --show-toplevel)}" || exit 1
@@ -22,13 +27,28 @@ if [ -f CLAUDE.md ]; then
   awk '/^## Agent skills \(heinzelwerk\)/{p=1; print; next} /^## /{p=0} p' CLAUDE.md >"$tmp/CLAUDE.md.d/CLAUDE.md"
   [ -s "$tmp/CLAUDE.md.d/CLAUDE.md" ] && docs="$docs $tmp/CLAUDE.md.d/CLAUDE.md"
 fi
+# correction lines in original docs: one temp file per source, named by index, map in corr.map
+mkdir -p "$tmp/corr.d"; : >"$tmp/corr.map"; i=0
+while IFS= read -r src; do
+  i=$((i+1)); printf '%s\t%s\n' "$i" "$src" >>"$tmp/corr.map"
+  grep -E 'Correction \([0-9]{4}-[0-9]{2}-[0-9]{2}\)' "$src" \
+    | sed -E 's#(^|[ (`])[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+ `?[A-Za-z0-9_./-]+:[0-9]+([-,][0-9]+)*`?#\1#g' >"$tmp/corr.d/$i"
+  docs="$docs $tmp/corr.d/$i"
+done < <(git grep -lE 'Correction \([0-9]{4}-[0-9]{2}-[0-9]{2}\)' -- '*.md' '*.txt' ':!docs/agents/heinzelwerk' 2>/dev/null)
 [ -n "$docs" ] || { echo "check-refs: no agent docs found"; exit 0; }
 bad=0
 refre='`[A-Za-z0-9_./-]*/[A-Za-z0-9_./-]+(:[0-9]+([-,][0-9]+)*)?`|[A-Za-z0-9_./-]+\.[A-Za-z]+:[0-9]+'
+src_of() {   # temp file → the doc it came from
+  case $1 in
+    "$tmp"/CLAUDE.md.d/*) echo CLAUDE.md ;;
+    "$tmp"/corr.d/*) awk -F'\t' -v n="${1##*/}" '$1==n{print $2}' "$tmp/corr.map" ;;
+    *) echo "$1" ;;
+  esac
+}
 
 # refs
 while IFS=: read -r file ref; do
-  file=${file#"$tmp/CLAUDE.md.d/"}
+  file=$(src_of "$file")
   ref=${ref#\`}; ref=${ref%\`}
   case $ref in /*|*'*'*|*http*|*'#'*|*'<'*|*'$'*|*'{'*|'') continue ;; esac
   path=${ref%%:*}; line=${ref#*:}; [ "$line" = "$ref" ] && line=""
@@ -40,17 +60,35 @@ while IFS=: read -r file ref; do
   fi
 done < <(grep -oHE "$refre" $docs | sort -u)
 
-# claims: bullets and table rows without evidence or tag
+# claims: bullets and table rows without evidence or tag; the reserved word; line counts
 for f in docs/agents/heinzelwerk/{repo-map,workspace,design,learnings}.md; do
   [ -f "$f" ] || continue
   while IFS=: read -r ln text; do
     case $text in *'<'*'>'*) continue ;; esac                                  # template placeholders
     [ "$f" = docs/agents/heinzelwerk/workspace.md ] && [[ $text =~ ^[[:space:]]*-\ \*\* ]] && continue   # its settings lines
-    grep -qE "$refre|[A-Za-z0-9_./-]+/[A-Za-z0-9_.-]+\.[A-Za-z0-9]+|adopted: |\(unverified\)|\(verified [0-9]{4}-[0-9]{2}-[0-9]{2}" <<<"$text" && continue
+    grep -qE "$refre|[A-Za-z0-9_./-]+/[A-Za-z0-9_.-]+\.[A-Za-z0-9]+|adopted: |\(unverified[):]|\(verified [0-9]{4}-[0-9]{2}-[0-9]{2}" <<<"$text" && continue
     echo "$f:$ln: untagged claim: ${text:0:70}"; bad=1
   done < <(awk '/^\|[ :-]*-[ :|-]*$/{sep=1; next} {if (sep && prev!="") buf=""; sep=0}
                {if (buf!="") print buf; buf=""} /^[ \t]*[-*] |^\|/{buf=NR":"$0} {prev=$0} END{if (buf!="") print buf}' "$f")
+  while IFS=: read -r ln text; do
+    stripped=$(sed -E 's/\(unverified(\)|:|,| locally)//g; s/<!--.*-->//g' <<<"$text")
+    grep -qi 'unverified' <<<"$stripped" || continue
+    echo "$f:$ln: 'unverified' outside the tag (write (unverified) or reword): ${text:0:60}"; bad=1
+  done < <(grep -niE 'unverified' "$f")
+  if [ "$f" = docs/agents/heinzelwerk/repo-map.md ]; then
+    while IFS=: read -r ln text; do
+      echo "$f:$ln: line count (rots with the next commit): ${text:0:60}"; bad=1
+    done < <(grep -nE '\b[0-9]+ lines\b' "$f" | grep -v 'max 120 lines\|Max 120 lines')
+  fi
 done
+
+# ledger
+if [ -f docs/agents/heinzelwerk/adopted.md ]; then
+  while IFS=: read -r ln text; do
+    grep -qE '^- [^ ]+ @ [0-9a-f]{40}: .+; stale: [0-9]+ corrected, [0-9]+ marked, [0-9]+ ignored(; filed: [^;]+)?[[:space:]]*$' <<<"$text" && continue
+    echo "docs/agents/heinzelwerk/adopted.md:$ln: ledger line off format (- <path> @ <hash>: … ; stale: n corrected, n marked, n ignored[; filed: …]): ${text:0:60}"; bad=1
+  done < <(grep -n '^- ' docs/agents/heinzelwerk/adopted.md)
+fi
 
 # header
 if [ $since = yes ]; then
@@ -61,9 +99,14 @@ if [ $since = yes ]; then
     git rev-parse -q --verify "$sha^{commit}" >/dev/null || { echo "$f: verified against $sha, not a commit here"; bad=1; continue; }
     changed=$(git diff --name-only "$sha" HEAD)
     while IFS= read -r ref; do
-      ref=${ref#\`}; ref=${ref%\`}; path=${ref%%:*}
+      ref=${ref#\`}; ref=${ref%\`}; path=${ref%%:*}; line=${ref#*:}
+      [ "$line" = "$ref" ] && continue                      # a bare path: existence is the refs check's job
       case $path in /*|../*|*'*'*|*http*|'') continue ;; esac
-      grep -qxF "$path" <<<"$changed" && { echo "$f: $ref changed since $sha"; bad=1; }
+      grep -qxF "$path" <<<"$changed" || continue
+      line=${line%%[-,]*}; txt=$(sed -n "${line}p" "$path" 2>/dev/null | tr -d '\r')
+      # the same line text still exists in the file at <sha> → it only moved; a short line proves nothing
+      [ ${#txt} -ge 8 ] && MSYS_NO_PATHCONV=1 git show "$sha:$path" 2>/dev/null | tr -d '\r' | grep -qxF -- "$txt" && continue
+      echo "$f: $ref changed since $sha"; bad=1
     done < <(grep -oE "$refre" "$f" | sort -u)
   done
 fi

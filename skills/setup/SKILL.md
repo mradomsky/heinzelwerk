@@ -30,7 +30,7 @@ Read whatever exists; don't assume.
   2. entry points: routes with method, path, and the auth they require;
   3. unauthenticated routes, listed on their own;
   4. money or spend paths: code that moves game or real credits, calls to paid external APIs, anything with a bill;
-  5. what the repo calls and what calls it (workspace mode), including vendored copies of another repo's fixtures or schemas and the file that pins them;
+  5. what the repo calls and what calls it (workspace mode), including vendored copies of another repo's fixtures or schemas, code generated from another repo's spec, and the file that pins them;
   6. how to build, test, run: exact commands, plus any git-ignored file the app needs to start (`.env.local`);
   7. CI jobs and their steps, in order, with arguments, so checks are copied, not guessed; which jobs deploy or release, on which trigger;
   8. persistence and migrations;
@@ -134,7 +134,8 @@ Per repo, on a fresh branch `docs/heinzelwerk-setup` cut from `origin/main`:
 - `docs/agents/heinzelwerk/merge-policy.json` from [merge-policy.json](merge-policy.json) with the answers from G (off if G was skipped); G on → also the CI workflow and the `.claude/settings.json` permission
 - the `.claude/worktrees/` ignore edit for every whole-repo check that lacked it (C)
 - **Upgrade from an older plugin**: `scripts/merge-gate`, `scripts/tf-gate`, `scripts/ui-shots` in the repo are copies an earlier setup made. The plugin's `scripts/` provides them now (on PATH through its SessionStart hook). Delete the copies. Replace `Bash(scripts/merge-gate *)` with `Bash(merge-gate *)`. Drop `max_changed_lines` from the policy unless the user wants a cap.
-- `docs/agents/heinzelwerk/repo-map.md`: from the verified map, max 120 lines, facts only
+- `docs/agents/heinzelwerk/repo-map.md`: from the verified map, max 120 lines, facts only. No "N lines" counts: they rot with the next commit, and `path:line` already says where to look
+- Write every file with the Write or Edit tool: a shell `echo` or heredoc expands `**/dist/` and `$VAR` into something else
 - `GLOSSARY.md` / `docs/adr/` only if section E produced resolved content; otherwise they are created later, when first needed
 
 **Pick the file to edit**: always `CLAUDE.md`; Claude Code ignores `AGENTS.md` whenever any `CLAUDE.md` exists in the folder or above it.
@@ -169,7 +170,7 @@ Then tell the user to create, in the unversioned workspace folder, a `CLAUDE.md`
 
 Single mode: `docs/agents/heinzelwerk/learnings.md` from [learnings.md](learnings.md) in the repo itself.
 
-Run `check-refs` (plugin script, on PATH) and fix every line it prints, then commit `docs: set up agent docs`. **F said yes → run `heinzelwerk:adopt-docs` now**, on the same branch; it adds its own commit and reconciles the refs its corrections moved. Only then open one PR per repo. Remove the detached worktrees from §1. Do not merge.
+Run `check-refs` (plugin script, on PATH) and fix every line it prints, then commit `docs: set up agent docs`. **F said yes → run `heinzelwerk:adopt-docs` now**, on the same branch; it adds its own commit and reconciles every ref the branch's edits moved. Only then open one PR per repo. Remove the detached worktrees from §1. Do not merge.
 
 ## 5. Done: tell the user
 

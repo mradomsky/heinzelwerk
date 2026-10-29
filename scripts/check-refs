@@ -1,17 +1,31 @@
 #!/usr/bin/env bash
 # heinzelwerk reference check. Deterministic: every `path:line` and every backticked path in the agent docs
-# must exist in the working tree, and the line must be inside the file. Prints each miss; exit 2 on any.
-# Usage: check-refs [repo-root]   (default: the current repo). Skips globs, URLs, owner/repo#N, placeholders.
+# must exist, and the line must be inside the file. Prints each miss; exit 2 on any.
+# Usage: check-refs [repo-root]   (default: the current repo).
+# Scope: docs/agents/heinzelwerk/*.md, GLOSSARY*.md, docs/adr/*.md, and the `## Agent skills (heinzelwerk)`
+# block of CLAUDE.md (the rest of CLAUDE.md is the user's prose, not a path list).
+# `../x` resolves against the workspace folder (the parent of the main checkout), so the check works from a
+# worktree anywhere. Skips `/routes`, globs, URLs, owner/repo#N, placeholders.
 set -uo pipefail
 cd "${1:-$(git rev-parse --show-toplevel)}" || exit 1
-docs=$(ls docs/agents/heinzelwerk/*.md GLOSSARY*.md docs/adr/*.md CLAUDE.md 2>/dev/null)
+common=$(cd "$(git rev-parse --git-common-dir)" && pwd)   # the main checkout's .git, even from a worktree
+ws=$(dirname "$(dirname "$common")")                        # <workspace>/<repo>/.git → <workspace>
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+docs=$(ls docs/agents/heinzelwerk/*.md GLOSSARY*.md docs/adr/*.md 2>/dev/null)
+if [ -f CLAUDE.md ]; then
+  mkdir -p "$tmp/CLAUDE.md.d"
+  awk '/^## Agent skills \(heinzelwerk\)/{p=1; print; next} /^## /{p=0} p' CLAUDE.md >"$tmp/CLAUDE.md.d/CLAUDE.md"
+  [ -s "$tmp/CLAUDE.md.d/CLAUDE.md" ] && docs="$docs $tmp/CLAUDE.md.d/CLAUDE.md"
+fi
 [ -n "$docs" ] || { echo "check-refs: no agent docs found"; exit 0; }
 bad=0
 while IFS=: read -r file ref; do
+  file=${file#"$tmp/CLAUDE.md.d/"}
   ref=${ref#\`}; ref=${ref%\`}
-  case $ref in *'*'*|*http*|*'#'*|*'<'*|*'$'*|*'{'*|'') continue ;; esac
+  case $ref in /*|*'*'*|*http*|*'#'*|*'<'*|*'$'*|*'{'*|'') continue ;; esac
   path=${ref%%:*}; line=${ref#*:}; [ "$line" = "$ref" ] && line=""
   line=${line%%[-,]*}
+  case $path in ../*) path="$ws/${path#../}" ;; esac
   [ -e "$path" ] || { echo "$file: missing $ref"; bad=1; continue; }
   if [ -n "$line" ] && [ -f "$path" ]; then
     n=$(wc -l <"$path"); (( line <= n + 1 )) || { echo "$file: $ref beyond end ($n lines)"; bad=1; }

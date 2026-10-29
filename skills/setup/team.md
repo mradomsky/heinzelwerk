@@ -26,7 +26,8 @@ How heinzelwerk agents work in this repo. Mode rules (single repo vs workspace) 
   - infra paths: always a risk area
 - **Contracts** (see team-modes **Contract changes**; validator checks every diff touching these):
   - API: <e.g. docs/api-contract.md> = single source of truth backend ↔ frontend · provider backend
+  - Provided (omit if none): <e.g. `POST /webhooks/anomaly` in `src/server.ts:16-26`, called by automation-service> · consumers <repos>
   - Consumed: <e.g. `POST /auth/v1/m2m-token` of auth-service, called from `src/auth.ts:40`> · provider <repo>
-  - Vendored: <e.g. `contract/fixtures/introspection.json`, copy of meta `fixtures/introspection.json`, pinned in `contract/fixtures/SOURCE.txt`> · provider <repo>; a provider change means a re-vendor here
+  - Vendored: <e.g. `contract/fixtures/introspection.json`, copy of meta `fixtures/introspection.json`, pinned in `contract/fixtures/SOURCE.txt`; or `src/generated/` from meta `openapi/x.json`, unpinned> · provider <repo>; a provider change means a re-vendor or regenerate here
   - Infra outputs: <e.g. infra/**/outputs.tf> · provider infra
   - Shared types: <e.g. packages/types/> · provider = the task's named owner

@@ -18,6 +18,6 @@ Pick the path by state:
   1b. **Prototype**, when the slice changes what a screen looks like or how a flow behaves, and the user hasn't seen it yet. Offer it. If the user says yes, use the `heinzelwerk:prototype` skill: a few radically different UI variations, or a logic walkthrough. The user picks. The chosen variant and the question it settled go into the spec; the prototype goes to a throwaway branch with a pointer from the spec issue.
   2. **Spec**: `heinzelwerk:to-spec` skill, publishing to the tracker. Input was an existing issue → update that issue into the spec instead of creating a new one.
   3. **Slice**: `heinzelwerk:to-tickets` skill on that spec. Tickets come out as sub-issues labelled `ready-for-agent`.
-  4. **Docs PR**: glossary or ADR changes from step 1 → commit them on a fresh branch `docs/shape-<topic>`, commit message `docs: update domain docs from shaping`, open PR.
+  4. **Docs PR**: glossary or ADR changes from step 1, and a row in `docs/agents/heinzelwerk/out-of-scope.md` for each item the spec's out-of-scope section settles for longer than this slice (`proposal | product | reason | revisit when`) → commit them on a fresh branch `docs/shape-<topic>`, commit message `docs: update domain docs from shaping`, open PR. Read that file before the grill: an item already there is answered with its row.
 
 Finish with the frontier: slices with no open blockers, each as the exact command to run (`/heinzelwerk:feature <n>`).

@@ -1,4 +1,4 @@
-You are reviewing the `heinzelwerk` Claude Code plugin in the current directory with fresh eyes. You did not write it. Read README.md first, then every file under agents/, commands/, skills/, hooks/, .claude-plugin/.
+You are reviewing the `heinzelwerk` Claude Code plugin in the current directory with fresh eyes. You did not write it. Read README.md first, then docs/GLOSSARY.md (the plugin's own terms and the words to avoid), docs/adr/ (decisions with their rejected options), and docs/out-of-scope.md (proposals already turned down, with the condition to revisit them: do not re-propose one unless its condition holds, and then say so). Then every file under agents/, commands/, skills/, hooks/, scripts/, .claude-plugin/.
 
 Skills copied from upstream (tdd, code-review, codebase-design, domain-modeling, grilling, to-spec, to-tickets, writing-for-agents, ponytail-debt) are out of scope except for their marked `_(heinzelwerk …)_` adaptations and how our files use them.
 

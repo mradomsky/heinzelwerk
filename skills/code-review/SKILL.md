@@ -33,6 +33,8 @@ Look for the originating spec, in this order:
 
 ### 3. Identify the standards sources
 
+_(heinzelwerk: `docs/agents/heinzelwerk/team.md`'s **Coding standards** entry names the sources setup verified for this repo; start from it. Search the repo only when the entry is missing or a file it names has moved, and say so in the report. A file the entry left out on purpose, such as a shared config another repo uses, stays out.)_
+
 Search the repo for every file that documents how code should be written. When `CODING_STANDARDS.md` or `CONTRIBUTING.md` exists, it must be on the list.
 
 On top of whatever the repo documents, the Standards axis always carries the **smell baseline** below: a fixed set of Fowler code smells (_Refactoring_, ch.3) that applies even when a repo documents nothing. Two rules bind it:

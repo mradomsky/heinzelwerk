@@ -32,7 +32,8 @@ You do no task work: no code, no tasks, no spec edits. Follow the `heinzelwerk:p
    - the ticket;
    - the mode;
    - the team config path (`~/.claude/teams/<team>/config.json`);
-   - in a bugfix run, the instruction to follow `bugfix.md` in the `heinzelwerk:phased-workflow` skill.
+   - in a bugfix run, the instruction to follow `bugfix.md` in the `heinzelwerk:phased-workflow` skill;
+   - a `## Context` block: the output of `spawn-context <role> <ticket>` (validator: `--pr <PR>`; workspace mode: `--tickets <owner/repo>` and `--dir <repo>`), run once per spawn and pasted whole. It holds the ticket, the newest plan and run-state comments, the team.md entries every role reads, the agent-skills pointers, and for validator the PR body and its changed files. The script exits non-zero when a fetch fails: then spawn without the block and say so in the prompt, never paste a partial one.
 
    Teammates discover who is running from that config (team-modes **Messaging**); you never maintain a roster.
 4. **Release** a teammate (send it a shutdown request) once all three conditions hold:
@@ -87,6 +88,12 @@ Third nudge to the same agent on the same task → tell tech-lead, who reassigns
 - completes it;
 - recreates it as a pending task, with the same branch and worktree in its details, for the replacement to claim.
 
+The crashed teammate's worktree stays locked (`git worktree lock`, team-modes §1). Unlock it yourself before the replacement claims the task: `git -C <repo> worktree unlock <path>`, and say so in the recreated task's details. Never unlock a worktree whose lock reason names a running teammate.
+
+**Silence** (the two clocks; the minutes come from `team.md`'s `Silence` entry, default 20):
+- A teammate holds an in-progress task and, for that many minutes, sent no message, pushed no commit, and changed no task → one message: `[team-lead] silent <n> min on <task>: report state in two lines, or hand off`. It counts as a nudge. A second window with still nothing → tell tech-lead, who reassigns the task or stops it. A subagent spawn in the foreground is not silence: its report arrives as the teammate's next message, or as a hand-back you forward (§2).
+- A teammate posted its done note and created the validate task, and then keeps committing or messaging about that task → one message: `[team-lead] <branch> is frozen since the validate task; the next change is a fix round`. Not a nudge. Still going → tell tech-lead.
+
 ### System pass
 Run it whenever a task completes:
 - Duplicates: two tasks with the same goal or overlapping files → tell tech-lead which one to keep.
@@ -103,8 +110,8 @@ Stay silent when everything is fine. Style is never a reason for a nudge.
 Keep one `## Heinzelwerk run state` comment per run on the ticket. Create it at the first phase change and keep its comment id. Edit it by id at every later phase change: `gh api -X PATCH repos/{owner}/{repo}/issues/comments/<id> -F body=@<file>`. Every role posts under the same login, so `--edit-last` may hit another role's comment.
 
 The comment holds:
-- the running counts the metrics block needs: nudges and whether they changed behaviour, escalations to the user, proposals by outcome, fix rounds, subagent escalations, infra applies;
-- a **task snapshot**: every task not completed, as `id | title | owner | branch | worktree`. Tech-lead's docs PR and the final report read this snapshot and the PR bodies once the task list is gone.
+- the running counts the metrics block needs: nudges and whether they changed behaviour, silence messages, escalations to the user, proposals by outcome, fix rounds, subagent escalations, infra applies;
+- a **task snapshot**: every task not completed, as `id | title | owner | branch | worktree`. Tech-lead's docs PR and the final report read this snapshot and the PR bodies once the task list is gone. A resumed run reuses these branch names.
 
 The final report takes its numbers from the run-state comment, never from memory. Every timestamp in the run state and the report is UTC (`date -u`) and marked `UTC`.
 
@@ -115,7 +122,7 @@ The final report takes its numbers from the run-state comment, never from memory
 
 It holds: tasks by status with owner, branch, and worktree; open proposals; pending escalations; infra applies; and which skills the next session loads. Point at tickets, PRs, and comments instead of repeating them; redact secrets. Ask tech-lead for the technical state first.
 
-**Resume.** At run start, a `## Heinzelwerk run state` comment with no `## Heinzelwerk final report` after it means that run was interrupted. Read it, tell the user you're resuming, and continue from its state instead of reseeding. Tasks and teammates don't survive a new session: spawn product and tech-lead; tech-lead recreates every task the state lists as open, in progress, or pending, with the same branches and worktrees in their details. Tasks whose PR passed validation stay done.
+**Resume.** At run start, a `## Heinzelwerk run state` comment with no `## Heinzelwerk final report` after it means that run was interrupted. Read it, tell the user you're resuming, and continue from its state instead of reseeding. Tasks and teammates don't survive a new session: spawn product and tech-lead; tech-lead recreates every task the state lists as open, in progress, or pending, with the same branches and worktrees in their details. Tasks whose PR passed validation stay done. Branch names come from the snapshot, never from a new slug (team-modes **Branch name**); a worktree the snapshot lists is unlocked first, because its lock reason names a teammate that no longer exists.
 
 ## 4. End the run
 Every run ends with a final report. A run ends on one of:
@@ -129,11 +136,13 @@ Every run ends with a final report. A run ends on one of:
 
    | Worktree | Action |
    |---|---|
+   | locked (`git worktree list --porcelain` shows `locked <reason>`), and the reason names a teammate of a run that is still running, or a run whose state comment has no final report | keep it; another session owns it |
+   | locked, and the reason names this run or a run that has its final report | `git worktree unlock <path>`, then the row below that fits |
    | detached (validator's `val-`, `red-`, `accept-`) | `git worktree remove <path>` |
    | on a branch and pushed (`git -C <path> rev-list --count @{u}..HEAD` is `0`) | remove it, then `git branch -D <branch>` |
    | not pushed, no upstream, or git refuses the remove (uncommitted work) | keep it and mention it in the final report |
 
-   Never `--force`.
+   Never `--force`, never `unlock` a worktree whose reason names a run you cannot see the end of.
 3. Post the final report on the ticket, starting with `## Heinzelwerk final report`. It holds:
    - outcome;
    - acceptance verdict (per criterion, with evidence);
@@ -160,6 +169,7 @@ tasks: <total> (discovered: <n>)
 fix_rounds: <total> (max per PR: <n>)
 diagnose_rounds: <n>
 nudges: <total>, <n> changed behaviour
+silence: <n> silent-window messages, <n> frozen-branch messages
 escalations_to_user: <n>
 proposals: <n> (accepted: <n>, rejected: <n>, to product: <n>, to user: <n>)
 escalations: <n> opus subagents, <n> sonnet subagents, <n> haiku subagents

@@ -17,6 +17,7 @@ How heinzelwerk agents work in this repo. Mode rules (single repo vs workspace) 
 - **Checks** (validator runs every one, in order; copied from CI, quiet flags only): <e.g. `npm run build --silent`, `npm run lint -- --quiet`, `npm test -- --reporter=dot`, `npm audit --audit-level=high (red on main: #12)`, `docker build -q . (unverified locally: docker)`, `actionlint (CI only: needs $RUNNER_TEMP)`>
 - **Verified against**: <sha> <date> (checks and every ref in this file; retro bumps it)
 - **Run cap** (wall clock per run; coordinator stops the run past it; omit for none): <e.g. 3h>
+- **Silence** (minutes a teammate may hold an in-progress task with no message, commit, or task change before coordinator asks for its state; omit for the default 20): <e.g. 30 for a repo whose checks run long>
 - **Coding standards**: <path to CODING_STANDARDS.md / CONTRIBUTING.md, or the lint config this repo's `package.json` names, or "none: smell baseline only">; UI repos also `docs/agents/heinzelwerk/design.md`
 - **Risk areas** (validator reviews diffs touching these on Opus). Project-specific; each entry is a path/glob or a described kind of change, plus why it is risky. A file family gets its glob, not one member (`contract-skip*`, `scripts/cutover-*`); a gate or judge script is listed with the inputs it reads:
   - <e.g. `services/auth/**`: authorization decisions>

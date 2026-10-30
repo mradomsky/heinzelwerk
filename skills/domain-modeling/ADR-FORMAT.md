@@ -19,7 +19,7 @@ That's it. An ADR can be a single paragraph. The value is in recording *that* a 
 Only include these when they add genuine value. Most ADRs won't need them.
 
 - **Status** frontmatter (`proposed | accepted | deprecated | superseded by ADR-NNNN`): useful when decisions are revisited
-- **Considered Options**: only when the rejected alternatives are worth remembering
+- **Considered Options**: only when the rejected alternatives are worth remembering. _(heinzelwerk: required for the two kinds below that exist to stop a re-proposal, **deliberate deviations from the obvious path** and **rejected alternatives**: a numbered list, each option with the reason it lost, the chosen one marked. The ADR is then the answer the next proposer gets.)_
 - **Consequences**: only when non-obvious downstream effects need to be called out
 
 ## Numbering

@@ -106,7 +106,7 @@ Workspace mode: also propose each repo's role, and the integration command if on
 When on:
 - Policy from [merge-policy.json](merge-policy.json) with `enabled: true`. `allow_paths: ["*"]`, unless the user names areas that must always wait for a human; those go in `deny_paths` (guarded: the risk areas, by default). Risk areas still get Opus review either way. `merge_method`: whichever the repo's history already uses (merge commits or squash); before settling on squash, grep the workspace's vendoring pins (`SOURCE*`, fixture `$comment`s, READMEs) for a merge-commit requirement: a pin that names a commit that must land on main unchanged puts those paths in `deny_paths`, or the rule in the risk area. Changes to the gate itself and to its policy always wait for a human; the gate never merges them. Tell the user once: the `validated` line the gate trusts could be posted by any role, since all roles share one `gh` login; that is acceptable while `main` is not production.
 - CI on pull requests: `require_checks` stays true. If no workflow runs on `pull_request`, propose `.github/workflows/heinzelwerk-checks.yml` running the **Worktree setup** and every **Checks** command from `team.md`, with the action versions the repo's (or workspace's) other workflows pin.
-- Permission: add `Bash(merge-gate *)` to `permissions.allow` in `.claude/settings.json` (the committed file; merge into it if it already exists). Without it, Claude Code's auto mode blocks the gate as "merge without review". The gate itself runs from the plugin's `scripts/`, so updates arrive with the plugin and no PR can change it.
+- Permission: add `Bash(merge-gate *)` to `permissions.allow` in `.claude/settings.json` (the committed file; merge into it if it already exists). Without it, Claude Code's auto mode blocks the gate as "merge without review". The gate itself runs from the plugin's `scripts/`, so updates arrive with the plugin and no PR can change it. Add `Bash(check-note *)` and `Bash(spawn-context *)` in the same list, gate on or off: they only read, but a prompt per spawn or per done note stalls an unattended run.
 - Docs PRs merge through the gate too; validator checks their formats. If terms, ADRs, or learnings should wait for a human, put their paths in `deny_paths`.
 
 ## 3. Confirm the drafts
@@ -129,6 +129,7 @@ Per repo, on a fresh branch `docs/heinzelwerk-setup` cut from `origin/main`:
 - `docs/agents/heinzelwerk/triage-labels.md` from [triage-labels.md](triage-labels.md); create missing labels with `gh label create` (workspace mode: in the tickets repo only)
 - `docs/agents/heinzelwerk/domain.md` from [domain.md](domain.md)
 - `docs/agents/heinzelwerk/team.md` from [team.md](team.md), including the `Autonomy` line and `Verified against <sha> <date>`
+- `docs/agents/heinzelwerk/out-of-scope.md` from [out-of-scope.md](out-of-scope.md): the header and an empty table (the example row removed); workspace mode: in the tickets repo only
 - UI found: `docs/agents/heinzelwerk/design.md` as drafted in C3
 - infra found: `docs/agents/heinzelwerk/infra-policy.json` from [infra-policy.json](infra-policy.json) with the answers from C2, and the `.gitignore` lines from C2. Keep only `protected_types` of providers the stacks use; `allowed_delete_types` takes globs, `"*"` for every unprotected type. Then give one verdict per resource type the stacks declare (`grep -h '^resource' **/*.tf | sort -u`): protected, delete-ok, or update-only; a type whose in-place update restarts or re-provisions production (an SSM document that runs bootstrap, a launch template, a task definition) is decided with the user, never left out by omission. `tf-gate` needs `jq` installed on the machine.
 - `docs/agents/heinzelwerk/merge-policy.json` from [merge-policy.json](merge-policy.json) with the answers from G (off if G was skipped); G on → also the CI workflow and the `.claude/settings.json` permission
@@ -160,6 +161,7 @@ The block:
 - **Triage labels**: <one line>. See `docs/agents/heinzelwerk/triage-labels.md` before applying any label.
 - **Domain docs**: <single- or multi-context>. Read `docs/agents/heinzelwerk/domain.md` before exploring code or naming anything.
 - **Team rules**: read `docs/agents/heinzelwerk/team.md` before any team task.
+- **Out of scope**: see `docs/agents/heinzelwerk/out-of-scope.md` before proposing or triaging discovered work.
 - **Repo map**: see `docs/agents/heinzelwerk/repo-map.md` when locating code.
 - **Design system** (UI repos): read `docs/agents/heinzelwerk/design.md` before building or reviewing any UI.
 - **Learnings**: read `<path to learnings.md>` before starting any task.

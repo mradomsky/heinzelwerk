@@ -45,9 +45,9 @@ Needs Claude Code 2.1.295 or later (for hook `onFailure`).
 **Dependencies.**
 - The guard hook needs only bash (Git Bash on Windows).
 - `tf-gate` needs `jq` on infra repos.
-- The tracker and `merge-gate` need `gh`.
+- The tracker, `merge-gate`, and `spawn-context` need `gh` (its built-in `--jq`; no `jq` binary). `check-note` needs only bash.
 
-The plugin's `scripts/` (`merge-gate`, `tf-gate`, `ui-shots`, `check-refs`) is on the Bash tool's PATH while the plugin is enabled: a SessionStart hook adds it. It is `scripts/`, not `bin/`, because claude.ai and Cowork refuse a plugin with a top-level `bin/`. So target repos carry no copies, and every plugin update reaches every repo at once. The default branch must be `main`: both gates read their policy from it, and every worktree starts from `origin/main`.
+The plugin's `scripts/` (`merge-gate`, `tf-gate`, `ui-shots`, `check-refs`, `check-note`, `spawn-context`) is on the Bash tool's PATH while the plugin is enabled: a SessionStart hook adds it. It is `scripts/`, not `bin/`, because claude.ai and Cowork refuse a plugin with a top-level `bin/`. So target repos carry no copies, and every plugin update reaches every repo at once. The default branch must be `main`: both gates read their policy from it, and every worktree starts from `origin/main`.
 
 Start every shaping or run session with `--model opus`: a command's `model:` covers only its first turn, and shape, feature, bugfix, and retro span many.
 
@@ -91,14 +91,14 @@ CLAUDE.md                 ## Agent skills (heinzelwerk) pointer block (existing 
 GLOSSARY.md               lazily, resolved terms only
 docs/adr/                 lazily, decisions meeting all three ADR criteria
 docs/agents/heinzelwerk/  heinzelwerk's own files; other files in docs/agents/ are left alone
-  issue-tracker.md  triage-labels.md  domain.md  team.md  repo-map.md  learnings.md
+  issue-tracker.md  triage-labels.md  domain.md  team.md  repo-map.md  learnings.md  out-of-scope.md
   design.md               UI repos: design system
   infra-policy.json       infra repos: tf-gate policy
   merge-policy.json       merge-gate policy (setup section G)
   adopted.md              ledger of adopted docs
   retros/                 retro records
   workspace.md            tickets repo only, workspace mode
-.claude/settings.json     Bash(merge-gate *) permission (section G)
+.claude/settings.json     Bash(check-note *), Bash(spawn-context *) permissions; Bash(merge-gate *) with section G
 GLOSSARY-MAP.md           tickets repo only, workspace mode
 CLAUDE.workspace.md       tickets repo only; parent folder CLAUDE.md = one @import line
 ```
@@ -125,7 +125,8 @@ Model-invoked (reusable discipline, agents reach for them):
 - `skills/tdd`, `skills/code-review`, `skills/codebase-design`, `skills/domain-modeling`, `skills/grilling`, `skills/writing-for-agents`, `skills/prototype`, `skills/diagnosing-bugs`, `skills/improve-codebase-architecture`, `skills/to-spec`, `skills/to-tickets`: adapted copies of mattpocock/skills. Their descriptions say "heinzelwerk copy … Use inside heinzelwerk …". So with the mattpocock plugin also installed, your own sessions pick the upstream skill and runs pick ours. Both are namespaced (`heinzelwerk:tdd` vs `mattpocock-skills:tdd`); no rename needed.
 
 Other:
-- `scripts/` — `merge-gate` (gh: reads policy, CI, and the PR; merges), `tf-gate` (terraform plan check and apply against the policy), `ui-shots` (pushes screenshots to the orphan branch `heinzelwerk-screenshots`), `check-refs` (every `path:line` in the agent docs and in appended corrections exists, every claim carries evidence or an `(unverified)` tag, the adopted ledger keeps its format, `--since-header` lists refs whose line changed since the doc was verified): on the Bash tool's PATH while the plugin is enabled; policy stays in the target repo, the code stays here
+- `scripts/` — `merge-gate` (gh: reads policy, CI, and the PR; merges), `tf-gate` (terraform plan check and apply against the policy), `ui-shots` (pushes screenshots to the orphan branch `heinzelwerk-screenshots`), `check-refs` (every `path:line` in the agent docs and in appended corrections exists, every claim carries evidence or an `(unverified)` tag, the adopted ledger keeps its format, `--since-header` lists refs whose line changed since the doc was verified), `check-note` (a done note has every field in order and one exit code per `team.md` check; a verdict ends with the full-sha validated line and no bare `inconclusive`), `spawn-context` (prints the `## Context` block a spawn prompt carries: ticket, plan and run-state comments, team rules, agent-skills pointers, the PR for validator): on the Bash tool's PATH while the plugin is enabled; policy stays in the target repo, the code stays here. `scripts/tests/` holds their regression suites
+- `docs/GLOSSARY.md` — the plugin's own terms with the words to avoid; `docs/adr/` — plugin decisions with their rejected options; `docs/out-of-scope.md` — proposals turned down, each with the condition to revisit it. Reviews and retro read all three before proposing
 - `agents/` — roles, usable as subagents or teammates
 - `hooks/` — `path.sh` (SessionStart) appends `scripts/` to PATH through `CLAUDE_ENV_FILE`, nothing else. `guard.sh` (PreToolUse) blocks:
   - pushing, checking out, or moving main

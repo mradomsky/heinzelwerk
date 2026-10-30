@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# heinzelwerk note check. Deterministic, over the two texts other roles and scripts parse:
+#   note      a done note (phased-workflow **Done note**): every required field present, in order, non-empty;
+#             `checks:` holds one exit code per team.md check (count from team.md, or --checks N);
+#             `session:` names the transcript; an `abandoned:` note needs only `abandoned: <why>`.
+#   verdict   a validator verdict body (validator **Verdict**): last non-empty line is
+#             `heinzelwerk: validated <40-hex sha>` (the `— heinzelwerk` footer goes above it);
+#             `inconclusive` always carries a reason (`inconclusive: <why>`); clock times carry `UTC`.
+# Prints each miss; exit 2 on any. Reads the text from a file or stdin.
+# Usage: check-note note  [--checks N | --team <team.md>] [file]
+#        check-note verdict [file]
+# Agents run it before posting; the validator runs it on the PR body's note before its own checks.
+set -uo pipefail
+mode=${1:-}; shift || true
+checks=""; team=""
+while [ $# -gt 0 ]; do
+  case $1 in
+    --checks) checks=$2; shift 2 ;;
+    --team) team=$2; shift 2 ;;
+    *) break ;;
+  esac
+done
+case $mode in note|verdict) ;; *) echo "usage: check-note note|verdict [--checks N|--team team.md] [file]" >&2; exit 1 ;; esac
+text=$(cat "${1:-/dev/stdin}") || exit 1
+text=${text//$'\r'/}   # PR bodies from gh may carry CRLF
+bad=0; miss() { echo "check-note: $*"; bad=1; }
+
+field() { grep -m1 -E "^$1:" <<<"$text" | sed -E "s/^$1:[[:space:]]*//"; }
+
+if [ "$mode" = note ]; then
+  # the note may sit inside a PR body: cut from `## Done note` when that heading exists
+  if grep -q '^## Done note' <<<"$text"; then
+    text=$(awk '/^## Done note/{p=1; next} /^## /{p=0} p' <<<"$text")
+  fi
+  if grep -qE '^abandoned:' <<<"$text"; then
+    [ -n "$(field abandoned)" ] || miss "abandoned: has no reason"
+  else
+    required="did evidence checks handoff left escalations session"
+    prev=0
+    for f in $required; do
+      line=$(grep -n -m1 -E "^$f:" <<<"$text" | cut -d: -f1)
+      if [ -z "$line" ]; then miss "$f: missing"; continue; fi
+      [ -n "$(field "$f")" ] || miss "$f: empty"
+      (( line > prev )) || miss "$f: out of order (expected after the previous field)"
+      prev=$line
+    done
+    # checks: one exit code per team.md check
+    cl=$(field checks)
+    if [ -n "$cl" ]; then
+      codes=$(grep -oE '[0-9]+' <<<"$cl" | wc -l)   # the line holds exit codes only; prose belongs in evidence:
+      if [ -z "$checks" ] && [ -n "$team" ] && [ -f "$team" ]; then
+        # the Checks entry: one line → every backticked item on it; a list → one per indented line that holds a
+        # backticked command; no Checks entry in team.md → nothing to compare against
+        block=$(awk '/^- \*\*Checks\*\*/{p=1; sub(/^[^:]*:/, ""); print; next} /^- \*\*/{p=0} p && /^[[:space:]]+/{print; next} p{p=0}' "$team")
+        if [ -z "$(tr -d '[:space:]' <<<"$block")" ]; then
+          checks=""
+        elif [ "$(grep -c . <<<"$block")" -le 1 ]; then
+          checks=$(grep -oE '`[^`]+`' <<<"$block" | wc -l)
+        else
+          checks=$(tail -n +2 <<<"$block" | grep -c '`')
+        fi
+      fi
+      if [ -n "$checks" ]; then
+        (( codes == checks )) || miss "checks: has $codes exit codes, team.md lists $checks checks"
+      fi
+      grep -qE '[0-9]' <<<"$cl" || miss "checks: has no exit code"
+    fi
+    # session: a path or an id, never a bare word like "yes"
+    s=$(field session)
+    [ -z "$s" ] || grep -qE '[0-9a-f]{8}|/|\\' <<<"$s" || miss "session: names no transcript path or session id"
+  fi
+  # a secret value never travels in a note
+  grep -qE '(sk-ant-|ghp_|gho_|AKIA[0-9A-Z]{16})' <<<"$text" && miss "note contains what looks like a secret value"
+fi
+
+if [ "$mode" = verdict ]; then
+  last=$(grep -vE '^[[:space:]]*$' <<<"$text" | tail -1)
+  if ! grep -qE '^heinzelwerk: validated [0-9a-f]+$' <<<"$last"; then
+    miss "last line is not \`heinzelwerk: validated <sha>\`: $last"
+  else
+    sha=${last##* }
+    [ ${#sha} -eq 40 ] || miss "validated sha has ${#sha} chars, the gate wants the full 40"
+  fi
+  grep -iE 'inconclusive' <<<"$text" | grep -qviE 'inconclusive:[[:space:]]*[^[:space:]]' && miss "inconclusive without a reason (write \`inconclusive: <why, where to verify>\`)"
+  # a clock time (not a path:line:col): digits bounded on the left by start, space, or a date's `T`
+  grep -qE '(^|[[:space:]T])[0-9]{2}:[0-9]{2}(:[0-9]{2})?Z?([[:space:]]|$)' <<<"$text" && ! grep -q 'UTC' <<<"$text" && miss "a timestamp without UTC"
+fi
+
+exit $(( bad ? 2 : 0 ))

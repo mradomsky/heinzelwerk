@@ -54,6 +54,8 @@ The goal is not a clean repro but a **higher reproduction rate**. Loop the trigg
 
 Stop and say so explicitly. List what you tried. Ask the user for: (a) access to whatever environment reproduces it, (b) a redacted captured artifact (HAR file, log dump, core dump, screen recording with timestamps), or (c) permission to add temporary production instrumentation. Do **not** proceed to hypothesise without a loop.
 
+_(heinzelwerk: the repro result on the ticket is one of `repro: yes`, `repro: no`, or `repro: inconclusive: <why>; verify on <where>`. Inconclusive is the word for a bug that depends on what this machine is not: another OS, a host user id, a device, production data, a daemon that isn't running. Never report such a bug as reproduced, not reproduced, or "fails on <OS>" from here.)_
+
 ### Completion criterion: a tight loop that goes red
 
 Phase 1 is done when the loop is **tight** and **red-capable**: you can name **one command** (a script path, a test invocation, a curl) that you have **already run at least once** (show the invocation and its output, redacted), and that is:

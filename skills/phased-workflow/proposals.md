@@ -4,7 +4,7 @@ Read before proposing a task you discovered, and (tech-lead) when triaging one. 
 
 ## Discovering work (branching)
 Found something while working? Don't silently fix it, don't drop it. **Propose** it:
-1. **Dedup first**: if a task in the task list or an open issue has the same goal or touches the same files → comment there instead.
+1. **Dedup first**: if a task in the task list or an open issue has the same goal or touches the same files → comment there instead. A row in `docs/agents/heinzelwerk/out-of-scope.md` with the same goal → not a proposal, unless its `revisit when` condition holds; then say so in `why:`.
 2. Else create `[proposed] #N <what>` with these fields in its details:
 ```
 phase: analyze | implement | validate
@@ -30,6 +30,8 @@ proposer → tech-lead
 accepted for a role not running → tech-lead tells coordinator → coordinator spawns it
 ```
 The proposer's `scope guess` is input, never the decision. Scope is product's call.
+
+A rejection that would recur (not worth it, out of scope for a reason that outlives this run) gets a row in `docs/agents/heinzelwerk/out-of-scope.md` through tech-lead's docs PR: `proposal | rejected by | reason | revisit when`. Tech-lead keeps the rows in its notes until then. A one-off rejection (duplicate, already done) gets no row.
 
 **Not a proposal**:
 - Validator's fix task goes straight to the implementer (same PR, not new work).

@@ -27,13 +27,13 @@ Extra tasks:
 - The slice has more than one PR → add `#N validate: slice acceptance`, blocked by every implement task.
 - An infra task touches an `auto_apply_dirs` dir → also add `#N tech-lead apply: <dir>`, blocked by that infra task; slice acceptance is blocked by the apply task too.
 
-**Post the plan.** Check file overlap (single mode) or the PR order (workspace mode). Post the plan on the ticket in team-modes §3 format. Then tell coordinator: `[tech-lead] plan posted: spawn <roles>`.
+**Post the plan.** Branch names follow team-modes **Branch name** (deterministic; reuse what an earlier comment on the ticket named). Check file overlap (single mode) or the PR order (workspace mode). Post the plan on the ticket in team-modes §3 format. Then tell coordinator: `[tech-lead] plan posted: spawn <roles>`.
 
 ## 2. Triage proposals (promptly)
 Follow the triage path in `proposals.md` (`heinzelwerk:phased-workflow` skill). Outcomes:
 - **accept** → create the open task with owner, blockers, seams; delete the proposal.
 - **merge** a duplicate.
-- **reject** → delete the proposal and send the proposer the reason.
+- **reject** → delete the proposal and send the proposer the reason. A reason that outlives this run → keep a row `proposal | rejected by | reason | revisit when` for `docs/agents/heinzelwerk/out-of-scope.md` (§6); read that file before triaging, so a rejected idea is answered with its row.
 - **ask product** when scope is unclear; scope is product's call.
 
 **Contract proposals** follow team-modes **Contract changes**. A breaking change lands only when its consumer task is in this run. Otherwise product picks drop or shim; you tell the proposer the decision and delete the proposal, and the compatible version goes into the proposer's current PR.
@@ -70,9 +70,10 @@ In infra's worktree (path in your plan), checked out at the validated commit, re
 ## 6. Docs PR (after diagnose, before the merge task)
 Collect `term:`, `adr:`, `learning:`, `risk:` lines from the done notes in the PR bodies (the task list may be gone by now) and from your own notes. Draft them in the `heinzelwerk:domain-modeling` formats:
 - glossary entries (opinionated, `_Avoid_` synonyms, no implementation detail);
-- ADRs only when all three criteria hold;
+- ADRs only when all three criteria hold; a deviation from the obvious path or a rejected alternative lists its **Considered Options**;
 - learnings edits (add new, drop stale or contradicted, max 80 lines);
-- new risk areas in `docs/agents/heinzelwerk/team.md`.
+- new risk areas in `docs/agents/heinzelwerk/team.md`;
+- rows for `docs/agents/heinzelwerk/out-of-scope.md`: your rejected proposals (§2) and product's `out` scope decisions, each with a `revisit when` condition.
 
 Write them yourself, one worktree per repo whose docs change, on branch `docs/agent-docs-<ticket>`. Commit `docs: update agent docs (#<ticket>)`, open a PR whose body says `Refs #<ticket>`, then create `#N validate tech-lead: docs` so the gate can merge the PR. Nothing to add → skip the PR. Either way, end with `[tech-lead] docs PR: <url | none>` to coordinator.
 

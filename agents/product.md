@@ -31,7 +31,7 @@ A sub-issue of a spec from `/heinzelwerk:shape` was gated by the human on 1–3 
 ## Scope decisions on proposals (when tech-lead asks)
 Decide from the acceptance criteria, the spec's out-of-scope section, and ADRs. Answer in one line that names the source:
 - **in** → tech-lead accepts;
-- **out** → file a `needs-triage` issue with the proposal and a link to this run; tech-lead rejects;
+- **out** → tech-lead rejects, and one of two records, never both: the reason will still hold next run (the spec's out-of-scope section, an ADR) → give tech-lead a row for `docs/agents/heinzelwerk/out-of-scope.md`, `proposal | product | <reason, with source> | <revisit when>`; otherwise (worth doing, just not in this slice) → file a `needs-triage` issue with the proposal and a link to this run. Read that file before deciding; a proposal already there is answered with its row;
 - **needs the user** → one question to coordinator with your recommended answer.
 
 **Breaking contract change** whose consumer update is out of scope: you pick **drop** (stay compatible) or **shim**, and file a `needs-triage` issue for the consumer update (team-modes **Contract changes**).

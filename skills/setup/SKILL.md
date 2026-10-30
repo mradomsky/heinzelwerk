@@ -65,6 +65,7 @@ Summarise what's present and what's missing. Then take the sections in order: on
 - Checks, copied from CI: the same steps, in the same order, with the same arguments and the same preceding steps (an `npm pack` before a script that takes the tarball), including build steps from deploy jobs. Add only flags that drop output without changing the exit code (`--silent`, `-q`); never a reporter or filter flag, which can hide the failure the validator needs. A step the runner marked `CI only` keeps that suffix, or gets the local equivalent. Any check that scans the whole repo must ignore `.claude/worktrees/`, where task worktrees live; if one doesn't, the ignore edit goes into this setup's PR (§4).
 - Coding standards source: only what this repo's own config and dependencies use, cited (`package.json:<line>`); a shared config another repo uses is not this repo's standard.
 - Run cap: wall clock per run, e.g. 3h. Propose none until the user knows how long a normal run takes.
+- Silence: minutes a teammate may work without a message, commit, or task change before coordinator asks for its state. Propose the default (20, omit the line); longer only when the checks or the worktree setup take longer than that.
 - Contracts (API, infra outputs, shared types): paths and provider role for each, both what this repo provides and what it consumes from another repo, and every vendored copy of another repo's fixture or schema with its pin file. Infra outputs are a contract by default whenever `outputs.tf` files exist.
 
 **Risk areas** are this project's, not a fixed list. Start from the verified map: every unauthenticated route and every money or spend path is a candidate. Add from the code: security, persistence and migrations, data deletion, infra-as-code, public or cross-repo contracts, concurrency, personal data, external integrations, anything with past incidents in issues or docs; what `CLAUDE.md` or the README marks as dangerous or production-touching. "A merge to `main` deploys" is an entry only where a workflow does that, cited by `path:line`. Then ask the user for risks only they know. Each entry: path/glob or kind of change, plus why.
@@ -129,9 +130,11 @@ Per repo, on a fresh branch `docs/heinzelwerk-setup` cut from `origin/main`:
 - `docs/agents/heinzelwerk/triage-labels.md` from [triage-labels.md](triage-labels.md); create missing labels with `gh label create` (workspace mode: in the tickets repo only)
 - `docs/agents/heinzelwerk/domain.md` from [domain.md](domain.md)
 - `docs/agents/heinzelwerk/team.md` from [team.md](team.md), including the `Autonomy` line and `Verified against <sha> <date>`
+- `docs/agents/heinzelwerk/out-of-scope.md` from [out-of-scope.md](out-of-scope.md): the header and an empty table (the example row removed); workspace mode: in the tickets repo only
 - UI found: `docs/agents/heinzelwerk/design.md` as drafted in C3
 - infra found: `docs/agents/heinzelwerk/infra-policy.json` from [infra-policy.json](infra-policy.json) with the answers from C2, and the `.gitignore` lines from C2. Keep only `protected_types` of providers the stacks use; `allowed_delete_types` takes globs, `"*"` for every unprotected type. Then give one verdict per resource type the stacks declare (`grep -h '^resource' **/*.tf | sort -u`): protected, delete-ok, or update-only; a type whose in-place update restarts or re-provisions production (an SSM document that runs bootstrap, a launch template, a task definition) is decided with the user, never left out by omission. `tf-gate` needs `jq` installed on the machine.
-- `docs/agents/heinzelwerk/merge-policy.json` from [merge-policy.json](merge-policy.json) with the answers from G (off if G was skipped); G on → also the CI workflow and the `.claude/settings.json` permission
+- `docs/agents/heinzelwerk/merge-policy.json` from [merge-policy.json](merge-policy.json) with the answers from G (off if G was skipped); G on → also the CI workflow and the `Bash(merge-gate *)` permission
+- `.claude/settings.json` (the committed file; merge into it if it exists): `Bash(check-note *)` and `Bash(spawn-context *)` in `permissions.allow`, gate on or off. They only read, but a permission prompt per spawn or per done note stalls an unattended run
 - the `.claude/worktrees/` ignore edit for every whole-repo check that lacked it (C)
 - **Upgrade from an older plugin**: `scripts/merge-gate`, `scripts/tf-gate`, `scripts/ui-shots` in the repo are copies an earlier setup made. The plugin's `scripts/` provides them now (on PATH through its SessionStart hook). Delete the copies. Replace `Bash(scripts/merge-gate *)` with `Bash(merge-gate *)`. Drop `max_changed_lines` from the policy unless the user wants a cap.
 - `docs/agents/heinzelwerk/repo-map.md`: from the verified map, max 120 lines, facts only, second line `Verified against <sha> <date>.` No "N lines" counts: they rot with the next commit, and `path:line` already says where to look
@@ -160,6 +163,7 @@ The block:
 - **Triage labels**: <one line>. See `docs/agents/heinzelwerk/triage-labels.md` before applying any label.
 - **Domain docs**: <single- or multi-context>. Read `docs/agents/heinzelwerk/domain.md` before exploring code or naming anything.
 - **Team rules**: read `docs/agents/heinzelwerk/team.md` before any team task.
+- **Out of scope**: see `docs/agents/heinzelwerk/out-of-scope.md` before proposing or triaging discovered work.
 - **Repo map**: see `docs/agents/heinzelwerk/repo-map.md` when locating code.
 - **Design system** (UI repos): read `docs/agents/heinzelwerk/design.md` before building or reviewing any UI.
 - **Learnings**: read `<path to learnings.md>` before starting any task.

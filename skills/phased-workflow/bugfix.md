@@ -8,7 +8,7 @@ Read by tech-lead, the owner, and validator in a `/heinzelwerk:bugfix` run. `#N`
    - Leave one task `#N <role> implement: <bug>` with the seam in its details.
    - Then message coordinator: `[tech-lead] plan posted: spawn <role>`.
    - Too little information to reproduce → tech-lead tells product; product labels `needs-info` with questions; coordinator ends the run.
-2. **implement (owner)**, on branch `fix/<ticket>-<topic>` in its own worktree, with the `heinzelwerk:tdd` skill:
+2. **implement (owner)**, on branch `fix/<ticket>-<slug>` (team-modes **Branch name**) in its own worktree, with the `heinzelwerk:tdd` skill:
    a. If the cause is not obvious, or the bug is intermittent or performance-related → run the `heinzelwerk:diagnosing-bugs` skill first: build a loop that goes **red**, minimise it, find the cause. Post findings on the issue.
    b. Write a test at the seam that goes **red** on this bug; commit it as `test: reproduce <bug> (#N)`.
    c. Fix the root cause until the test is **green**; grep every caller of what you change; commit `fix: <what> (#N)`.

@@ -1,6 +1,6 @@
 # heinzelwerk
 
-The plugin's own vocabulary: the words its skills, agents, and scripts use for the run, the people in it, and the things they hand each other. Target repos keep their domain in their own `GLOSSARY.md`; this file is about the plugin. `check-refs` and reviews flag the _Avoid_ words in plugin text.
+The plugin's own vocabulary: the words its skills, agents, and scripts use for the run, the people in it, and the things they hand each other. Target repos keep their domain in their own `GLOSSARY.md`; this file is about the plugin. Plugin reviews (`prompts/review-plugin.md`) flag the _Avoid_ words in plugin text.
 
 ## People in a run
 

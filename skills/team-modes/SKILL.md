@@ -27,7 +27,7 @@ Only coordinator talks to the user.
 - Any other role → message it **only if it is running**. To check, first read the `members` array in the team config; its path is in your spawn prompt (`~/.claude/teams/<team>/config.json`). Replying to a message you received is always allowed. A message to a stopped teammate revives it with stale context; only coordinator spawns.
 - Target not running → message **tech-lead** instead, saying who you meant and why. Tech-lead decides whether that role is needed (then coordinator spawns it) or whether the matter becomes a task or proposal.
 - Messages vanish when the run ends; which things go on GitHub instead is in phased-workflow **Ticket vs task**.
-- **Footer**: every comment, review, and PR body an agent posts on GitHub ends with a line `— heinzelwerk`. Humans and retro tell agent text from the user's that way; every role posts under the user's login. Commits carry the `Co-Authored-By` trailer instead.
+- **Footer**: every comment, review, and PR body an agent posts on GitHub ends with a line `— heinzelwerk`. One exception: a pass verdict keeps `heinzelwerk: validated <sha>` as its last line and puts the footer right above it. Humans and retro tell agent text from the user's that way; every role posts under the user's login. Commits carry the `Co-Authored-By` trailer instead.
 - **Voice** in teammate messages and done notes: answer first; no greeting or recap; short words; drop articles when the sentence still reads without them; keep every not/never/no/only; payload (paths, commands, numbers, errors) exact. Ticket comments, PRs, code, and docs use normal prose.
 
 ## Contract changes
@@ -40,9 +40,9 @@ Contracts are the paths under **Contracts** in `docs/agents/heinzelwerk/team.md`
   git -C <repo> fetch origin
   grep -qxF .claude/worktrees/ <repo>/.git/info/exclude || echo .claude/worktrees/ >> <repo>/.git/info/exclude
   git -C <repo> worktree add <repo>/.claude/worktrees/heinzelwerk/<branch> -b <branch> origin/main
-  git -C <repo> worktree lock <repo>/.claude/worktrees/heinzelwerk/<branch> --reason "<role> #<ticket> <run start, UTC>"
+  git -C <repo> worktree lock <repo>/.claude/worktrees/heinzelwerk/<branch> --reason "<role> #<ticket> <run start>"
   ```
-  The lock says who holds the worktree. `worktree add` refuses a path that exists → never remove it; read `git worktree list --porcelain` for its lock reason and message coordinator with it. Coordinator unlocks only worktrees whose owner is gone (coordinator §3, §4.2). Unlock your own worktree (`git worktree unlock <path>`) right after your done note; a fix round locks it again.
+  `<role>` is your member name (`backend`, `backend-2`); `<ticket>` and `<run start>` (UTC) come from your spawn prompt's `## Context` header. The lock says who holds the worktree. `worktree add` refuses a path that exists → never remove it; read `git worktree list --porcelain` for its lock reason and message coordinator with it. Coordinator unlocks only worktrees whose owner is gone (coordinator §3, §4.2). Unlock your own worktree (`git worktree unlock <path>`) as the last step of phased-workflow **Done**; a fix round locks it again.
   Then run the **Worktree setup** command from `team.md` inside the new worktree (e.g. `npm ci`): a fresh worktree has no dependencies. Work only inside that path. One task = one branch = one worktree = one PR.
   Temp files go in your own scratchpad directory; `/tmp` is shared with every agent on the machine. Unfinished work waits as a WIP commit on your branch, not in the stash: the stash is one per repo, shared by every worktree and by the user.
 - **Branch name**: `<type>/<ticket-number>-<slug>[-<role>]`, deterministic, so a second run on the same ticket lands on the same branch:
@@ -50,7 +50,7 @@ Contracts are the paths under **Contracts** in `docs/agents/heinzelwerk/team.md`
   - slug = the ticket title, lower-case, every run of non-alphanumerics replaced by one `-`, the first three words, leading and trailing `-` dropped;
   - `-be`, `-fe`, `-infra` only when the plan gives one ticket more than one implement task.
 
-  Example: ticket #19 "Anomaly webhook: notify on spike" → `feat/19-anomaly-webhook-notify`. Tech-lead writes the names in the plan comment. Before inventing one, read the ticket's run-state comment and earlier plan comments: a branch named there is reused, whatever its slug. Validator's and the docs PR's branches keep their own fixed shapes (`val-`, `red-`, `accept-`, `docs/agent-docs-<ticket>`).
+  Example: ticket #19 "Anomaly webhook: notify on spike" → `feat/19-anomaly-webhook-notify`. Tech-lead writes the names in the plan comment. Before inventing one, read the ticket's run-state comment and earlier plan comments: a branch named there is reused, whatever its slug. The slug is the one place ticket text reaches a command (phased-workflow **Untrusted content**): the rule leaves only `[a-z0-9-]`. Validator's detached worktrees (`val-`, `red-`, `accept-`) and the docs PR branch (`docs/agent-docs-<ticket>`) keep their own fixed shapes.
 - **Commits**: conventional commits that reference the ticket; keep Claude Code's `Co-Authored-By` trailer (retro uses it as one signal to tell agent commits from human ones). Example: `feat: add anomaly webhook (#19)`; in workspace mode the ref is `(owner/repo#19)`.
 - **Stay current with main.** Run `git fetch origin && git rebase origin/main` in your worktree:
   - before moving a task to under review;

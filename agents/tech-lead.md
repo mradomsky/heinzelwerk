@@ -27,7 +27,7 @@ Extra tasks:
 - The slice has more than one PR → add `#N validate: slice acceptance`, blocked by every implement task.
 - An infra task touches an `auto_apply_dirs` dir → also add `#N tech-lead apply: <dir>`, blocked by that infra task; slice acceptance is blocked by the apply task too.
 
-**Post the plan.** Branch names follow team-modes **Branch name**: the slug rule, or the name an earlier plan or run-state comment on this ticket already used. Check file overlap (single mode) or the PR order (workspace mode). Post the plan on the ticket in team-modes §3 format. Then tell coordinator: `[tech-lead] plan posted: spawn <roles>`.
+**Post the plan.** Branch names follow team-modes **Branch name** (deterministic; reuse what an earlier comment on the ticket named). Check file overlap (single mode) or the PR order (workspace mode). Post the plan on the ticket in team-modes §3 format. Then tell coordinator: `[tech-lead] plan posted: spawn <roles>`.
 
 ## 2. Triage proposals (promptly)
 Follow the triage path in `proposals.md` (`heinzelwerk:phased-workflow` skill). Outcomes:

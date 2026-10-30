@@ -33,7 +33,7 @@ You do no task work: no code, no tasks, no spec edits. Follow the `heinzelwerk:p
    - the mode;
    - the team config path (`~/.claude/teams/<team>/config.json`);
    - in a bugfix run, the instruction to follow `bugfix.md` in the `heinzelwerk:phased-workflow` skill;
-   - a `## Context` block: the output of `spawn-context <role> <ticket>` (validator: `--pr <PR>`; workspace mode: `--tickets <owner/repo>` and `--dir <repo>`), run once per spawn and pasted whole. It holds the ticket, the newest plan and run-state comments, the team.md entries every role reads, the agent-skills pointers, and for validator the PR body and its changed files. The script exits non-zero when a fetch fails: then spawn without the block and say so in the prompt, never paste a partial one.
+   - a `## Context` block: the output of `spawn-context <role> <ticket> --start "<run start>"` (validator: `--pr <PR>`; workspace mode: `--tickets <owner/repo>`, and `--dir` the tickets repo for product and tech-lead, the task's repo for an implementer or validator), run once per spawn and pasted whole. Its header carries the run start, which the teammate's worktree lock reason repeats. It holds the ticket, the newest plan and run-state comments, the team.md entries every role reads, the agent-skills pointers, and for validator the PR body and its changed files. The script exits non-zero when a fetch fails: then spawn without the block, with the ticket and the run start written by hand, and say so in the prompt; never paste a partial one.
 
    Teammates discover who is running from that config (team-modes **Messaging**); you never maintain a roster.
 4. **Release** a teammate (send it a shutdown request) once all three conditions hold:
@@ -88,11 +88,11 @@ Third nudge to the same agent on the same task → tell tech-lead, who reassigns
 - completes it;
 - recreates it as a pending task, with the same branch and worktree in its details, for the replacement to claim.
 
-The crashed teammate's worktree stays locked (`git worktree lock`, team-modes §1). Unlock it yourself before the replacement claims the task: `git -C <repo> worktree unlock <path>`, and say so in the recreated task's details. Never unlock a worktree whose lock reason names a running teammate.
+The crashed teammate's worktree stays locked (`git worktree lock`, team-modes §1); its reason reads `<role> #<ticket> <run start>`. Unlock it yourself before the replacement claims the task: `git -C <repo> worktree unlock <path>`, and say so in the recreated task's details. Never unlock a worktree whose reason names a member that is still in the team config (`backend` and `backend-2` are different members).
 
 **Silence** (the two clocks; the minutes come from `team.md`'s `Silence` entry, default 20):
-- A teammate holds an in-progress task and, for that many minutes, sent no message, pushed no commit, and changed no task → one message: `[team-lead] silent <n> min on <task>: report state in two lines, or hand off`. It counts as a nudge. A second window with still nothing → tell tech-lead, who reassigns the task or stops it. A subagent spawn in the foreground is not silence: its report arrives as the teammate's next message, or as a hand-back you forward (§2).
-- A teammate posted its done note and created the validate task, and then keeps committing or messaging about that task → one message: `[team-lead] <branch> is frozen since the validate task; the next change is a fix round`. Not a nudge. Still going → tell tech-lead.
+- A teammate holds an in-progress task and, for that many minutes, sent no message, pushed no commit, and changed no task → one message: `[team-lead] silent <n> min on <task>: report state in two lines, or hand off`. Counted under `silence:` in the run state, not under `nudges:`. A second window with still nothing → tell tech-lead, who reassigns the task or stops it. A subagent spawn in the foreground is not silence: its report arrives as the teammate's next message, or as a hand-back you forward (§2).
+- A teammate posted its done note and created the validate task, no fix or rebase task for that PR is pending or in progress, and it keeps committing or messaging about that task → one message: `[team-lead] <branch> is frozen since the validate task; the next change is a fix round`. Counted under `silence:` too. Still going → tell tech-lead.
 
 ### System pass
 Run it whenever a task completes:
@@ -122,7 +122,7 @@ The final report takes its numbers from the run-state comment, never from memory
 
 It holds: tasks by status with owner, branch, and worktree; open proposals; pending escalations; infra applies; and which skills the next session loads. Point at tickets, PRs, and comments instead of repeating them; redact secrets. Ask tech-lead for the technical state first.
 
-**Resume.** At run start, a `## Heinzelwerk run state` comment with no `## Heinzelwerk final report` after it means that run was interrupted. Read it, tell the user you're resuming, and continue from its state instead of reseeding. Tasks and teammates don't survive a new session: spawn product and tech-lead; tech-lead recreates every task the state lists as open, in progress, or pending, with the same branches and worktrees in their details. Tasks whose PR passed validation stay done. Branch names come from the snapshot, never from a new slug (team-modes **Branch name**); a worktree the snapshot lists is unlocked first, because its lock reason names a teammate that no longer exists.
+**Resume.** At run start, a `## Heinzelwerk run state` comment with no `## Heinzelwerk final report` after it means that run was interrupted. Read it, tell the user you're resuming, and continue from its state instead of reseeding. Tasks and teammates don't survive a new session: spawn product and tech-lead; tech-lead recreates every task the state lists as open, in progress, or pending, with the same branches and worktrees in their details. Tasks whose PR passed validation stay done. Branch names come from the snapshot, never from a new slug (team-modes **Branch name**); a worktree the snapshot lists is unlocked first (§4.2, the row for this run's ticket), because its lock reason names a teammate that no longer exists.
 
 ## 4. End the run
 Every run ends with a final report. A run ends on one of:
@@ -136,13 +136,13 @@ Every run ends with a final report. A run ends on one of:
 
    | Worktree | Action |
    |---|---|
-   | locked (`git worktree list --porcelain` shows `locked <reason>`), and the reason names a teammate of a run that is still running, or a run whose state comment has no final report | keep it; another session owns it |
-   | locked, and the reason names this run or a run that has its final report | `git worktree unlock <path>`, then the row below that fits |
+   | locked (`git worktree list --porcelain` shows `locked <reason>`; the reason reads `<role> #<ticket> <run start>`): the ticket is not this run's, and its newest `## Heinzelwerk run state` comment has no final report after it | keep it; another session owns it |
+   | locked: the ticket is this run's (also a run you are resuming), or that ticket's run state is followed by a final report, or it has no run state at all | `git worktree unlock <path>`, then the row below that fits |
    | detached (validator's `val-`, `red-`, `accept-`) | `git worktree remove <path>` |
    | on a branch and pushed (`git -C <path> rev-list --count @{u}..HEAD` is `0`) | remove it, then `git branch -D <branch>` |
    | not pushed, no upstream, or git refuses the remove (uncommitted work) | keep it and mention it in the final report |
 
-   Never `--force`, never `unlock` a worktree whose reason names a run you cannot see the end of.
+   Never `--force`, never `unlock` a worktree whose ticket's run state has no final report and is not this run's.
 3. Post the final report on the ticket, starting with `## Heinzelwerk final report`. It holds:
    - outcome;
    - acceptance verdict (per criterion, with evidence);

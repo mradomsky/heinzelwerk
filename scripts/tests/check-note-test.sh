@@ -6,6 +6,14 @@ cat >"$tmp/team.md" <<'EOF'
 # Team rules
 - **Checks** (validator runs every one, in order): `npm run build --silent`, `npm test -- --reporter=dot`, `npm audit --audit-level=high (red on main: #12)`
 EOF
+cat >"$tmp/list-team.md" <<'EOF'
+- **Checks** (validator runs every one, in order; failures only):
+  1. `npm run check -- --threshold error`
+  2. `npm test -- --reporter=dot` (covers `src/`, `lambda/` specs)
+  - build: `npm run build`
+- **Coding standards**: none
+EOF
+printf '# Team rules\n- **Run cap**: 3h\n' >"$tmp/empty-team.md"
 t() { local name="$1" mode="$2" exp="$3" input="$4"; shift 4
   out=$(printf '%s\n' "$input" | bash "$cn" "$mode" "$@" 2>&1); rc=$?
   res=$([ $rc -eq 0 ] && echo PASS || echo FAIL); n=$((n+1))
@@ -23,14 +31,16 @@ session: ~/.claude/projects/x/3f2a9c1b-1.jsonl'
 echo "--- note: must pass"
 t "full note, team count" note PASS "$good" --team "$tmp/team.md"
 t "full note, --checks 3" note PASS "$good" --checks 3
+t "list-form Checks, 3 commands" note PASS "$good" --team "$tmp/list-team.md"
 t "inside PR body" note PASS "## Summary
 hi
 ## Done note
 $good
 ## Other
 x" --checks 3
-t "abandoned note" note PASS "abandoned: teammate crashed
-did: nothing landed"
+t "abandoned note" note PASS "abandoned: teammate crashed"
+t "CRLF body" note PASS "$(printf '%s\r\n' $'## Done note' "$good")" --checks 3
+t "no Checks entry in team.md" note PASS "$good" --team "$tmp/empty-team.md"
 t "optional fields" note PASS "$good
 term: Anomaly
 learning: flaky test x" --checks 3
@@ -60,6 +70,9 @@ heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "inconclusive with reason" verdict PASS "manual check: inconclusive: needs a device; verify on a phone
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "timestamp with UTC" verdict PASS "ran at 2026-10-30 12:00 UTC
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "file:line:col is not a time" verdict PASS "smell at src/a.ts:120:45 (Mysterious Name)
+— heinzelwerk
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 echo "--- verdict: must fail"
 t "short sha" verdict FAIL "heinzelwerk: validated 0123456"

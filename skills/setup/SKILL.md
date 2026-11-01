@@ -116,7 +116,7 @@ First read `<scratchpad>/checks-<repo>.txt` for every repo:
 - Red on `origin/main` → the user keeps the check with the suffix `(red on main: <ticket>)`, where the ticket is opened `ready-for-human` in the tickets repo, or drops it. A red check stays in the list only with that suffix; the validator reads it (validator §1).
 - Invocation differs from CI (argument, preceding step) → fix the check line, not the check.
 - Red locally but green on `origin/main` in CI → the runner is the suspect, not the check: write `unverified locally (<reason>)`, never "fails on <OS>".
-- `unverified locally` or `CI only` → the line keeps that suffix; the user may install the tool and rerun.
+- `unverified locally` or `CI only` → the line keeps that suffix, in parentheses after the closing backtick of the command, never inside the code span: the validator pastes the span into a shell, and a `(` inside it is a syntax error; the user may install the tool and rerun.
 - Still running → wait, or write `unverified locally` and go on; the user decides.
 - The user changed a check in C → rerun only that one.
 
@@ -126,8 +126,8 @@ Then show drafts of the `## Agent skills (heinzelwerk)` block (below) and every 
 
 Per repo, on a fresh branch `docs/heinzelwerk-setup` cut from `origin/main`:
 
-- `docs/agents/heinzelwerk/issue-tracker.md` from [issue-tracker-github.md](issue-tracker-github.md); workspace mode: keep its **Workspace** paragraph and fill the tickets repo in
-- `docs/agents/heinzelwerk/triage-labels.md` from [triage-labels.md](triage-labels.md); create missing labels with `gh label create` (workspace mode: in the tickets repo only)
+- `docs/agents/heinzelwerk/issue-tracker.md` from [issue-tracker-github.md](issue-tracker-github.md): replace every `<tracker>` with the tickets repo (`owner/repo`, workspace mode) or with this repo (single mode; `gh` would infer it, the flag stays so a copy from a worktree or a sibling still lands right); workspace mode keeps its **Workspace** paragraph
+- `docs/agents/heinzelwerk/triage-labels.md` from [triage-labels.md](triage-labels.md); create missing labels with `gh label create` (workspace mode: in the tickets repo only, and the table says so)
 - `docs/agents/heinzelwerk/domain.md` from [domain.md](domain.md)
 - `docs/agents/heinzelwerk/team.md` from [team.md](team.md), including the `Autonomy` line and `Verified against <sha> <date>`
 - `docs/agents/heinzelwerk/out-of-scope.md` from [out-of-scope.md](out-of-scope.md): the header and an empty table (the example row removed); workspace mode: in the tickets repo only
@@ -167,7 +167,10 @@ The block:
 - **Repo map**: see `docs/agents/heinzelwerk/repo-map.md` when locating code.
 - **Design system** (UI repos): read `docs/agents/heinzelwerk/design.md` before building or reviewing any UI.
 - **Learnings**: read `<path to learnings.md>` before starting any task.
+- **Sibling paths** (workspace mode only): `../<repo>/…` above is relative to this repo's main checkout, i.e. the workspace folder. From a task worktree (`.claude/worktrees/<x>`), resolve it as `$(cd "$(git rev-parse --git-common-dir)/../.." && pwd)/<repo>/…`.
 ```
+
+The **Sibling paths** line exists because `../meta` from a worktree lands inside `.claude/worktrees/`; `check-refs` resolves through the common dir, an agent reading the block does not.
 
 **Workspace mode, additionally**, in the tickets repo on the same branch:
 

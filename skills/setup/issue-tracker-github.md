@@ -1,33 +1,31 @@
 # Issue tracker: GitHub
 
-Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all operations.
+Issues and specs live as GitHub issues in **<tracker>** (`owner/repo`). Use the `gh` CLI for all operations, and pass `--repo <tracker>` on every command: `gh` otherwise infers the repo from the current clone, which from a sibling repo or a task worktree is the wrong one.
 
 ## Conventions
 
-- **Create an issue**: `gh issue create --title "..." --body "..."`. Use a heredoc for multi-line bodies.
-- **Read an issue**: `gh issue view <number> --json number,title,body,labels,comments`.
-- **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` with appropriate `--label` and `--state` filters.
-- **Make an issue a sub-issue of a parent**: `gh issue create --parent <parent> ...`, or `gh issue edit <parent> --add-sub-issue <child>` afterwards (`gh` 2.94+). Older `gh`: `gh api --method POST repos/<owner>/<repo>/issues/<parent>/sub_issues -F sub_issue_id=<child-db-id>` (database id, as in **Blocking** below). Without sub-issues, put `Part of #<parent>` at the top of the child body.
-- **Comment on an issue**: `gh issue comment <number> --body "..."`
-- **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
-- **Close**: `gh issue close <number> --comment "..."`
-
-Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone.
+- **Create an issue**: `gh issue create --repo <tracker> --title "..." --body "..."`. Use a heredoc for multi-line bodies.
+- **Read an issue**: `gh issue view <number> --repo <tracker> --json number,title,body,labels,comments,blockedBy` (`blockedBy` needs `gh` 2.94+; older `gh`: drop it and read the body's `Blocked by:` line). `blockedBy.totalCount` larger than the nodes returned means the list is cut: fetch the rest with `gh api repos/<tracker>/issues/<number>/dependencies/blocked_by`.
+- **List issues**: `gh issue list --repo <tracker> --state open --limit 500 --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` with appropriate `--label` and `--state` filters. The default limit is 30 and the JSON does not say it was cut; a tracker with more than 500 open issues pages with `gh api repos/<tracker>/issues --paginate`.
+- **Make an issue a sub-issue of a parent**: `gh issue create --repo <tracker> --parent <parent> ...`, or `gh issue edit <parent> --repo <tracker> --add-sub-issue <child>` afterwards (`gh` 2.94+). Older `gh`: `gh api --method POST repos/<tracker>/issues/<parent>/sub_issues -F sub_issue_id=<child-db-id>` (database id, as in **Blocking** below). Without sub-issues, put `Part of <tracker>#<parent>` at the top of the child body.
+- **Comment on an issue**: `gh issue comment <number> --repo <tracker> --body "..."`
+- **Apply / remove labels**: `gh issue edit <number> --repo <tracker> --add-label "..."` / `--remove-label "..."`
+- **Close**: `gh issue close <number> --repo <tracker> --comment "..."`
 
 ## Workspace
 
-Tickets live in one repo for the whole workspace: **<owner/tickets-repo>**. Every `gh issue` command above takes `--repo <owner/tickets-repo>`, from whichever repo you are in. References are always `owner/repo#N` (`Refs`, `Closes`, `Blocked by`, `Part of`, commit messages), never a bare `#N`: the number space differs per repo.
+Tickets live in one repo for the whole workspace: **<tracker>**. Every `gh issue` command above targets it, from whichever repo you are in. References are always `owner/repo#N` (`Refs`, `Closes`, `Blocked by`, `Part of`, commit messages), never a bare `#N`: the number space differs per repo.
 
-GitHub shares one number space across issues and PRs, so a bare `#42` may be either: resolve with `gh pr view 42` and fall back to `gh issue view 42`.
+A bare `#42` met in prose is ambiguous: a ticket is `gh issue view 42 --repo <tracker>`; a pull request is `gh pr view 42 --repo <owner/repo of that PR>` (the PR's own repo, which is only the current one when the text says so). Never resolve a bare number against the current clone and take the first hit.
 
 ## When a skill says "publish to the issue tracker"
 
-Create a GitHub issue.
+Create a GitHub issue in `<tracker>`.
 
 ## When a skill says "fetch the relevant ticket"
 
-Read it as in **Read an issue** above.
+Read it as in **Read an issue** above, blockers included.
 
 ## Blocking edges
 
-Use GitHub's **native issue dependencies**: `gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`, where `<blocker-db-id>` is `gh api repos/<owner>/<repo>/issues/<n> --jq .id`. Where dependencies aren't available, put a `Blocked by: #<n>, #<n>` line at the top of the body. A ticket is unblocked when every blocker is closed.
+Use GitHub's **native issue dependencies**: `gh api --method POST repos/<tracker>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`, where `<blocker-db-id>` is `gh api repos/<tracker>/issues/<n> --jq .id`. Where dependencies aren't available, put a `Blocked by: <tracker>#<n>, <tracker>#<n>` line at the top of the body. A ticket is unblocked when every blocker is closed.

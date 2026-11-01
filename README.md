@@ -96,6 +96,7 @@ docs/agents/heinzelwerk/  heinzelwerk's own files; other files in docs/agents/ a
   infra-policy.json       infra repos: tf-gate policy
   merge-policy.json       merge-gate policy (setup section G)
   adopted.md              ledger of adopted docs
+  corrections.md          append-only ledger of in-place fixes to context files (CLAUDE.md, AGENTS.md)
   retros/                 retro records
   workspace.md            tickets repo only, workspace mode
 .claude/settings.json     Bash(check-note *), Bash(spawn-context *) permissions; Bash(merge-gate *) with section G

@@ -6,7 +6,7 @@
 #             (a path, a `path:line`, `adopted:`) or a tag (`(unverified)`, `(verified <date> …)`);
 #             the word "unverified" appears only as that tag; repo-map has no "N lines" count;
 #   ledger    every line of adopted.md keeps `- <path> @ <hash>: … ; stale: <n> corrected, <n> marked, <n> ignored`,
-#             every line of corrections.md keeps `- <date> <path>:<line>: was "…" → now "…", see <path:line>`;
+#             every line of corrections.md keeps `- <date> <path>:<line>: was "…" → now "…", see <path:line>[; why: …]`;
 #   header    with --since-header: each doc's `verified against <sha> <date>` line is present, and every
 #             in-repo `path:line` whose line no longer reads as it did at <sha> is printed (the list retro
 #             re-verifies; a ref that only shifted is not printed).

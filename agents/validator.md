@@ -49,7 +49,7 @@ Then remove the integration worktree and complete the acceptance task.
 ## Docs (`#N validate tech-lead: docs`)
 Tech-lead's docs PR. No checks, no review subagents. Check that:
 - the diff touches only `docs/agents/heinzelwerk/`, `GLOSSARY*.md`, `docs/adr/`, and other docs whose every changed line has a matching new line in `docs/agents/heinzelwerk/corrections.md`;
-- glossary entries and ADRs follow the `heinzelwerk:domain-modeling` formats (an ADR that records a deviation or a rejected alternative has its **Considered Options**);
+- glossary entries and ADRs follow the `heinzelwerk:domain-modeling` formats (**Considered Options** are optional; an ADR without them is not a fail);
 - `out-of-scope.md` rows have all four columns and a `revisit when` that is a condition, not "never" (a safety rule is an ADR, not a row);
 - ADR numbers are unique (`ls docs/adr | cut -d- -f1 | sort | uniq -d` prints nothing);
 - learnings stay within 80 lines;

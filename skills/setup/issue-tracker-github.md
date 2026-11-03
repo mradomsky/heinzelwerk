@@ -1,6 +1,6 @@
 # Issue tracker: GitHub
 
-Issues and specs live as GitHub issues in **<tracker>** (`owner/repo`). Use the `gh` CLI for all operations, and pass `--repo <tracker>` on every command: `gh` otherwise infers the repo from the current clone, which from a sibling repo or a task worktree is the wrong one.
+Issues and specs live as GitHub issues in **<tracker>** (owner/repo). Use the `gh` CLI for all operations, and pass `--repo <tracker>` on every command: `gh` otherwise infers the repo from the current clone, which from a sibling repo or a task worktree is the wrong one.
 
 ## Conventions
 
@@ -20,7 +20,7 @@ A bare `#42` met in prose is ambiguous: a ticket is `gh issue view 42 --repo <tr
 
 ## When a skill says "publish to the issue tracker"
 
-Create a GitHub issue in `<tracker>`.
+Create a GitHub issue in **<tracker>**.
 
 ## When a skill says "fetch the relevant ticket"
 

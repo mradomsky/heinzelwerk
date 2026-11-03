@@ -92,7 +92,7 @@ if [ -f docs/agents/heinzelwerk/adopted.md ]; then
 fi
 if [ -f docs/agents/heinzelwerk/corrections.md ]; then
   while IFS=: read -r ln text; do
-    grep -qE '^- [0-9]{4}-[0-9]{2}-[0-9]{2} [^ ]+:[0-9]+: was ".+" .* now ".+", see ([^ ]+/[^ ]+ )?[^ ]+:[0-9]+' <<<"$text" && continue
+    grep -qE '^- [0-9]{4}-[0-9]{2}-[0-9]{2} [^ ]+:[0-9]+: was ".+" .* now ".+", see ([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+ )?\.?[A-Za-z0-9_][^ :]*:[0-9]+([-,][0-9]+)*(; why: .+)?[[:space:]]*$' <<<"$text" && continue
     echo "docs/agents/heinzelwerk/corrections.md:$ln: ledger line off format (- <date> <path>:<line>: was \"…\" → now \"…\", see <path:line> or <owner>/<repo> <path>:<line>): ${text:0:60}"; bad=1
   done < <(grep -n '^- ' docs/agents/heinzelwerk/corrections.md)
 fi

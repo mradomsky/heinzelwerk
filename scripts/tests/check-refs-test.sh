@@ -19,6 +19,7 @@ t "dot path" PASS "$p .github/workflows/ci.yml:45-56"
 t "cross-repo ref with why" PASS "$p V-M-Pioneer-Trading/meta .github/workflows/openapi-sync.yml:45-56; why: synced"
 t "old sentence with quotes" PASS '- 2026-11-03 a.md:1: was "the "Go" table" → now "the TS table", see a.md:1'
 t "CRLF line end" PASS "$p a.md:1"$'\r'
+t "marked" PASS '- 2026-11-03 CHANGELOG.md:31: was "old entry" → marked, see a.md:1; why: release history'
 echo "--- corrections.md: must fail"
 t "no see" FAIL '- 2026-11-03 a.md:1: was "old" → now "new"'
 t "see with no path" FAIL "$p nothing"
@@ -27,5 +28,6 @@ t "trailing junk" FAIL "$p V-M-Pioneer-Trading/meta src/x.ts:12 extra junk"
 t "local folder path" FAIL "$p ../meta/x.yml:4"
 t "absolute path" FAIL "$p C:/Users/max/x.yml:4"
 t "URL" FAIL "$p https://github.com/o/r/blob/main/x.yml:4"
+t "marked with quotes" FAIL '- 2026-11-03 a.md:1: was "old" → marked "x", see a.md:1'
 t "bad date" FAIL '- 2026-11 a.md:1: was "old" → now "new", see a.md:1'
 echo "$n cases, $bad bad"; [ $bad -eq 0 ]

@@ -6,7 +6,7 @@
 #             (a path, a `path:line`, `adopted:`) or a tag (`(unverified)`, `(verified <date> …)`);
 #             the word "unverified" appears only as that tag; repo-map has no "N lines" count;
 #   ledger    every line of adopted.md keeps `- <path> @ <hash>: … ; stale: <n> corrected, <n> marked, <n> ignored`,
-#             every line of corrections.md keeps `- <date> <path>:<line>: was "…" → now "…", see <path:line>[; why: …]`;
+#             every line of corrections.md keeps `- <date> <path>:<line>: was "…" → now "…", see <path:line>[; why: …]` (the see ref may be `<owner>/<repo> <path>:<line>`);
 #   header    with --since-header: each doc's `verified against <sha> <date>` line is present, and every
 #             in-repo `path:line` whose line no longer reads as it did at <sha> is printed (the list retro
 #             re-verifies; a ref that only shifted is not printed).
@@ -92,8 +92,8 @@ if [ -f docs/agents/heinzelwerk/adopted.md ]; then
 fi
 if [ -f docs/agents/heinzelwerk/corrections.md ]; then
   while IFS=: read -r ln text; do
-    grep -qE '^- [0-9]{4}-[0-9]{2}-[0-9]{2} [^ ]+:[0-9]+: was ".+" .* now ".+", see [^ ]+:[0-9]+' <<<"$text" && continue
-    echo "docs/agents/heinzelwerk/corrections.md:$ln: ledger line off format (- <date> <path>:<line>: was \"…\" → now \"…\", see <path:line>): ${text:0:60}"; bad=1
+    grep -qE '^- [0-9]{4}-[0-9]{2}-[0-9]{2} [^ ]+:[0-9]+: was ".+" .* now ".+", see ([^ ]+/[^ ]+ )?[^ ]+:[0-9]+' <<<"$text" && continue
+    echo "docs/agents/heinzelwerk/corrections.md:$ln: ledger line off format (- <date> <path>:<line>: was \"…\" → now \"…\", see <path:line> or <owner>/<repo> <path>:<line>): ${text:0:60}"; bad=1
   done < <(grep -n '^- ' docs/agents/heinzelwerk/corrections.md)
 fi
 

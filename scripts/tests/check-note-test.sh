@@ -4,7 +4,7 @@ cn=${1:-"$(dirname "$0")/../check-note"}; bad=0; n=0
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 cat >"$tmp/team.md" <<'EOF'
 # Team rules
-- **Checks** (validator runs every one, in order): `npm run build --silent`, `npm test -- --reporter=dot`, `npm audit --audit-level=high (red on main: #12)`
+- **Checks** (validator runs every one, in order): `npm run build --silent`, `npm test -- --reporter=dot`, `npm audit --audit-level=high` (red on main: #12)
 EOF
 cat >"$tmp/list-team.md" <<'EOF'
 - **Checks** (validator runs every one, in order; failures only):

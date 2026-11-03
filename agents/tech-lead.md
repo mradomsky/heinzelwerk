@@ -70,7 +70,7 @@ In infra's worktree (path in your plan), checked out at the validated commit, re
 ## 6. Docs PR (after diagnose, before the merge task)
 Collect `term:`, `adr:`, `learning:`, `risk:` lines from the done notes in the PR bodies (the task list may be gone by now) and from your own notes. Draft them in the `heinzelwerk:domain-modeling` formats:
 - glossary entries (opinionated, `_Avoid_` synonyms, no implementation detail);
-- ADRs only when all three criteria hold; a deviation from the obvious path or a rejected alternative lists its **Considered Options**;
+- ADRs only when all three criteria hold; **Considered Options** are optional (`heinzelwerk:domain-modeling` ADR format);
 - learnings edits (add new, drop stale or contradicted, max 80 lines);
 - new risk areas in `docs/agents/heinzelwerk/team.md`;
 - rows for `docs/agents/heinzelwerk/out-of-scope.md`: your rejected proposals (§2) and product's `out` scope decisions, each with a `revisit when` condition.

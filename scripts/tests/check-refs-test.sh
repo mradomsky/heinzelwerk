@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # check-refs ledger-format regression suite (corrections.md). Usage: bash scripts/tests/check-refs-test.sh [scripts/check-refs]
-cr=$(cd "$(dirname "${1:-$0/../../check-refs}")" && pwd)/$(basename "${1:-check-refs}"); bad=0; n=0
+cr=${1:-"$(dirname "$0")/../check-refs"}; cr=$(cd "$(dirname "$cr")" && pwd)/$(basename "$cr"); bad=0; n=0
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 cd "$tmp" && git init -q && mkdir -p docs/agents/heinzelwerk && printf 'x\n' >a.md
 printf '# Team\n\n- see `a.md:1`\n' >docs/agents/heinzelwerk/team.md

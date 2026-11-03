@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # heinzelwerk reference check. Deterministic, over the agent docs:
 #   refs      every `path:line` and backticked path exists, and the line is inside the file; also in every
-#             `Correction (<date>)` line adopt-docs appended to an original doc;
+#             `Correction (<date>)` line an older adopt-docs appended to an original doc (legacy; new fixes go in place);
 #   claims    every bullet or table row in repo-map, workspace, design, learnings carries evidence
 #             (a path, a `path:line`, `adopted:`) or a tag (`(unverified)`, `(verified <date> …)`);
 #             the word "unverified" appears only as that tag; repo-map has no "N lines" count;
-#   ledger    every line of adopted.md keeps `- <path> @ <hash>: … ; stale: <n> corrected, <n> marked, <n> ignored`;
+#   ledger    every line of adopted.md keeps `- <path> @ <hash>: … ; stale: <n> corrected, <n> marked, <n> ignored`,
+#             every line of corrections.md keeps `- <date> <path>:<line>: was "…" → now "…", see <path:line>[; why: …]`;
 #   header    with --since-header: each doc's `verified against <sha> <date>` line is present, and every
 #             in-repo `path:line` whose line no longer reads as it did at <sha> is printed (the list retro
 #             re-verifies; a ref that only shifted is not printed).
@@ -21,7 +22,7 @@ cd "${1:-$(git rev-parse --show-toplevel)}" || exit 1
 common=$(cd "$(git rev-parse --git-common-dir)" && pwd)   # the main checkout's .git, even from a worktree
 ws=$(dirname "$(dirname "$common")")                        # <workspace>/<repo>/.git → <workspace>
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
-docs=$(ls docs/agents/heinzelwerk/*.md GLOSSARY*.md docs/adr/*.md 2>/dev/null)
+docs=$(ls docs/agents/heinzelwerk/*.md GLOSSARY*.md docs/adr/*.md 2>/dev/null | grep -v '/corrections\.md$')   # the ledger's refs are dated history
 if [ -f CLAUDE.md ]; then
   mkdir -p "$tmp/CLAUDE.md.d"
   awk '/^## Agent skills \(heinzelwerk\)/{p=1; print; next} /^## /{p=0} p' CLAUDE.md >"$tmp/CLAUDE.md.d/CLAUDE.md"
@@ -88,6 +89,12 @@ if [ -f docs/agents/heinzelwerk/adopted.md ]; then
     grep -qE '^- [^ ]+ @ [0-9a-f]{40}: .+; stale: [0-9]+ corrected, [0-9]+ marked, [0-9]+ ignored(; filed: [^;]+)?[[:space:]]*$' <<<"$text" && continue
     echo "docs/agents/heinzelwerk/adopted.md:$ln: ledger line off format (- <path> @ <hash>: … ; stale: n corrected, n marked, n ignored[; filed: …]): ${text:0:60}"; bad=1
   done < <(grep -n '^- ' docs/agents/heinzelwerk/adopted.md)
+fi
+if [ -f docs/agents/heinzelwerk/corrections.md ]; then
+  while IFS=: read -r ln text; do
+    grep -qE '^- [0-9]{4}-[0-9]{2}-[0-9]{2} [^ ]+:[0-9]+: was ".+" .* now ".+", see [^ ]+:[0-9]+' <<<"$text" && continue
+    echo "docs/agents/heinzelwerk/corrections.md:$ln: ledger line off format (- <date> <path>:<line>: was \"…\" → now \"…\", see <path:line>): ${text:0:60}"; bad=1
+  done < <(grep -n '^- ' docs/agents/heinzelwerk/corrections.md)
 fi
 
 # header

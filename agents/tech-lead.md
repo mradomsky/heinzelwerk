@@ -54,6 +54,7 @@ An accepted task belongs to a role that isn't running → tell coordinator to sp
 
 **Merge.** Single mode, and `git show origin/main:docs/agents/heinzelwerk/merge-policy.json` says `"enabled": true` → create `#N validate: merge`. Its details list the PRs in merge order: the docs PR last, infra PRs left out. The merge task is blocked by the docs validate task when there is one. Validator runs the gate and reports `[validator] merge gate: …`.
 - The gate skips one PR for `mergeable` or CI → one rebase round, and only one: create `#N <role> fix <k>: rebase on main` for that PR (the PR's owner rebases and the PR gets validated again) and `#N validate: merge 2` for that PR and the PRs after it in the merge order.
+- The gate skips a PR for `bot review: open <n>` → create `#N <role> fix <k>: review threads` for that PR (phased-workflow **Bot review threads**: the owner fixes, replies on every thread, the PR gets validated again) and `#N validate: merge <k+1>` for it and the PRs after it. Rounds count against the fix-task cap; at the cap, hand it to the human with the open threads. A skip for `bot review pending` or `bot review unavailable` (policy `required`) → hand it to the human: the bot, not the run, is late.
 - A second skip, or a skip for any other reason → hand it to the human.
 
 Then write the technical report (§7).

@@ -45,7 +45,7 @@ The task list has three states: pending, in progress, completed. A task's title 
 
 - **Open** = pending with a role in the title. Tech-lead's seeded tasks start here, with blockers set as task dependencies. The owner claims it, which sets it to in progress. **Claim only tasks whose title names your role**, never the next free task. Every `validate` task is validator's, whatever role its title also names.
 - **Implement task done**, in this order:
-  1. PR open.
+  1. PR open, as a draft (team-modes **Draft until validated**).
   2. Done note written into the task's details (`TaskUpdate`).
   3. `#N validate <role>: <what>` created (pending).
   4. The implementer itself completes the implement task.
@@ -53,6 +53,8 @@ The task list has three states: pending, in progress, completed. A task's title 
   The next task exists before yours is completed, because a role with no open task gets released and validator may start slice acceptance. The validate task is the quality gate.
 - **Validate task**: validator claims it, posts the verdict, completes it.
   - Fail → validator creates `#N <role> fix <k>: <what>` (pending; k is the fix round number) with the repro in its details, and messages the owner. The owner fixes on the same branch, writes the fix task's done note, creates the next validate task, then completes the fix task.
+  - **Bot review threads** (`merge-policy.json` names a `review_bot`): after validator's pass marked the PR ready, the bot reviews it and may open threads. The merge gate reports `bot review: open <n>`; tech-lead then creates `#N <role> fix <k>: review threads`. The owner runs `review-gate <PR>` (plugin script; lists each unresolved thread as `<thread id> <path>:<line> <first line>`), fixes what is right, and replies on **every** thread, fix or disagreement, with the footer:
+    `gh api graphql -f query='mutation($t:ID!,$b:String!){addPullRequestReviewThreadReply(input:{pullRequestReviewThreadId:$t,body:$b}){comment{id}}}' -F t=<thread id> -F b=@<file>`. Agents never resolve a thread (no `resolveReviewThread`, no `@<bot> resolve`): the bot resolves what it accepts, and a thread it keeps open is the next round's work. The round is a fix round like any other: same branch, draft again, done note, new validate task, and it counts against the cap below.
   - **Fix-task cap: 3 per PR.** A fail after the third → validator messages tech-lead instead of creating a fourth, and tech-lead chooses: split, reassign, or stop.
   - The `validated` line lives on the PR that the gate merges. A re-landed or re-opened PR is a new PR and gets a new validate task.
 - **Proposal** = `[proposed] #N <what>` (pending; owner hint and the fields from [proposals.md](proposals.md) in its details). Nobody claims a proposal. Only tech-lead acts on it:
@@ -81,7 +83,7 @@ The task list has three states: pending, in progress, completed. A task's title 
   3. Complete the task.
   4. Message coordinator `[<repo>@<branch>] validate task created: <PR>`, then unlock your worktree (team-modes §1).
 
-  From then on the branch is frozen: validator reviews the head commit it claimed, and the next change to the branch is a fix round. Coordinator reminds you once if commits keep coming; stop at the done note. A fix task, whether validator's or tech-lead's, means the same branch and the same loop (lock the worktree again), and you update the done note section in the PR body.
+  From then on the branch is frozen: validator reviews the head commit it claimed, and the next change to the branch is a fix round. Coordinator reminds you once if commits keep coming; stop at the done note. A fix task, whether validator's or tech-lead's, means the same branch and the same loop (lock the worktree again, `gh pr ready --undo <PR>` before the first push), and you update the done note section in the PR body.
 
 ## Subagents (every role)
 A teammate's subagent may hand back to the main session (the platform's `team-lead`) instead of you. So:

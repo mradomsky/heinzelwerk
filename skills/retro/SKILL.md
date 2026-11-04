@@ -34,6 +34,7 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
      - issues that reference a merged agent PR and report a bug: `gh api repos/{owner}/{repo}/issues/<PR>/timeline --jq '.[] | select(.event=="cross-referenced") | .source.issue.html_url'`.
 
      Each one is evidence that a `validated` PR was not good enough. Trace it to the validator, a missing check, or the spec.
+   - **Bot review threads**, when `merge-policy.json` names a `review_bot`: the bot reviews only validated heads (team-modes **Draft until validated**), so every `fix <k>: review threads` task, and every thread the bot opened after a pass (`review-gate <PR>` on the merged PRs; GraphQL `reviewThreads` keeps resolved ones), is something the validator passed and the bot caught. Count them per run and read them: a real miss is a validator finding, a nit the bot was wrong about is noise to note under `bot_review`.
 
 4. **Look for candidates for improvement** in these categories.
 

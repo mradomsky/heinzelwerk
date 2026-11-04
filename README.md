@@ -13,12 +13,14 @@ Claude Code plugin: a lean autonomous dev team (coordinator / product / tech-lea
 - **Phases, not pipelines.** Every task carries one phase: analyze / implement / validate. Any agent may create work in any phase; every task leaves a handoff.
 - **Tickets are durable, tasks are disposable.** Everything the next run needs lives on GitHub.
 - **Pointers, not imports.** `CLAUDE.md` holds a short `## Agent skills (heinzelwerk)` block; agents read `docs/agents/heinzelwerk/*` when the pointer fires.
+- **Draft until validated.** Every agent PR opens as a draft and turns ready only when the validator passes its head; a fix round turns it back. GitHub's "ready for review" therefore means "heinzelwerk validated this", and a review bot that skips drafts reviews only validated heads, so what it still finds is what the validator missed.
 - **Humans merge, unless a deterministic gate allows it.** Agents open PRs and never push main. `merge-gate` lives in the plugin's `scripts/`, so no PR can change it. It merges a PR only when `merge-policy.json` on main allows it, which means all of:
   - the validator's `heinzelwerk: validated <sha>` line names the PR's current head
   - every changed file is allowed by the policy
   - CI green
   - mergeable
   - no unchecked manual check left (the validator does the ones it can)
+  - the review bot the policy names (`review_bot`, e.g. CodeRabbit) has no open thread on the head; `bot_review: required` also waits for its review, `best-effort` merges without one and says so in a `note:` line
 
   Policy files, `.claude/settings*.json`, and workflows always wait for a human. The gate runs after tech-lead's diagnose finds no gap, and it covers the docs PR too. A PR stacked on a merged PR is retargeted to main first: closed and reopened once, so CI runs on the new base. Setup section G turns the gate on: policy, a PR CI workflow, and the `Bash(merge-gate *)` permission that auto mode needs. Recommended off when `main` deploys to production. One reason: the `validated` line is a protocol marker, not an authorization. Every role shares one `gh` login, so a teammate, or text a teammate reads in the repo, could post it.
 - **Infra auto-applies only through a deterministic gate.** `tf-gate` lives in the plugin's `scripts/`. It checks the saved plan against `infra-policy.json` on main: environment allowlist, no destroys, protected types, change limit. Tech-lead applies on pass and escalates on fail or doubt. Credential scope is the real boundary: agents never hold prod write credentials.
@@ -45,9 +47,9 @@ Needs Claude Code 2.1.295 or later (for hook `onFailure`).
 **Dependencies.**
 - The guard hook needs only bash (Git Bash on Windows).
 - `tf-gate` needs `jq` on infra repos.
-- The tracker, `merge-gate`, and `spawn-context` need `gh` (its built-in `--jq`; no `jq` binary). `check-note` needs only bash.
+- The tracker, `merge-gate`, `review-gate`, and `spawn-context` need `gh` (its built-in `--jq`; no `jq` binary). `check-note` needs only bash.
 
-The plugin's `scripts/` (`merge-gate`, `tf-gate`, `ui-shots`, `check-refs`, `check-note`, `spawn-context`) is on the Bash tool's PATH while the plugin is enabled: a SessionStart hook adds it. It is `scripts/`, not `bin/`, because claude.ai and Cowork refuse a plugin with a top-level `bin/`. So target repos carry no copies, and every plugin update reaches every repo at once. The default branch must be `main`: both gates read their policy from it, and every worktree starts from `origin/main`.
+The plugin's `scripts/` (`merge-gate`, `review-gate`, `tf-gate`, `ui-shots`, `check-refs`, `check-note`, `spawn-context`) is on the Bash tool's PATH while the plugin is enabled: a SessionStart hook adds it. It is `scripts/`, not `bin/`, because claude.ai and Cowork refuse a plugin with a top-level `bin/`. So target repos carry no copies, and every plugin update reaches every repo at once. The default branch must be `main`: both gates read their policy from it, and every worktree starts from `origin/main`.
 
 Start every shaping or run session with `--model opus`: a command's `model:` covers only its first turn, and shape, feature, bugfix, and retro span many.
 
@@ -99,7 +101,7 @@ docs/agents/heinzelwerk/  heinzelwerk's own files; other files in docs/agents/ a
   corrections.md          append-only ledger of in-place fixes to original docs (the docs carry no history)
   retros/                 retro records
   workspace.md            tickets repo only, workspace mode
-.claude/settings.json     Bash(check-note *), Bash(spawn-context *) permissions; Bash(merge-gate *) with section G
+.claude/settings.json     Bash(check-note *), Bash(spawn-context *) permissions; Bash(merge-gate *), Bash(review-gate *) with section G
 GLOSSARY-MAP.md           tickets repo only, workspace mode
 CLAUDE.workspace.md       tickets repo only; parent folder CLAUDE.md = one @import line
 ```
@@ -126,7 +128,7 @@ Model-invoked (reusable discipline, agents reach for them):
 - `skills/tdd`, `skills/code-review`, `skills/codebase-design`, `skills/domain-modeling`, `skills/grilling`, `skills/writing-for-agents`, `skills/prototype`, `skills/diagnosing-bugs`, `skills/improve-codebase-architecture`, `skills/to-spec`, `skills/to-tickets`: adapted copies of mattpocock/skills. Their descriptions say "heinzelwerk copy … Use inside heinzelwerk …". So with the mattpocock plugin also installed, your own sessions pick the upstream skill and runs pick ours. Both are namespaced (`heinzelwerk:tdd` vs `mattpocock-skills:tdd`); no rename needed.
 
 Other:
-- `scripts/` — `merge-gate` (gh: reads policy, CI, and the PR; merges), `tf-gate` (terraform plan check and apply against the policy), `ui-shots` (pushes screenshots to the orphan branch `heinzelwerk-screenshots`), `check-refs` (every `path:line` in the agent docs (and in legacy appended corrections) exists, every claim carries evidence or an `(unverified)` tag, the adopted ledger keeps its format, `--since-header` lists refs whose line changed since the doc was verified), `check-note` (a done note has every field in order and one exit code per `team.md` check; a verdict ends with the full-sha validated line and no bare `inconclusive`), `spawn-context` (prints the `## Context` block a spawn prompt carries: ticket, plan and run-state comments, team rules, agent-skills pointers, the PR for validator): on the Bash tool's PATH while the plugin is enabled; policy stays in the target repo, the code stays here. `scripts/tests/` holds their regression suites
+- `scripts/` — `merge-gate` (gh: reads policy, CI, the PR, and `review-gate`; merges), `review-gate` (gh GraphQL: the policy's review bot has reviewed the head sha and left no unresolved thread → `clean`; else `open <n>` with the thread ids, `pending`, or `unavailable: <why>` such as a rate limit with its retry time), `tf-gate` (terraform plan check and apply against the policy), `ui-shots` (pushes screenshots to the orphan branch `heinzelwerk-screenshots`), `check-refs` (every `path:line` in the agent docs (and in legacy appended corrections) exists, every claim carries evidence or an `(unverified)` tag, the adopted ledger keeps its format, `--since-header` lists refs whose line changed since the doc was verified), `check-note` (a done note has every field in order and one exit code per `team.md` check; a verdict ends with the full-sha validated line and no bare `inconclusive`), `spawn-context` (prints the `## Context` block a spawn prompt carries: ticket, plan and run-state comments, team rules, agent-skills pointers, the PR for validator): on the Bash tool's PATH while the plugin is enabled; policy stays in the target repo, the code stays here. `scripts/tests/` holds their regression suites
 - `docs/GLOSSARY.md` — the plugin's own terms with the words to avoid; `docs/adr/` — plugin decisions with their rejected options; `docs/out-of-scope.md` — proposals turned down, each with the condition to revisit it. Reviews and retro read all three before proposing
 - `agents/` — roles, usable as subagents or teammates
 - `hooks/` — `path.sh` (SessionStart) appends `scripts/` to PATH through `CLAUDE_ENV_FILE`, nothing else. `guard.sh` (PreToolUse) blocks:

@@ -4,7 +4,9 @@
 # Lives in the plugin's scripts/, so no PR can change it. Policy: docs/agents/heinzelwerk/merge-policy.json as on main
 # on GitHub, never the branch's copy. A PR that touches a heinzelwerk policy file, the project's Claude Code settings,
 # or a workflow always waits for a human. A PR stacked on another PR's branch is retargeted to main once that PR merged.
-# Waits up to MERGE_GATE_WAIT seconds (default 450) for CI: run it with a ten-minute Bash timeout.
+# Waits up to MERGE_GATE_WAIT seconds (default 450) for CI and, when the policy names a `review_bot`, for its review of the
+# head sha (`review-gate`, same budget): run it with a ten-minute Bash timeout. `bot_review: required` → an open, pending, or
+# unavailable bot review is a skip reason; `best-effort` → open threads skip, pending or unavailable merge with a note line.
 # Needs: gh only (its built-in --jq). Globs: bash patterns on the repo-relative path; * also matches /.
 set -euo pipefail
 # a gh or network failure still ends in a verdict line (no -E: an inherited trap inside $(...) would swallow the error)
@@ -15,6 +17,8 @@ pol() { raw docs/agents/heinzelwerk/merge-policy.json --jq "$1"; }
 pv() { gh pr view "$pr" --json "$1" --jq "$2"; }
 # a check run's conclusion is "" until it completes, so branch on status; a commit status carries state directly
 checks() { pv statusCheckRollup '.statusCheckRollup[]? | if .__typename == "CheckRun" then (if .status == "COMPLETED" then .conclusion else "PENDING" end) else (.state // "PENDING") end'; }
+rg() { "$(dirname "$0")/review-gate" "$pr"; }   # first line is the verdict; sibling script, so no PR can change it
+bot_pending() { rg | head -1 | grep -q "^BOT REVIEW: pending"; }
 enabled=$(pol '.enabled // false' 2>/dev/null) || { echo "MERGE SKIP: no docs/agents/heinzelwerk/merge-policy.json on main"; exit 0; }
 [ "$enabled" = true ] || { echo "MERGE SKIP: auto-merge off"; exit 0; }
 
@@ -31,7 +35,7 @@ fi
 
 # let CI finish; the verdict reads the final state
 wait=${MERGE_GATE_WAIT:-450}; deadline=$(( SECONDS + wait ))
-while grep -qE '^(PENDING|EXPECTED)$' <<<"$(checks)" && (( SECONDS < deadline )); do sleep 15; done
+while { grep -qE '^(PENDING|EXPECTED)$' <<<"$(checks)" || bot_pending; } && (( SECONDS < deadline )); do sleep 15; done
 reasons=()
 [ "$(pv state .state)" = OPEN ] || reasons+=("PR not open")
 [ "$(pv isDraft .isDraft)" = false ] || reasons+=("draft")
@@ -75,6 +79,14 @@ else
   (( bad == 0 )) || reasons+=("$bad CI check(s) failed")
 fi
 
+# bot review: the verdict line of review-gate; what a non-clean one means is the policy's `bot_review`
+note=""; rl=$(rg | head -1); rl=${rl#BOT REVIEW: }
+case $rl in
+  off|clean*) ;;
+  open*) reasons+=("bot review: $rl unresolved thread(s) (reply and fix; the bot resolves)") ;;
+  *) if [ "$(pol '.bot_review // "off"')" = required ]; then reasons+=("bot review $rl"); else note="bot review $rl (best-effort: merged without it)"; fi ;;
+esac
+
 if (( ${#reasons[@]} )); then echo "MERGE SKIP:"; printf '  - %s\n' "${reasons[@]}"; exit 0; fi
-if out=$(gh pr merge "$pr" "--$(pol '.merge_method // "squash"')" 2>&1); then echo "MERGED: PR $pr"
+if out=$(gh pr merge "$pr" "--$(pol '.merge_method // "squash"')" 2>&1); then echo "MERGED: PR $pr"; [ -z "$note" ] || echo "  - note: $note"
 else echo "MERGE SKIP:"; echo "  - merge failed: ${out//$'\n'/ }"; fi

@@ -12,4 +12,4 @@ Your scope is your paths (single mode) or your repos (workspace mode), as team-m
 **Contracts.** You provide the backend side of every **contract**. Keep changes compatible by default. Before you code a breaking change, send tech-lead a proposal (team-modes **Contract changes**).
 
 ## Build
-Use the `heinzelwerk:tdd` skill at the seams your task names: red → green, one slice at a time. Seams don't fit the change → message tech-lead before writing the test.
+Use the `heinzelwerk:tdd` skill at the seams your task names: red → green, one slice at a time. Seams don't fit the change → message tech-lead before writing the test. A docs-only task skips the loop (phased-workflow **Implementers**).

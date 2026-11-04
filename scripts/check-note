@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # heinzelwerk note check. Deterministic, over the two texts other roles and scripts parse:
 #   note      a done note (phased-workflow **Done note**): every required field present, in order, non-empty;
-#             `checks:` holds one exit code per team.md check (count from team.md, or --checks N);
+#             `checks:` holds one exit code (or `ci`: runs only in CI) per team.md check (count from team.md, or --checks N);
 #             `session:` names the transcript; an `abandoned:` note needs only `abandoned: <why>`.
 #   verdict   a validator verdict body (validator **Verdict**): last non-empty line is
 #             `heinzelwerk: validated <40-hex sha>` (the `— heinzelwerk` footer goes above it);
@@ -47,7 +47,9 @@ if [ "$mode" = note ]; then
     # checks: one exit code per team.md check
     cl=$(field checks)
     if [ -n "$cl" ]; then
-      codes=$(grep -oE '[0-9]+' <<<"$cl" | wc -l)   # the line holds exit codes only; prose belongs in evidence:
+      # exit codes only, or `ci` for a check that runs only in CI (reason in evidence:); prose belongs in evidence:
+      ci=$(tr -c '[:alnum:]' '\n' <<<"$cl" | grep -cx 'ci')
+      codes=$(( $(grep -oE '[0-9]+' <<<"$cl" | wc -l) + ci ))
       if [ -z "$checks" ] && [ -n "$team" ] && [ -f "$team" ]; then
         # the Checks entry: one line → every backticked item on it; a list → one per indented line that holds a
         # backticked command; no Checks entry in team.md → nothing to compare against
@@ -63,7 +65,7 @@ if [ "$mode" = note ]; then
       if [ -n "$checks" ]; then
         (( codes == checks )) || miss "checks: has $codes exit codes, team.md lists $checks checks"
       fi
-      grep -qE '[0-9]' <<<"$cl" || miss "checks: has no exit code"
+      grep -qE '[0-9]' <<<"$cl" || (( ci > 0 )) || miss "checks: has no exit code"
     fi
     # session: a path or an id, never a bare word like "yes"
     s=$(field session)

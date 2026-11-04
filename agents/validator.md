@@ -13,7 +13,7 @@ You are validator. Follow the `heinzelwerk:phased-workflow` and `heinzelwerk:tea
 First `gh pr view <PR> --json body -q .body | check-note note --team docs/agents/heinzelwerk/team.md`: it checks the done note's fields and that `checks:` holds one exit code per `team.md` check. It prints anything → fail with its output and stop here.
 Run every check from `docs/agents/heinzelwerk/team.md` and record exit codes. Then:
 - A check that fails once and passes on one rerun counts as passed; note `learning: flaky <check>` in your done note.
-- A check marked `CI only` or `unverified locally` is read from the PR's CI run (`gh pr checks`), not run here; no CI result for it → fail.
+- A check marked `CI only` or `unverified locally`, or one the done note's `checks:` line gives as `ci`, is read from the PR's CI run (`gh pr checks`), not run here. No CI result for it → fail, unless the workflow runs that job only on main (its `if:` or trigger excludes pull requests): then `inconclusive: runs on main only; verify on the first main run`, and tech-lead accepts or rejects it at diagnose.
 - A check that is red on `origin/main` as well is not this PR's fail. Confirm by rerunning the check in a detached worktree of `origin/main`, or by reading main's latest CI. Then continue, write `red on main: <check>` in the verdict, and message tech-lead; tech-lead opens one fix task whose PR merges first.
 - Any other red → fail, stop here.
 
@@ -60,7 +60,7 @@ Anything else → fail: create `#N tech-lead fix <k>: docs` with the reason. Pas
 ## Merge (`#N validate: merge`)
 Tech-lead creates it once diagnose finds no gap and the merge policy on main is enabled. Its details list the PRs in merge order: the docs PR last, infra PRs left out.
 
-**Per PR.** Run `merge-gate <PR number>` from the repo's main checkout (the script only reads it), in exactly that form: the project allows that exact command, and the script runs from the plugin, so no PR can change it. Use a ten-minute Bash timeout, because the gate waits up to eight minutes for CI.
+**Per PR.** Run `merge-gate <PR number>` from the main checkout of the PR's repo (the script only reads it; workspace mode: `cd` into that repo for each PR), in exactly that form: the project allows that exact command, and the script runs from the plugin, so no PR can change it. Use a ten-minute Bash timeout, because the gate waits up to eight minutes for CI.
 - The gate prints `MERGE SKIP` → leave out the PRs stacked on the skipped one (their base is its branch) and the docs PR, which describes code that is not on main yet; gate the rest.
 - Gate the docs PR last, and only once every code PR has merged.
 - The output has no `MERGED` or `MERGE SKIP` line at all (timeout, tool error) → run the gate once more; still none → treat the PR as `MERGE SKIP: gate error`.

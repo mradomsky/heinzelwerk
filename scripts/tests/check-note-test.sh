@@ -44,7 +44,11 @@ t "no Checks entry in team.md" note PASS "$good" --team "$tmp/empty-team.md"
 t "optional fields" note PASS "$good
 term: Anomaly
 learning: flaky test x" --checks 3
+t "ci token counts as a check" note PASS "$(sed 's/^checks:.*/checks: 0 0 ci/' <<<"$good")" --team "$tmp/team.md"
+t "ci only" note PASS "$(sed 's/^checks:.*/checks: ci ci ci/' <<<"$good")" --checks 3
 echo "--- note: must fail"
+t "ci short of team.md" note FAIL "$(sed 's/^checks:.*/checks: 0 ci/' <<<"$good")" --team "$tmp/team.md"
+t "ci inside a word is no token" note FAIL "$(sed 's/^checks:.*/checks: 0 0 cicd/' <<<"$good")" --checks 3
 t "missing session" note FAIL "$(grep -v '^session' <<<"$good")" --checks 3
 t "checks count short" note FAIL "$good" --checks 4
 t "checks count vs team.md" note FAIL "$(sed 's/^checks:.*/checks: 0 0/' <<<"$good")" --team "$tmp/team.md"

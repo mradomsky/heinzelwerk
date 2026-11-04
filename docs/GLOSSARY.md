@@ -114,6 +114,10 @@ _Avoid_: checkout, clone, branch (a worktree holds a branch), sandbox
 A run started from a folder of sibling repos with a `CLAUDE.workspace.md`; one repo (`meta`) holds tickets and workspace docs.
 _Avoid_: monorepo, multi-repo (as a noun), multi-mode
 
+**Hand-back mode**:
+A run whose host spawns teammates as background subagents of the main session (the Claude desktop app): no team config, no task tools. Each teammate's final message is its message to coordinator; the plan comment stands in for the task list.
+_Avoid_: subagent mode, no-team mode, fallback mode
+
 **Merge gate**:
 `merge-gate`, the plugin script that merges a PR only when `merge-policy.json` on main, the validated line, CI, and mergeability all allow it.
 _Avoid_: auto-merge (the setting is called that; the actor is the gate), merger, bot merge

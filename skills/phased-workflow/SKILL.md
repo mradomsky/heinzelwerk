@@ -76,7 +76,8 @@ The task list has three states: pending, in progress, completed. A task's title 
   - Haiku: use it for call-site searches and mechanical batches.
 
   Your role prompt may add triggers. State Opus and Haiku spawns in the done note's `escalations:` line. Spawn them as **Subagents** below says.
-- **Checks before the validate task**: run every check from `team.md`, in order, and put the exit codes into the done note's `checks:` line. The validator fails a PR whose `checks:` line is missing or short, without running anything itself.
+- **Docs-only task** (the plan says so: no code, test, config, or dependency changes): no red test and no `heinzelwerk:tdd` loop. The proof is the check the task names (each cited path exists, each cited name greps to exactly one match, the diff touches only the named lines), recorded in `evidence:`.
+- **Checks before the validate task**: run every check from `team.md`, in order, and put the exit codes into the done note's `checks:` line. A check you cannot run here (team.md marks it `CI only`, or it needs a daemon or device this machine lacks) gets `ci` instead of a number, with the reason in `evidence:`; never write `0` for a check you did not run. The validator fails a PR whose `checks:` line is missing or short, without running anything itself.
 - **Done**: branch, worktree, commits, and PR body follow team-modes. Once the PR is open:
   1. Write the done note into the PR body and the task's details. First run `check-note note --team docs/agents/heinzelwerk/team.md <file>` on it; it prints every missing or malformed field, and the validator runs the same check before anything else.
   2. Create `#N validate <role>: <what>`.

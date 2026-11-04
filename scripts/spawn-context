@@ -51,7 +51,11 @@ newest() {
 plan=$(newest '.body | test("(^|\n)Decisions\n") and test("\nTasks\n")') || fail "comments fetch failed"
 if [ -n "$plan" ]; then section "Plan comment (tech-lead)"; printf '%s\n' "$plan" | cap 80; fi
 state=$(newest '.body | startswith("## Heinzelwerk run state")') || fail "comments fetch failed"
-if [ -n "$state" ]; then section "Run state (an earlier run on this ticket)"; printf '%s\n' "$state" | cap 80; fi
+if [ -n "$state" ]; then
+  # coordinator's own run state names its start time; any other is an earlier run's (resume or history)
+  if [ -n "$start" ] && grep -qF -- "$start" <<<"$state"; then label="this run"; else label="an earlier run on this ticket"; fi
+  section "Run state ($label)"; printf '%s\n' "$state" | cap 80
+fi
 
 # team rules: the entries every role reads before coding or validating, with their indented continuation lines
 team=docs/agents/heinzelwerk/team.md

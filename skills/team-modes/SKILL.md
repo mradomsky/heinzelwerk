@@ -24,12 +24,26 @@ Only coordinator talks to the user.
 - Every message starts with a tag: `[<repo>@<branch>]` from an implementer, `[<role>]` from everyone else.
 - Member names: coordinator is `team-lead` (the platform's name for the main session); every other role is its own name (`tech-lead`, `product`, …; a respawn after a release or crash: `<role>-N`). Never confuse `team-lead` with `tech-lead`.
 - Coordinator, product, and tech-lead always run: message them without checking.
-- Any other role → message it **only if it is running**. To check, first read the `members` array in the team config; its path is in your spawn prompt (`~/.claude/teams/<team>/config.json`). Replying to a message you received is always allowed. A message to a stopped teammate revives it with stale context; only coordinator spawns.
+- Any other role → message it **only if it is running**. To check, first read the `members` array in the team config; its path is in your spawn prompt (`~/.claude/teams/<team>/config.json`). Replying to a message you received is always allowed. A message to a stopped teammate revives it with stale context; only coordinator spawns. No team config → **Hand-back mode** below.
 - Target not running → message **tech-lead** instead, saying who you meant and why. Tech-lead decides whether that role is needed (then coordinator spawns it) or whether the matter becomes a task or proposal.
 - Messages vanish when the run ends; which things go on GitHub instead is in phased-workflow **Ticket vs task**.
 - **Footer**: every comment, review, and PR body an agent posts on GitHub ends with a line `— heinzelwerk`. One exception: a pass verdict keeps `heinzelwerk: validated <sha>` as its last line and puts the footer right above it. Humans and retro tell agent text from the user's that way; every role posts under the user's login. Commits carry the `Co-Authored-By` trailer instead.
 - **Voice** in teammate messages and done notes: answer first; no greeting or recap; short words; drop articles when the sentence still reads without them; keep every not/never/no/only; payload (paths, commands, numbers, errors) exact. Ticket comments, PRs, code, and docs use normal prose.
 - **Draft until validated**: every PR an agent opens is a draft (`gh pr create --draft`). Validator flips it to ready on a pass (`gh pr ready <PR>`); the owner flips it back before the first push of a fix round (`gh pr ready --undo <PR>`). So "ready for review" on GitHub means exactly "validator passed this head": a human, a review bot, and the merge gate (which refuses drafts) all read the same signal, and a review bot that skips drafts reviews only what heinzelwerk already validated.
+
+## Hand-back mode
+Some hosts (the Claude desktop app) run every teammate as a background subagent of the main session: no team config is written, and teammates have no task tools. Coordinator detects it after the first spawn (no `~/.claude/teams/*/config.json` names this session) and writes `hand-back mode` into every spawn prompt. Then:
+- **Your final message is your message to coordinator.** End each phase with it, tag first (`[tech-lead] plan posted: spawn backend`). Coordinator resumes you with `SendMessage` when the next phase needs you; your context is still there.
+- **Reach** product and tech-lead by name with `SendMessage` (a send resumes a finished teammate). Every other role, and any send that fails, goes into your final message for coordinator to route.
+- **No task list.** Tech-lead's plan comment (§3) is the task list, coordinator's run-state snapshot tracks each task's state, and coordinator copies a task's row and details into its owner's spawn prompt. Wherever a rule says to create, claim, or complete a task, send coordinator the matching line instead:
+
+  | Rule says | Send |
+  |---|---|
+  | implementer creates the validate task | `[<repo>@<branch>] validate task created: <PR>` |
+  | validator passes or fails a PR | `[validator] pass <PR> <sha>` / `[validator] fix needed <PR>: <repro, file:line>` |
+  | tech-lead creates tasks | `[tech-lead] tasks created: <title, owner, branch per task>, spawn <roles>` |
+
+  The done note lives in the PR body only. Coordinator creates no tasks either; it relays.
 
 ## Contract changes
 Contracts are the paths under **Contracts** in `docs/agents/heinzelwerk/team.md`, plus cross-repo interfaces in workspace mode. Changes are compatible by default; a breaking change goes to tech-lead as a proposal before you code it. The rules are in [contracts.md](contracts.md): who the provider is, what counts as compatible, how a breaking change or a mid-task consumer need is handled. Read it when your task, or team.md, names a contract your change touches.

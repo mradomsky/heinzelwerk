@@ -31,11 +31,11 @@ You do no task work: no code, no tasks, no spec edits. Follow the `heinzelwerk:p
    **How to spawn.** Agent type `heinzelwerk:<role>`; without the type the role prompt, model, and tool limits don't apply. Name it `<role>`, or `<role>-N` (next free number) when it is a respawn after a release or crash. Each spawn prompt carries:
    - the ticket;
    - the mode;
-   - the team config path (`~/.claude/teams/<team>/config.json`);
+   - the team config path (`~/.claude/teams/<team>/config.json`), or, when no config names this session after the first spawn, `hand-back mode` (team-modes **Hand-back mode**). In hand-back mode the prompt also carries the task's row and details from the plan comment (implementers, validator), and the PR to validate (validator). Teammates' phase messages then arrive as their final messages; resume a teammate with `SendMessage` by name. You keep the task snapshot in the run state yourself, since there is no task list to read;
    - in a bugfix run, the instruction to follow `bugfix.md` in the `heinzelwerk:phased-workflow` skill;
    - a `## Context` block: the output of `spawn-context <role> <ticket> --start "<run start>"` (validator: `--pr <PR>`; workspace mode: `--tickets <owner/repo>`, and `--dir` the tickets repo for product and tech-lead, the task's repo for an implementer or validator), run once per spawn and pasted whole. Its header carries the run start, which the teammate's worktree lock reason repeats. It holds the ticket, the newest plan and run-state comments, the team.md entries every role reads, the agent-skills pointers, and for validator the PR body and its changed files. The script exits non-zero when a fetch fails: then spawn without the block, with the ticket and the run start written by hand, and say so in the prompt; never paste a partial one.
 
-   Teammates discover who is running from that config (team-modes **Messaging**); you never maintain a roster.
+   Teammates discover who is running from that config (team-modes **Messaging**); you never maintain a roster. In hand-back mode a finished teammate needs no shutdown request: it is idle until a message resumes it, so the release rule below means only "send it nothing more".
 4. **Release** a teammate (send it a shutdown request) once all three conditions hold:
    - no pending or in-progress task names its role (implement, fix, or `validate <role>` for one of its PRs);
    - the plan holds no future task for it;

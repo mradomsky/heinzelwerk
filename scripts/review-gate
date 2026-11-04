@@ -1,65 +1,163 @@
 #!/usr/bin/env bash
-# heinzelwerk bot-review gate. Deterministic: reads the merge policy on main and the PR's reviews, review threads,
-# and comments, and prints one verdict line (more lines only after `open`):
+# heinzelwerk bot-review gate.
+#
+# Deterministic: reads the merge policy on main and the pull request's reviews, review threads, and
+# comments, then prints one verdict line. Only `open` adds lines after it.
+#
 #   BOT REVIEW: off                  policy `bot_review` is off (or absent), or `review_bot` names nobody
-#   BOT REVIEW: clean <sha>          the bot reviewed the head sha, every thread it opened is resolved, and its latest
-#                                    review of that sha is not CHANGES_REQUESTED
+#   BOT REVIEW: clean <sha>          the bot reviewed the head sha, every thread it opened is resolved, and its
+#                                    latest review of that sha is not CHANGES_REQUESTED
 #   BOT REVIEW: open <n>             n unresolved bot threads; one line each: `<thread id> <path>:<line> <first line>`
 #                                    (reply with the thread id; the bot resolves, agents never do)
 #   BOT REVIEW: pending              no bot review of the head sha yet, and the wait (--wait <s>, default 0) is over
-#   BOT REVIEW: unavailable: <why>   draft PR (bots skip drafts), or a rate-limit comment newer than the bot's last
-#                                    review (`retry in <n> min` when the comment says how long)
-# Usage: review-gate <pr-number> [--wait <seconds>]   (inside the repo; exit 0 always; merge-gate reads the first line)
-# Policy keys (docs/agents/heinzelwerk/merge-policy.json on main): `review_bot` (the bot's login, with or without
-# `[bot]`), `bot_review` (`off` | `best-effort` | `required`; merge-gate decides what a non-clean verdict means).
+#   BOT REVIEW: unavailable: <why>   draft PR (bots skip drafts), a rate-limit comment newer than the bot's last
+#                                    review (`retry in <n> min` when the comment says how long), or a gh error
+#
+# Usage: review-gate <pr-number> [--wait <seconds>]
+#   Run inside the repo. Exit 0 always; merge-gate reads the first line.
+#
+# Policy keys (docs/agents/heinzelwerk/merge-policy.json on main):
+#   review_bot   the bot's login, with or without `[bot]` (GraphQL logins carry no suffix, REST ones do)
+#   bot_review   `off` | `best-effort` | `required`; merge-gate decides what a non-clean verdict means
+#
 # Needs: gh only (its built-in --jq).
 set -uo pipefail
-pr=${1:?pr number}; wait=0; [ "${2:-}" = --wait ] && wait=${3:-0}
-tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
-pol() { gh api -H 'Accept: application/vnd.github.raw+json' "repos/{owner}/{repo}/contents/docs/agents/heinzelwerk/merge-policy.json?ref=main" --jq "$1" 2>/dev/null; }
-mode=$(pol '.bot_review // "off"'); bot=$(pol '.review_bot // empty'); bot=${bot%\[bot\]}
-{ [ "$mode" = off ] || [ -z "$bot" ]; } && { echo "BOT REVIEW: off"; exit 0; }
-nwo=$(gh repo view --json nameWithOwner --jq .nameWithOwner) || { echo "BOT REVIEW: unavailable: gh repo view failed"; exit 0; }
-owner=${nwo%%/*}; name=${nwo#*/}
-# one GraphQL call per poll; gh's --jq flattens it into lines bash can read (a Bot's GraphQL login has no `[bot]`)
-state() {
-  gh api graphql -F owner="$owner" -F name="$name" -F pr="$pr" -f query='
-    query($owner:String!,$name:String!,$pr:Int!){ repository(owner:$owner,name:$name){ pullRequest(number:$pr){
-      isDraft headRefOid
-      reviews(last:100){ nodes{ author{login} state createdAt commit{oid} } }
-      reviewThreads(first:100){ nodes{ id isResolved path line originalLine comments(first:1){ nodes{ author{login} body } } } }
-      comments(last:50){ nodes{ author{login} createdAt body } } } } }' \
-    --jq '.data.repository.pullRequest as $p |
-      "draft \($p.isDraft)", "head \($p.headRefOid)",
-      ($p.reviews.nodes[] | select((.author.login // "") | rtrimstr("[bot]") == "'"$bot"'") | "review \(.state) \(.commit.oid // "-") \(.createdAt)"),
-      ($p.reviewThreads.nodes[] | select(((.comments.nodes[0].author.login // "") | rtrimstr("[bot]")) == "'"$bot"'")
-        | "thread \(.id) \(.isResolved) \(.path):\(.line // .originalLine // 0) \(.comments.nodes[0].body | split("\n") | map(select(length > 0 and (startswith("<!--") | not))) | .[0] // "" | .[0:100])"),
-      ($p.comments.nodes[] | select((.author.login // "") | rtrimstr("[bot]") == "'"$bot"'") | select(.body | test("[Rr]ate limit"))
-        | "ratelimit \(.createdAt) \((.body | [match("([0-9]+) minutes?").captures[0].string] | .[0]) // "?")")' \
-    >"$tmp/state" 2>"$tmp/err"
+
+pr_number=${1:?pr number}
+wait_seconds=0
+if [ "${2:-}" = --wait ]; then wait_seconds=${3:-0}; fi
+
+workdir=$(mktemp -d)
+trap 'rm -rf "$workdir"' EXIT
+
+# --- policy -------------------------------------------------------------------------------------------
+
+policy_value() {   # policy_value <jq expression>: reads merge-policy.json as it is on main, never the branch's copy
+  gh api -H 'Accept: application/vnd.github.raw+json' \
+    "repos/{owner}/{repo}/contents/docs/agents/heinzelwerk/merge-policy.json?ref=main" --jq "$1" 2>/dev/null
 }
-verdict() {   # reads $tmp/state; prints the verdict; returns 1 while pending (so the caller may wait)
-  local draft head last_review="" last_state="" head_reviewed=no ratelimit="" retry="?" open=0
-  draft=$(awk '$1=="draft"{print $2}' "$tmp/state"); head=$(awk '$1=="head"{print $2}' "$tmp/state")
-  [ "$draft" = true ] && { echo "BOT REVIEW: unavailable: draft PR (the bot skips drafts; validator marks it ready on a pass)"; return 0; }
-  while read -r _ st oid at; do last_review=$at; [ "$oid" = "$head" ] && { head_reviewed=yes; last_state=$st; }; done < <(awk '$1=="review"' "$tmp/state")
-  while read -r _ at min; do [[ $at > $ratelimit ]] && { ratelimit=$at; retry=$min; }; done < <(awk '$1=="ratelimit"' "$tmp/state")
-  if [ $head_reviewed = no ]; then
-    [[ -n $ratelimit && $ratelimit > $last_review ]] && { echo "BOT REVIEW: unavailable: rate limit, retry in $retry min"; return 0; }
-    return 1
-  fi
-  open=$(awk '$1=="thread" && $3=="false"' "$tmp/state" | wc -l | tr -d ' ')
-  if (( open > 0 )) || [ "$last_state" = CHANGES_REQUESTED ]; then
-    echo "BOT REVIEW: open $open"; awk '$1=="thread" && $3=="false"{id=$2; pl=$4; $1=$2=$3=$4=""; sub(/^ +/,""); print "  " id, pl, $0}' "$tmp/state"
+
+review_mode=$(policy_value '.bot_review // "off"')
+bot_login=$(policy_value '.review_bot // empty')
+bot_login=${bot_login%\[bot\]}   # compare without the suffix, since GraphQL omits it
+
+if [ "$review_mode" = off ] || [ -z "$bot_login" ]; then
+  echo "BOT REVIEW: off"
+  exit 0
+fi
+
+repo_full_name=$(gh repo view --json nameWithOwner --jq .nameWithOwner) \
+  || { echo "BOT REVIEW: unavailable: gh repo view failed"; exit 0; }
+repo_owner=${repo_full_name%%/*}
+repo_name=${repo_full_name#*/}
+
+# --- one GraphQL call per poll ------------------------------------------------------------------------
+# gh's --jq flattens the answer into lines bash can read, one kind per line:
+#   draft <true|false>
+#   head <sha>
+#   review <state> <sha the review is for> <created at>        one per review by the bot
+#   thread <id> <resolved true|false> <path>:<line> <first line>  one per thread the bot opened
+#   ratelimit <created at> <minutes to wait, or ?>               one per bot comment that mentions a rate limit
+
+graphql_query='
+  query($owner: String!, $name: String!, $pr: Int!) {
+    repository(owner: $owner, name: $name) {
+      pullRequest(number: $pr) {
+        isDraft
+        headRefOid
+        reviews(last: 100) { nodes { author { login } state createdAt commit { oid } } }
+        reviewThreads(first: 100) {
+          nodes { id isResolved path line originalLine comments(first: 1) { nodes { author { login } body } } }
+        }
+        comments(last: 50) { nodes { author { login } createdAt body } }
+      }
+    }
+  }'
+
+# rtrimstr, not a regex: gojq (inside gh) rejects `\[` in a string literal
+jq_flatten='
+  .data.repository.pullRequest as $pr
+  | def by_bot: ((.author.login // "") | rtrimstr("[bot]")) == "'"$bot_login"'";
+    def first_text_line: split("\n") | map(select(length > 0 and (startswith("<!--") | not))) | .[0] // "";
+    "draft \($pr.isDraft)",
+    "head \($pr.headRefOid)",
+    ($pr.reviews.nodes[] | select(by_bot)
+      | "review \(.state) \(.commit.oid // "-") \(.createdAt)"),
+    ($pr.reviewThreads.nodes[] | select(.comments.nodes[0] | by_bot)
+      | "thread \(.id) \(.isResolved) \(.path):\(.line // .originalLine // 0) \(.comments.nodes[0].body | first_text_line | .[0:100])"),
+    ($pr.comments.nodes[] | select(by_bot) | select(.body | test("[Rr]ate limit"))
+      | "ratelimit \(.createdAt) \((.body | [match("([0-9]+) minutes?").captures[0].string] | .[0]) // "?")")'
+
+fetch_state() {   # writes the flattened lines to $workdir/state; fails when gh does
+  gh api graphql -F owner="$repo_owner" -F name="$repo_name" -F pr="$pr_number" \
+    -f query="$graphql_query" --jq "$jq_flatten" >"$workdir/state" 2>"$workdir/error"
+}
+
+# --- verdict -------------------------------------------------------------------------------------------
+
+print_verdict() {   # reads $workdir/state; prints the verdict and returns 0, or returns 1 while the review is pending
+  local is_draft head_sha
+  is_draft=$(awk '$1 == "draft" { print $2 }' "$workdir/state")
+  head_sha=$(awk '$1 == "head"  { print $2 }' "$workdir/state")
+
+  if [ "$is_draft" = true ]; then
+    echo "BOT REVIEW: unavailable: draft PR (the bot skips drafts; validator marks it ready on a pass)"
     return 0
   fi
-  echo "BOT REVIEW: clean $head"
+
+  # which commit did the bot review last, and did it review the head?
+  local head_reviewed=no head_review_state="" last_review_at=""
+  while read -r _ state sha created_at; do
+    last_review_at=$created_at
+    if [ "$sha" = "$head_sha" ]; then
+      head_reviewed=yes
+      head_review_state=$state   # the last review of the head wins (CHANGES_REQUESTED, then APPROVED)
+    fi
+  done < <(awk '$1 == "review"' "$workdir/state")
+
+  # the newest rate-limit comment, if any (ISO timestamps compare as strings)
+  local rate_limited_at="" retry_minutes="?"
+  while read -r _ created_at minutes; do
+    if [[ $created_at > $rate_limited_at ]]; then
+      rate_limited_at=$created_at
+      retry_minutes=$minutes
+    fi
+  done < <(awk '$1 == "ratelimit"' "$workdir/state")
+
+  if [ $head_reviewed = no ]; then
+    if [[ -n $rate_limited_at && $rate_limited_at > $last_review_at ]]; then
+      echo "BOT REVIEW: unavailable: rate limit, retry in $retry_minutes min"
+      return 0
+    fi
+    return 1   # pending: the caller may wait and poll again
+  fi
+
+  local open_threads
+  open_threads=$(awk '$1 == "thread" && $3 == "false"' "$workdir/state" | wc -l | tr -d ' ')
+  if (( open_threads > 0 )) || [ "$head_review_state" = CHANGES_REQUESTED ]; then
+    echo "BOT REVIEW: open $open_threads"
+    # thread lines: `thread <id> <resolved> <path:line> <text…>` → `  <id> <path:line> <text…>`
+    awk '$1 == "thread" && $3 == "false" {
+           id = $2; location = $4
+           $1 = $2 = $3 = $4 = ""; sub(/^ +/, "")
+           print "  " id, location, $0
+         }' "$workdir/state"
+    return 0
+  fi
+
+  echo "BOT REVIEW: clean $head_sha"
 }
-deadline=$(( SECONDS + wait ))
+
+# --- poll until a verdict or the wait runs out --------------------------------------------------------
+
+deadline=$(( SECONDS + wait_seconds ))
 while :; do
-  state || { echo "BOT REVIEW: unavailable: gh api graphql failed: $(head -c 120 "$tmp/err")"; exit 0; }
-  verdict && exit 0
-  (( SECONDS < deadline )) || break
+  if ! fetch_state; then
+    echo "BOT REVIEW: unavailable: gh api graphql failed: $(head -c 120 "$workdir/error")"
+    exit 0
+  fi
+  if print_verdict; then exit 0; fi
+  if (( SECONDS >= deadline )); then break; fi
   sleep 15
 done
 echo "BOT REVIEW: pending"

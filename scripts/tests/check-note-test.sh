@@ -46,9 +46,15 @@ term: Anomaly
 learning: flaky test x" --checks 3
 t "ci token counts as a check" note PASS "$(sed 's/^checks:.*/checks: 0 0 ci/' <<<"$good")" --team "$tmp/team.md"
 t "ci only" note PASS "$(sed 's/^checks:.*/checks: ci ci ci/' <<<"$good")" --checks 3
+t "CI upper case, commas" note PASS "$(sed 's/^checks:.*/checks: 0, CI, 0/' <<<"$good")" --checks 3
+t "CRLF after ci" note PASS "$(printf '%s\r\n' "$(sed 's/^checks:.*/checks: 0 0 ci/' <<<"$good")")" --checks 3
 echo "--- note: must fail"
 t "ci short of team.md" note FAIL "$(sed 's/^checks:.*/checks: 0 ci/' <<<"$good")" --team "$tmp/team.md"
 t "ci inside a word is no token" note FAIL "$(sed 's/^checks:.*/checks: 0 0 cicd/' <<<"$good")" --checks 3
+t "0/ci is no token" note FAIL "$(sed 's|^checks:.*|checks: 0 0/ci|' <<<"$good")" --checks 3
+t "ci2 is no code" note FAIL "$(sed 's/^checks:.*/checks: 0 0 ci2/' <<<"$good")" --checks 3
+t "prose with ci" note FAIL "$(sed 's/^checks:.*/checks: 0 0 skipped in ci/' <<<"$good")" --checks 3
+t "prose after codes" note FAIL "$(sed 's/^checks:.*/checks: 0 0 0 (all green)/' <<<"$good")" --checks 3
 t "missing session" note FAIL "$(grep -v '^session' <<<"$good")" --checks 3
 t "checks count short" note FAIL "$good" --checks 4
 t "checks count vs team.md" note FAIL "$(sed 's/^checks:.*/checks: 0 0/' <<<"$good")" --team "$tmp/team.md"

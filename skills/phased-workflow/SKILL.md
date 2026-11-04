@@ -76,7 +76,7 @@ The task list has three states: pending, in progress, completed. A task's title 
   - Haiku: use it for call-site searches and mechanical batches.
 
   Your role prompt may add triggers. State Opus and Haiku spawns in the done note's `escalations:` line. Spawn them as **Subagents** below says.
-- **Docs-only task** (the plan says so: no code, test, config, or dependency changes): no red test and no `heinzelwerk:tdd` loop. The proof is the check the task names (each cited path exists, each cited name greps to exactly one match, the diff touches only the named lines), recorded in `evidence:`.
+- **Docs-only task** (the plan comment says so: no code, test, config, or dependency changes): no red test and no `heinzelwerk:tdd` loop. The proof is the check the task names (each cited path exists, each cited name greps to exactly one match, the diff touches only the named lines), recorded in `evidence:`.
 - **Checks before the validate task**: run every check from `team.md`, in order, and put the exit codes into the done note's `checks:` line. A check you cannot run here (team.md marks it `CI only`, or it needs a daemon or device this machine lacks) gets `ci` instead of a number, with the reason in `evidence:`; never write `0` for a check you did not run. The validator fails a PR whose `checks:` line is missing or short, without running anything itself.
 - **Done**: branch, worktree, commits, and PR body follow team-modes. Once the PR is open:
   1. Write the done note into the PR body and the task's details. First run `check-note note --team docs/agents/heinzelwerk/team.md <file>` on it; it prints every missing or malformed field, and the validator runs the same check before anything else.
@@ -89,7 +89,7 @@ The task list has three states: pending, in progress, completed. A task's title 
 ## Subagents (every role)
 A teammate's subagent may hand back to the main session (the platform's `team-lead`) instead of you. So:
 - Run subagents in the foreground.
-- End every subagent prompt with `Put the whole report in your final message and call no tool after it.`
+- End every subagent prompt with `Put the whole report in your hand-back (the host's hand-back tool where it offers one, else your final message) and call no other tool after it.`
 
 If a report never arrives:
 - Read the last message of the transcript the spawn result named (`output_file`); a teammate's own transcript path is the `session:` line of its done note.
@@ -104,7 +104,7 @@ Before completing the task, write the whole note into two places: the PR body un
 ```
 did: <what changed, files>
 evidence: <command + result summary, or PR link>
-checks: <exit code per team.md check, in order, e.g. 0 0 0 0; implement and fix tasks>
+checks: <exit code (or `ci`) per team.md check, in order, e.g. 0 0 0 ci; implement and fix tasks>
 handoff: <task id / verdict created>
 left: <anything not done, discoveries not filed; tech-lead collects these into the technical report>
 term: <optional: domain concept that is missing from or contradicts GLOSSARY.md>
@@ -114,7 +114,7 @@ escalations: <none | opus subagent: why | haiku subagents: what, effort>
 session: <this session's transcript: the `.jsonl` under `~/.claude/projects/<encoded cwd>/`, or its session id; retro and the hand-back fallback read it>
 risk: <optional: area that deserves an Opus review but isn't in team.md's risk areas, and why>
 ```
-Field order as above; `check-note note` verifies it. The `checks:` line holds exit codes only (one number per `team.md` check); what the checks said goes in `evidence:`.
+Field order as above; `check-note note` verifies it. The `checks:` line holds one token per `team.md` check: its exit code, or `ci` for a check that runs only in CI; what the checks said goes in `evidence:`.
 
 ## Docs
 Before starting, follow the `## Agent skills (heinzelwerk)` pointers in CLAUDE.md (or AGENTS.md): domain docs, team rules, learnings. Name things with `GLOSSARY.md` vocabulary. Say so explicitly when your change conflicts with an ADR.

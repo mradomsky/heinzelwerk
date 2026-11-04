@@ -52,8 +52,9 @@ plan=$(newest '.body | test("(^|\n)Decisions\n") and test("\nTasks\n")') || fail
 if [ -n "$plan" ]; then section "Plan comment (tech-lead)"; printf '%s\n' "$plan" | cap 80; fi
 state=$(newest '.body | startswith("## Heinzelwerk run state")') || fail "comments fetch failed"
 if [ -n "$state" ]; then
-  # coordinator's own run state names its start time; any other is an earlier run's (resume or history)
-  if [ -n "$start" ] && grep -qF -- "$start" <<<"$state"; then label="this run"; else label="an earlier run on this ticket"; fi
+  # coordinator's own run state carries `run start: <ts>` (coordinator §1.1 format); any other is an earlier run's
+  if [ -n "$start" ] && grep -qxF -- "run start: $start" <<<"$(sed -E 's/^[-*[:space:]]+//; s/[[:space:]]+$//' <<<"$state")"; then
+    label="this run"; else label="an earlier run on this ticket"; fi
   section "Run state ($label)"; printf '%s\n' "$state" | cap 80
 fi
 

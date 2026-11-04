@@ -47,9 +47,15 @@ if [ "$mode" = note ]; then
     # checks: one exit code per team.md check
     cl=$(field checks)
     if [ -n "$cl" ]; then
-      # exit codes only, or `ci` for a check that runs only in CI (reason in evidence:); prose belongs in evidence:
-      ci=$(tr -c '[:alnum:]' '\n' <<<"$cl" | grep -cx 'ci')
-      codes=$(( $(grep -oE '[0-9]+' <<<"$cl" | wc -l) + ci ))
+      # one token per check, in team.md order: an exit code, or `ci` for a check that runs only in CI (reason in
+      # evidence:); tokens separated by spaces or commas; anything else (prose, `0/ci`, `ci2`) is a miss
+      cl=$(tr '[:upper:]' '[:lower:]' <<<"$cl" | sed -E 's/[[:space:]]+$//')
+      if grep -qE '^([0-9]+|ci)([ ,]+([0-9]+|ci))*$' <<<"$cl"; then
+        codes=$(tr -s ' ,' '\n\n' <<<"$cl" | grep -c .)
+      else
+        miss "checks: holds exit codes or \`ci\` only, separated by spaces (prose goes in evidence:): $cl"
+        codes=$(grep -oE '[0-9]+' <<<"$cl" | wc -l)
+      fi
       if [ -z "$checks" ] && [ -n "$team" ] && [ -f "$team" ]; then
         # the Checks entry: one line → every backticked item on it; a list → one per indented line that holds a
         # backticked command; no Checks entry in team.md → nothing to compare against
@@ -65,7 +71,7 @@ if [ "$mode" = note ]; then
       if [ -n "$checks" ]; then
         (( codes == checks )) || miss "checks: has $codes exit codes, team.md lists $checks checks"
       fi
-      grep -qE '[0-9]' <<<"$cl" || (( ci > 0 )) || miss "checks: has no exit code"
+      grep -qE '[0-9]|(^|[ ,])ci([ ,]|$)' <<<"$cl" || miss "checks: has no exit code"
     fi
     # session: a path or an id, never a bare word like "yes"
     s=$(field session)

@@ -42,7 +42,7 @@ Needs Claude Code 2.1.295 or later (for hook `onFailure`).
 { "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1", "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1", "CLAUDE_CODE_USE_POWERSHELL_TOOL": "0" } }
 ```
 
-**Session shape.** Runs are interactive: a headless `-p` session cannot spawn teammates. Keep the default in-process teammate mode: split panes ignore the agents' `effort` and `disallowedTools`. In the Claude desktop app teammates run as background subagents with no team config and no task tools, whatever the settings say; coordinator detects that and runs in **hand-back mode** (team-modes skill), where each teammate's final message reaches coordinator and the plan comment is the task list.
+**Session shape.** Runs are interactive: a headless `-p` session cannot spawn teammates. Keep the default in-process teammate mode: split panes ignore the agents' `effort` and `disallowedTools`. In the Claude desktop app teammates run as background subagents with no team config and no task tools, whatever the settings say; coordinator detects that and runs in **hand-back mode** (team-modes skill, ADR 0007): each teammate reports by hand-back, coordinator resumes it by name, and the plan comment and run state stand in for the task list.
 
 **Dependencies.**
 - The guard hook needs only bash (Git Bash on Windows).

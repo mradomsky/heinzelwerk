@@ -25,11 +25,11 @@ The teammate that runs checks and the two-axis review, posts verdicts, runs slic
 _Avoid_: reviewer, QA, tester
 
 **Teammate**:
-Any agent-team member other than coordinator. Spawned by coordinator as `heinzelwerk:<role>`, named `<role>` or `<role>-N`.
+Any agent-team member other than coordinator. Spawned by coordinator as `heinzelwerk:<role>`, named `<role>` or `<role>-N`. In hand-back mode it is a background subagent of the main session that reports by hand-back and is resumed by name.
 _Avoid_: agent (too wide: subagents and the user's own sessions are agents too), worker, bot
 
 **Subagent**:
-A short-lived agent a role spawns in the foreground for one report (an Opus critique, a Haiku search). Hands back to its spawner, or to coordinator by platform accident.
+A short-lived agent a role spawns in the foreground for one report (an Opus critique, a Haiku search). Hands back to its spawner, or to coordinator by platform accident. A **hand-back** is that report, delivered through the host's hand-back tool where it has one; hand-back mode makes it every teammate's only channel to coordinator.
 _Avoid_: helper, child, sub-task
 
 ## Work

@@ -106,15 +106,20 @@ done < <(grep -oiE 'inconclusive: main[ -]only: [^;]+' <<<"$verdict" | sed -E 's
 body=$(pv body '.body'); body=${body//$'\r'/}
 grep -qE '^[[:space:]]*[-*] \[ \]' <<<"$body" && reasons+=("unchecked item in PR body (needs a human)")
 # Depends on: every named PR merged first (a cross-repo consumer never lands before its provider). Only the refs right
-# after the phrase count (`Depends on a/b#1, c/d#2 and #3`), so `Closes …#140` or "depends on the config" add nothing
+# after the phrase count (`Depends on a/b#1, c/d#2, and #3`; separators `,` `;` `and` `&` or a space), so `Closes …#140`
+# or "depends on the config" add nothing. Bold, backticks, a markdown link around the ref, and `PR #N` are read through
 ref='(https://github\.com/)?[A-Za-z0-9-]+/[A-Za-z0-9_.-]+(#|/pull/)[0-9]+|#[0-9]+'
-deps=$(grep -oiE "depends on:?[[:space:]]+($ref)([[:space:]]*(,|and|&)[[:space:]]*($ref))*" <<<"$body" | grep -oE "$ref" \
+dbody=$(sed -E 's/[*`]//g; s/\[([^]]*)\]\([^)]*\)/\1/g; s/PR[[:space:]]+#/#/g' <<<"$body")
+deps=$(grep -oiE "depends on:?[[:space:]]+($ref)([[:space:]]*(,|;|&|and|,[[:space:]]*and)?[[:space:]]*($ref))*" <<<"$dbody" | grep -oE "$ref" \
   | sed -E 's#^https://github\.com/##; s#/pull/#\##' | sort -u || true)
+own=""; [ -z "$deps" ] || own=$(gh repo view --json nameWithOwner --jq .nameWithOwner 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
 while IFS= read -r d; do
-  [ -n "$d" ] && [ "$d" != "#$pr" ] || continue
-  if [[ $d == \#* ]]; then ds=$(gh pr view "${d#\#}" --json state --jq .state 2>/dev/null || echo "no readable PR (an issue, or no access)")
-  else ds=$(gh pr view "${d##*#}" -R "${d%#*}" --json state --jq .state 2>/dev/null || echo "no readable PR (an issue, or no access)"); fi
-  [ "$ds" = MERGED ] || reasons+=("depends on $d, which is $ds (merge it first)")
+  [ -n "$d" ] || continue
+  [ "$d" = "#$pr" ] || [ "$(tr '[:upper:]' '[:lower:]' <<<"$d")" = "$own#$pr" ] && continue   # the PR itself
+  # done means merged into main, the same rule as the early exit above
+  if [[ $d == \#* ]]; then ds=$(gh pr view "${d#\#}" --json state,baseRefName --jq '.state + " into " + .baseRefName' 2>/dev/null || echo "no readable PR (an issue, or no access)")
+  else ds=$(gh pr view "${d##*#}" -R "${d%#*}" --json state,baseRefName --jq '.state + " into " + .baseRefName' 2>/dev/null || echo "no readable PR (an issue, or no access)"); fi
+  [ "$ds" = "MERGED into main" ] || reasons+=("depends on $d, which is ${ds/OPEN into */OPEN} (merge it into main first)")
 done <<<"$deps"
 # optional size cap: only when the policy sets max_changed_lines
 max=$(pol '.max_changed_lines // empty')
@@ -157,5 +162,6 @@ case $bot_verdict in
 esac
 
 if (( ${#reasons[@]} )); then echo "MERGE SKIP:"; printf '  - %s\n' "${reasons[@]}"; exit 0; fi
-if out=$(gh pr merge "$pr" "--$(pol '.merge_method // "squash"')" 2>&1); then echo "MERGED: PR $pr"; [ -z "$merge_note" ] || echo "  - note: $merge_note"
+# --match-head-commit: a push after the head was read (a bot's autofix) makes GitHub refuse, never merge an unread head
+if out=$(gh pr merge "$pr" "--$(pol '.merge_method // "squash"')" --match-head-commit "$head" 2>&1); then echo "MERGED: PR $pr"; [ -z "$merge_note" ] || echo "  - note: $merge_note"
 else echo "MERGE SKIP:"; echo "  - merge failed: ${out//$'\n'/ }"; fi

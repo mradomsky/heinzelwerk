@@ -93,9 +93,10 @@ if [ "$mode" = verdict ]; then
   grep -iE 'inconclusive' <<<"$text" | grep -qviE 'inconclusive:[[:space:]]*[^[:space:]]' && miss "inconclusive without a reason (write \`inconclusive: <why, where to verify>\`)"
   # a check that runs on main only has one form, the one merge-gate matches against tech-lead's acceptance. Caught by
   # the phrases, not the bare word, so `cmd/main.go`, `src/main/java`, "domain only", "the main thread", or "main's
-  # startup" in an inconclusive stay free
-  grep -iE 'inconclusive:' <<<"$text" | grep -viE "main (thread|process|window|menu|screen|function|loop)|main's" \
-    | grep -iE '(^|[^a-z])main[ -]only|only (on|in|from) (the )?`?main|on `?main`?([^a-z0-9./_-]|$)|push(es)? to `?main|main branch|default branch|first main run|post-merge|push-only|not (run|triggered) (on|for) pull requests' | grep -qvE 'inconclusive: main only: [^;[:space:]][^;]*; verify on the first main run' \
+  # startup" in an inconclusive stay free. Those words are cut out of the line, not the line dropped, so a real phrase
+  # beside them is still caught
+  grep -iE 'inconclusive:' <<<"$text" | sed -E "s/[Mm]ain (thread|process|window|menu|screen|function|loop)//g; s/[Mm]ain's//g" \
+    | grep -iE '(^|[^a-z])main[ -]only|only (on|in|from) (the )?`?main|on `?main`?([^a-z0-9./_-]|$)|(push(es)?|merge) to `?main|main branch|default branch|first main run|post-merge|after (the )?merge|push[ -]only|not (run|triggered) (on|for) (pull requests|prs)|pull_request' | grep -qvE 'inconclusive: main only: [^;[:space:]][^;]*; verify on the first main run' \
     && miss "a main-only inconclusive not in the form \`inconclusive: main only: <check>; verify on the first main run\`"
   # a clock time (not a path:line:col): digits bounded on the left by start, space, or a date's `T`
   grep -qE '(^|[[:space:]T])[0-9]{2}:[0-9]{2}(:[0-9]{2})?Z?([[:space:]]|$)' <<<"$text" && ! grep -q 'UTC' <<<"$text" && miss "a timestamp without UTC"

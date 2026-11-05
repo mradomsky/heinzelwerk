@@ -111,6 +111,16 @@ t "not triggered for pull requests" verdict FAIL "inconclusive: arm64 build not 
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "post-merge only" verdict FAIL "inconclusive: smoke test is post-merge
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main's beside a real phrase" verdict FAIL "inconclusive: contract job runs on main's push only; verify later
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main process beside push-only" verdict FAIL "inconclusive: arm64 buildx is push-only (main process image)
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "only after merge" verdict FAIL "inconclusive: e2e only runs after merge
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "not run on PRs" verdict FAIL "inconclusive: smoke job not run on PRs
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "merge to main" verdict FAIL "inconclusive: triggers on merge to main
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "main-only hyphenated" verdict FAIL "inconclusive: main-only: docker build; verify on the first main run
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "default branch wording" verdict FAIL "inconclusive: job runs only on the default branch

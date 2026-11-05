@@ -35,7 +35,8 @@ case "$*" in
   "pr view 7 --json state"*)                 echo "${FAKE_STATE:-OPEN}" ;;
   # another PR (a Depends on target): FAKE_DEP_STATE for all, or OPEN for the numbers in FAKE_OPEN_PRS
   "pr view "*"--json state"*)                n=$3; [ "${FAKE_DEP_STATE:-MERGED}" = FAIL ] && exit 1
-                                             if [[ " ${FAKE_OPEN_PRS:-} " == *" $n "* ]]; then echo OPEN; else echo "${FAKE_DEP_STATE:-MERGED}"; fi ;;
+                                             if [[ " ${FAKE_OPEN_PRS:-} " == *" $n "* ]]; then st=OPEN; else st=${FAKE_DEP_STATE:-MERGED}; fi
+                                             echo "$st into ${FAKE_DEP_BASE:-main}" ;;
   "pr view "*"--json isDraft"*)              echo false ;;
   "pr view "*"--json mergeable"*)            echo MERGEABLE ;;
   "pr view "*"--json headRefOid"*)           echo "$HEAD_SHA" ;;
@@ -44,7 +45,7 @@ case "$*" in
   "pr view "*"--json body"*)                 printf '%s\n' "${FAKE_BODY:-## Done note}" ;;
   "repo view"*)                              echo "${FAKE_REPO:-owner/repo}" ;;
   "pr view "*"--json files"*)                echo README.md ;;
-  "pr merge "*)                              exit 0 ;;
+  "pr merge 7 --squash --match-head-commit $HEAD_SHA") exit 0 ;;
   *)                                         echo "fake gh: unexpected call: $*" >&2; exit 1 ;;
 esac
 FAKE_GH
@@ -144,5 +145,15 @@ FAKE_BODY="Fixes #77; retry behaviour depends on the backoff config." FAKE_DEP_S
 FAKE_BODY="Depends on owner/a#1, owner/b#2 and #3" FAKE_OPEN_PRS=3 expect "list after the phrase: last one counts" "depends on #3, which is OPEN" "$validated" 7
 FAKE_BODY="Depends on owner/a#1, owner/b#2 and #3" FAKE_OPEN_PRS=2 expect "list after the phrase: middle one counts" "depends on owner/b#2, which is OPEN" "$validated" 7
 FAKE_BODY="Depends on #7" FAKE_DEP_STATE=OPEN expect "depends on itself is ignored" "MERGED: PR 7" "$validated" 7
+FAKE_BODY="Depends on Owner/Repo#7" FAKE_DEP_STATE=OPEN expect "depends on itself, owner/repo form" "MERGED: PR 7" "$validated" 7
+FAKE_BODY="Depends on owner/provider#60" FAKE_DEP_BASE=feat/x expect "provider merged into another base" "which is MERGED into feat/x" "$validated" 7
+FAKE_BODY="**Depends on:** owner/provider#60" FAKE_OPEN_PRS=60 expect "bold phrase" "depends on owner/provider#60, which is OPEN" "$validated" 7
+FAKE_BODY='Depends on `owner/provider#60`' FAKE_OPEN_PRS=60 expect "backticked ref" "depends on owner/provider#60, which is OPEN" "$validated" 7
+FAKE_BODY="Depends on [owner/provider#60](https://github.com/owner/provider/pull/60)" FAKE_OPEN_PRS=60 expect "markdown link" "depends on owner/provider#60, which is OPEN" "$validated" 7
+FAKE_BODY="Depends on PR #12" FAKE_OPEN_PRS=12 expect "PR #N" "depends on #12, which is OPEN" "$validated" 7
+FAKE_BODY="Depends on owner/a#1, owner/a#2, and owner/a#3" FAKE_OPEN_PRS=3 expect "Oxford comma" "depends on owner/a#3, which is OPEN" "$validated" 7
+FAKE_BODY="Depends on owner/a#1; owner/a#2" FAKE_OPEN_PRS=2 expect "semicolon list" "depends on owner/a#2, which is OPEN" "$validated" 7
+FAKE_BODY="Depends on owner/a#1 owner/a#2" FAKE_OPEN_PRS=2 expect "space list" "depends on owner/a#2, which is OPEN" "$validated" 7
+FAKE_BODY="Depends on owner/my_repo#4" FAKE_OPEN_PRS=4 expect "underscore repo name kept" "depends on owner/my_repo#4, which is OPEN" "$validated" 7
 
 echo "$cases cases, $failures bad"; [ $failures -eq 0 ]

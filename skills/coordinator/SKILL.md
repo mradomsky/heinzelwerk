@@ -100,7 +100,7 @@ Run it whenever a task completes:
 - Coherence: do the open tasks still serve the acceptance criteria? Drifting → tell product and tech-lead in two lines.
 - Idle: a teammate idle while unblocked tasks exist → tell tech-lead.
 - Validator: a pending validate task older than 15 minutes, or a fix pushed with no verdict after 15 minutes, while validator is idle → one message to validator naming the task.
-- All validated: no `validate: merge` task exists yet (re-validations in a merge round do not restart diagnose), a validate task completed, no validate or fix task pending or in progress, and every verdict a pass → tell tech-lead to diagnose (§4 of tech-lead's prompt). From there tech-lead merges and writes the docs PR.
+- All validated: no `validate: merge` or `validate tech-lead: docs` task exists yet (diagnose already found no gap once either exists, and re-validations in a merge round do not restart it), a validate task completed, no validate or fix task pending or in progress, and every verdict a pass → tell tech-lead to diagnose (§4 of tech-lead's prompt). From there tech-lead merges and writes the docs PR.
 
 Stay silent when everything is fine. Style is never a reason for a nudge.
 

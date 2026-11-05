@@ -7,13 +7,14 @@
 # Lives in the plugin's scripts/, so no PR can change it. Policy: docs/agents/heinzelwerk/merge-policy.json as on main
 # on GitHub, never the branch's copy. A PR that touches a heinzelwerk policy file, the project's Claude Code settings,
 # or a workflow always waits for a human. A PR stacked on another PR's branch is retargeted to main once that PR merged.
-# A PR whose body says `Depends on <PR>[, <PR> and <PR>]` (`owner/repo#N`, `#N`, or a pull URL) waits until every such PR
-# is merged.
+# A PR whose body says `Depends on <PR>[, <PR> and <PR>]` (`owner/repo#N`, `#N`, or a pull URL; to the sentence's end, or
+# a list below a bare `Depends on:`) waits until every such PR is merged into main.
+# Markers (validated, accepted main-only) count only in comments and reviews by the gh user running the gate.
 # Waits up to MERGE_GATE_WAIT seconds (default 450) for CI and, when the policy names a `review_bot`, for its review of the
 # head sha (`review-gate`, same budget): run it with a ten-minute Bash timeout. `bot_review: required` → an open, pending, or
 # unavailable bot review is a skip reason; `best-effort` → open threads skip, pending or unavailable merge with a note line.
-# The newest validator verdict of the head (a body with a stand-alone `heinzelwerk: validated <sha>` line naming it) may hold `inconclusive: main only: <check>; …`
-# lines (a CI job that runs on main only): each needs tech-lead's line `heinzelwerk: accepted main-only <check> @ <sha>`
+# Each validator verdict of the head (a body with a stand-alone `heinzelwerk: validated <sha>` line naming it) may hold
+# `inconclusive: main only: <check>; …` lines (a CI job that runs on main only): each needs tech-lead's line `heinzelwerk: accepted main-only <check> @ <sha>`
 # naming the head, like the validated line.
 # Needs: gh only (its built-in --jq). Globs: bash patterns on the repo-relative path; * also matches /.
 set -euo pipefail
@@ -76,8 +77,16 @@ reasons=()
 # GitHub recomputes mergeability after every merge to main; UNKNOWN means it is still at it
 m=$(pv mergeable .mergeable); for _ in 1 2 3 4 5 6; do [ "$m" = UNKNOWN ] || break; sleep 5; m=$(pv mergeable .mergeable); done
 [ "$m" = MERGEABLE ] || reasons+=("mergeable: $m (needs a rebase)")
-bodies=$(pv comments,reviews '.comments[].body, .reviews[].body'); bodies=${bodies//$'\r'/}
 head=$(pv headRefOid .headRefOid)
+# markers count only in the user's own comments and reviews: every role posts under the user's login, and anyone can
+# comment on a public repo. @ME@ and @HEAD@ are filled in below (a login is [A-Za-z0-9-], a sha hex: safe in a jq string)
+trusted_jq='[(.comments[], .reviews[]) | select(.author.login == "@ME@") | .body // ""]'
+# every trusted verdict of the head: a body with a stand-alone validated line naming it (a footer below changes nothing)
+verdict_jq=$trusted_jq' | map(select([scan("(?m)^heinzelwerk: validated ([0-9a-f]{7,40})[ \t\r]*$") | .[0]] | any(. as $s | "@HEAD@" | startswith($s)))) | .[]'
+me=$(gh api user --jq .login)
+[[ $me =~ ^[A-Za-z0-9-]+$ && $head =~ ^[0-9a-f]{40}$ ]] || { echo "MERGE SKIP: unreadable login ($me) or head ($head)"; exit 0; }
+bodies_prog="${trusted_jq//@ME@/$me} | .[]"; verdict_prog=${verdict_jq//@ME@/$me}; verdict_prog=${verdict_prog//@HEAD@/$head}
+bodies=$(pv comments,reviews "$bodies_prog"); bodies=${bodies//$'\r'/}
 # a marker names the head: the full sha, or a prefix of 7+ hex chars that matches it
 names_head() { [[ ${#1} -ge 7 && $head == "$1"* ]]; }
 # the validator's pass must name the commit being merged; a push after validation needs a new pass. Only a line that is
@@ -90,27 +99,32 @@ if [ "$(pol '.require_validation // true')" = true ]; then
   [ $vok = yes ] || reasons+=("no \"heinzelwerk: validated $head\" on the PR")
 fi
 # a check validator could not see (its job runs on main only) merges only with tech-lead's acceptance of this head.
-# The checks come from the newest verdict of this head alone: a body with a stand-alone validated line naming the head
-# (the same rule as above, so a footer below the line changes nothing); a comment quoting the form demands nothing.
-# Names are plain strings. $head is hex from gh, safe inside the jq string
-verdict=$(pv comments,reviews '[(.comments[] | {t: .createdAt, b: .body}), (.reviews[] | {t: .submittedAt, b: .body})] | map(select([(.b // "") | scan("(?m)^heinzelwerk: validated ([0-9a-f]{7,40})[ \t\r]*$") | .[0]] | any(. as $s | "'"$head"'" | startswith($s)))) | sort_by(.t) | (last // {b: ""}) | .b')
-verdict=${verdict//$'\r'/}
-accepted=$(grep -E '^heinzelwerk: accepted main-only .+ @ [0-9a-f]{7,40}[[:space:]]*$' <<<"$bodies" | sed -E 's/^heinzelwerk: accepted main-only //; s/[[:space:]]+$//' || true)
+# The checks come from every trusted verdict of this head ($verdict_jq), so a later body that validates the head never
+# erases one; a comment quoting the form demands nothing. Names are plain strings, backticks and bold aside
+verdict=$(pv comments,reviews "$verdict_prog"); verdict=${verdict//$'\r'/}
+accepted=$(grep -E '^heinzelwerk: accepted main-only .+ @ [0-9a-f]{7,40}[[:space:]]*$' <<<"$bodies" | sed -E 's/^heinzelwerk: accepted main-only //; s/[`*]//g; s/[[:space:]]+$//' || true)
 while IFS= read -r c; do
   [ -n "$c" ] || continue; aok=no
   while IFS= read -r a; do
     [[ -n $a && ${a% @ *} == "$c" ]] && names_head "${a##* @ }" && aok=yes
   done <<<"$accepted"
   [ $aok = yes ] || reasons+=("main-only check $c not accepted for this head (needs \"heinzelwerk: accepted main-only $c @ $head\", tech-lead)")
-done < <(grep -oiE 'inconclusive: main[ -]only: [^;]+' <<<"$verdict" | sed -E 's/^[^:]*: [^:]*:[[:space:]]*//; s/[[:space:]]+$//' | sort -u || true)
+done < <(grep -oiE 'inconclusive: main[ -]only: [^;]+' <<<"$verdict" | sed -E 's/^[^:]*: [^:]*:[[:space:]]*//; s/[`*]//g; s/[[:space:]]+$//' | sort -u || true)
 body=$(pv body '.body'); body=${body//$'\r'/}
 grep -qE '^[[:space:]]*[-*] \[ \]' <<<"$body" && reasons+=("unchecked item in PR body (needs a human)")
-# Depends on: every named PR merged first (a cross-repo consumer never lands before its provider). Only the refs right
-# after the phrase count (`Depends on a/b#1, c/d#2, and #3`; separators `,` `;` `and` `&` or a space), so `Closes …#140`
-# or "depends on the config" add nothing. Bold, backticks, a markdown link around the ref, and `PR #N` are read through
+# Depends on: every named PR merged first (a cross-repo consumer never lands before its provider). Every ref from the
+# phrase to the end of its sentence counts (`Depends on a/b#1 (the contract), and on c/d#2, which …`), and a bare
+# `Depends on:` takes the list items below it; so `Closes #140. Depends on …` or "depends on the config" add nothing
+# before the phrase or past the sentence. Bold, backticks, a markdown link around the ref, and `PR #N` are read through.
+# A ref too many is a skip a human reads; a ref missed would merge early, so the rule errs wide
 ref='(https://github\.com/)?[A-Za-z0-9-]+/[A-Za-z0-9_.-]+(#|/pull/)[0-9]+|#[0-9]+'
-dbody=$(sed -E 's/[*`]//g; s/\[([^]]*)\]\([^)]*\)/\1/g; s/PR[[:space:]]+#/#/g' <<<"$body")
-deps=$(grep -oiE "depends on:?[[:space:]]+($ref)([[:space:]]*(,|;|&|and|,[[:space:]]*and)?[[:space:]]*($ref))*" <<<"$dbody" | grep -oE "$ref" \
+dbody=$(sed -E 's/(\*\*|`)//g; s/\[([^]]*)\]\([^)]*\)/\1/g; s/PR[[:space:]]+#/#/g' <<<"$body")
+deps=$(awk '
+  inlist && /^[[:space:]]*$/ { next }
+  inlist && /^[[:space:]]*([-*+]|[0-9]+[.)])[[:space:]]/ { print; next }
+  { inlist = 0; i = index(tolower($0), "depends on"); if (!i) next
+    seg = substr($0, i + 10) " "; if (match(seg, /\.[[:space:]]/)) seg = substr(seg, 1, RSTART - 1)
+    print seg; t = seg; gsub(/[:*[:space:]]/, "", t); if (t == "") inlist = 1 }' <<<"$dbody" | grep -oE "$ref" \
   | sed -E 's#^https://github\.com/##; s#/pull/#\##' | sort -u || true)
 own=""; [ -z "$deps" ] || own=$(gh repo view --json nameWithOwner --jq .nameWithOwner 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
 while IFS= read -r d; do

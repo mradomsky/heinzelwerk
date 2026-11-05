@@ -4,11 +4,13 @@
 # merge-gate is copied into a scratch dir next to a fake review-gate (always "BOT REVIEW: off"), and a fake `gh` on
 # PATH answers the policy and `gh pr view` calls: a green, open, mergeable PR whose head is HEAD_SHA, with the
 # comment and review bodies read from FAKE_BODIES_FILE. FAKE_CWD, when set, is the directory every gh call must run in.
-# So this suite covers the bash logic; the --jq programs are checked live against a real PR.
+# The fake ignores --jq, so the last section runs the gate's author and verdict programs in gh's own gojq on literal
+# JSON (skipped without an authenticated gh).
 #
 # Usage: bash scripts/tests/merge-gate-test.sh [scripts/merge-gate]
 
 src=${1:-"$(dirname "$0")/../merge-gate"}
+realgh=$(command -v gh || true)   # the live jq section below runs the gate's programs in gh's own gojq
 failures=0
 cases=0
 workdir=$(mktemp -d)
@@ -27,6 +29,7 @@ case "$*" in
   *merge-policy.json*".require_validation"*) echo true ;;
   *merge-policy.json*".require_checks"*)     echo true ;;
   *merge-policy.json*".allow_paths"*)        echo '*' ;;
+  *merge-policy.json*".deny_paths"*)         printf '%s\n' "${FAKE_DENY:-}" ;;
   *merge-policy.json*".merge_method"*)       echo squash ;;
   *merge-policy.json*)                       echo "" ;;
   "pr view "*"--json baseRefName"*)          echo "${FAKE_BASE:-main}" ;;
@@ -40,11 +43,12 @@ case "$*" in
   "pr view "*"--json isDraft"*)              echo false ;;
   "pr view "*"--json mergeable"*)            echo MERGEABLE ;;
   "pr view "*"--json headRefOid"*)           echo "$HEAD_SHA" ;;
-  "pr view "*"--json comments,reviews"*last*) cat "$FAKE_VERDICT_FILE" ;;
+  "api user --jq .login")                    echo "${FAKE_ME-mradomsky}" ;;
+  "pr view "*"--json comments,reviews"*startswith*) cat "$FAKE_VERDICT_FILE" ;;
   "pr view "*"--json comments,reviews"*)     cat "$FAKE_BODIES_FILE" ;;
   "pr view "*"--json body"*)                 printf '%s\n' "${FAKE_BODY:-## Done note}" ;;
   "repo view"*)                              echo "${FAKE_REPO:-owner/repo}" ;;
-  "pr view "*"--json files"*)                echo README.md ;;
+  "pr view "*"--json files"*)                printf '%s\n' "${FAKE_FILES:-README.md}" ;;
   "pr merge 7 --squash --match-head-commit $HEAD_SHA") exit 0 ;;
   *)                                         echo "fake gh: unexpected call: $*" >&2; exit 1 ;;
 esac
@@ -127,7 +131,7 @@ heinzelwerk: accepted main-only e2e @ $HEAD_SHA" 7
 expect "acceptance not at line start ignored" "main-only check docker build not accepted" "$main_only
 note: heinzelwerk: accepted main-only docker build @ $HEAD_SHA" 7
 
-echo "--- main-only lines come from the newest verdict"
+echo "--- main-only lines come from the verdicts of the head"
 FAKE_VERDICT="$validated" expect "quoted form in another comment demands nothing" "MERGED: PR 7" "tech-lead: 'inconclusive: main only: docker build' is fine
 $validated" 7
 expect "hyphenated main-only still needs acceptance" "main-only check docker build not accepted" "inconclusive: main-only: docker build; verify on the first main run
@@ -155,5 +159,63 @@ FAKE_BODY="Depends on owner/a#1, owner/a#2, and owner/a#3" FAKE_OPEN_PRS=3 expec
 FAKE_BODY="Depends on owner/a#1; owner/a#2" FAKE_OPEN_PRS=2 expect "semicolon list" "depends on owner/a#2, which is OPEN" "$validated" 7
 FAKE_BODY="Depends on owner/a#1 owner/a#2" FAKE_OPEN_PRS=2 expect "space list" "depends on owner/a#2, which is OPEN" "$validated" 7
 FAKE_BODY="Depends on owner/my_repo#4" FAKE_OPEN_PRS=4 expect "underscore repo name kept" "depends on owner/my_repo#4, which is OPEN" "$validated" 7
+FAKE_BODY="Depends on:
+- owner/a#1
+- owner/b#2" FAKE_OPEN_PRS=2 expect "list items under a bare phrase" "depends on owner/b#2, which is OPEN" "$validated" 7
+FAKE_BODY="**Depends on:**
+
+* owner/b#2" FAKE_OPEN_PRS=2 expect "star list after a blank line" "depends on owner/b#2, which is OPEN" "$validated" 7
+FAKE_BODY="Depends on:
+- owner/a#1
+
+Closes #140" FAKE_OPEN_PRS=140 expect "list ends at the next paragraph" "MERGED: PR 7" "$validated" 7
+FAKE_BODY="Depends on owner/a#1 (the contract) and owner/b#2" FAKE_OPEN_PRS=2 expect "ref after a parenthetical" "depends on owner/b#2, which is OPEN" "$validated" 7
+FAKE_BODY="Depends on owner/a#1 and on owner/b#2" FAKE_OPEN_PRS=2 expect "and on" "depends on owner/b#2, which is OPEN" "$validated" 7
+FAKE_BODY="Depends on owner/a#1, which adds the endpoint, and owner/b#2." FAKE_OPEN_PRS=2 expect "ref after a clause" "depends on owner/b#2, which is OPEN" "$validated" 7
+FAKE_BODY="Depends on owner/a#1. See #140 for context" FAKE_OPEN_PRS=140 expect "next sentence adds nothing" "MERGED: PR 7" "$validated" 7
+
+echo "--- markers by the gate's own user only, names without markdown"
+FAKE_ME="" expect "unreadable login skips" "MERGE SKIP: unreadable login" "$validated" 7
+expect "backticked check, plain acceptance" "MERGED: PR 7" "inconclusive: main only: \`docker build\`; verify on the first main run
+$validated
+heinzelwerk: accepted main-only docker build @ $HEAD_SHA" 7
+expect "plain check, bold acceptance" "MERGED: PR 7" "$main_only
+heinzelwerk: accepted main-only **docker build** @ $HEAD_SHA" 7
+
+echo "--- paths that always need a human"
+FAKE_FILES=".github/workflows/ci.yml" expect "workflow file" "path not allowed: .github/workflows/ci.yml" "$validated" 7
+FAKE_FILES=".claude/settings.json" expect "project settings" "path not allowed: .claude/settings.json" "$validated" 7
+FAKE_FILES="docs/agents/heinzelwerk/merge-policy.json" expect "policy file" "path not allowed: docs/agents/heinzelwerk/merge-policy.json" "$validated" 7
+FAKE_FILES="src/a.ts
+infra/main.tf" FAKE_DENY="infra/*" expect "deny_paths hit" "path not allowed: infra/main.tf" "$validated" 7
+
+# The fake gh above never runs a --jq program. Here the gate's own author and verdict programs (read from the script)
+# run in gh's built-in gojq on literal JSON: `gh api rate_limit --jq '<json> | <program>'` ignores the API answer.
+echo "--- live jq (gh's gojq; needs an authenticated gh)"
+if [ -n "$realgh" ] && "$realgh" auth status >/dev/null 2>&1; then
+  eval "$(grep -E '^(trusted_jq|verdict_jq)=' "$src")"
+  tj="${trusted_jq//@ME@/me-user} | .[]"; vj=${verdict_jq//@ME@/me-user}; vj=${vj//@HEAD@/$HEAD_SHA}
+  # live <case name> <program> <json, @H@ = head, @O@ = old sha> <+must contain | -must not contain>…
+  live() {
+    local name=$1 prog=$2 json=${3//@H@/$HEAD_SHA}; shift 3; json=${json//@O@/$OLD_SHA}
+    local out flag="  ok "; out=$("$realgh" api rate_limit --jq "$json | $prog" 2>&1) || out="jq error: $out"
+    for e in "$@"; do
+      case $e in +*) [[ $out == *"${e#+}"* ]] || flag="**BAD**" ;; -*) [[ $out != *"${e#-}"* ]] || flag="**BAD**" ;; esac
+    done
+    [[ $out == "jq error:"* ]] && flag="**BAD**"
+    cases=$((cases + 1)); [ "$flag" = "  ok " ] || failures=$((failures + 1))
+    printf '%s | %-48s | %s\n' "$flag" "$name" "${out//$'\n'/ ⏎ }"
+  }
+  me='"author": {"login": "me-user"}'; st='"author": {"login": "stranger"}'
+  live "stranger's validated line erases no demand" "$vj" '{"comments": [{'"$me"', "body": "inconclusive: main only: docker build; verify on the first main run\nheinzelwerk: validated @H@"}, {'"$st"', "body": "lgtm\nheinzelwerk: validated aaaaaaa"}], "reviews": []}' "+main only: docker build" "-lgtm"
+  live "stranger's acceptance is no marker" "$tj" '{"comments": [{'"$st"', "body": "heinzelwerk: accepted main-only docker build @ @H@"}, {'"$me"', "body": "hi"}], "reviews": []}' "+hi" "-accepted"
+  live "footer below the line still a verdict" "$vj" '{"comments": [{'"$me"', "body": "inconclusive: main only: e2e; verify on the first main run\nheinzelwerk: validated @H@\n— heinzelwerk"}], "reviews": []}' "+main only: e2e"
+  live "old-sha verdict demands nothing" "$vj" '{"comments": [{'"$me"', "body": "inconclusive: main only: e2e; verify on the first main run\nheinzelwerk: validated @O@"}], "reviews": []}' "-e2e"
+  live "CRLF, 7-char prefix" "$vj" '{"comments": [{'"$me"', "body": "inconclusive: main only: e2e; v\r\nheinzelwerk: validated aaaaaaa\r\n"}], "reviews": []}' "+main only: e2e"
+  live "marker not at line start is no verdict" "$vj" '{"comments": [{'"$me"', "body": "inconclusive: main only: e2e; v\nMERGE SKIP: x heinzelwerk: validated @H@"}], "reviews": []}' "-e2e"
+  live "every head verdict counts, reviews too" "$vj" '{"comments": [{'"$me"', "body": "re-run ok\nheinzelwerk: validated @H@"}], "reviews": [{'"$me"', "body": "inconclusive: main only: e2e; v\nheinzelwerk: validated @H@"}, {'"$me"', "body": null}]}' "+main only: e2e" "+re-run ok"
+else
+  echo "  skipped: no authenticated gh (the jq programs are not exercised)"
+fi
 
 echo "$cases cases, $failures bad"; [ $failures -eq 0 ]

@@ -102,6 +102,10 @@ t "main thread is no main-only" verdict PASS "inconclusive: race only on main th
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "main's startup is no main-only" verdict PASS "inconclusive: crash on main's startup path; verify on Android
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main in review prose is free" verdict PASS "Standards: rebased on main, the default branch, after merge of #12
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "two canonical checks on one line" verdict PASS "inconclusive: main only: a; verify on the first main run, inconclusive: main only: b; verify on the first main run
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 echo "--- verdict: must fail"
 t "runs on push to main" verdict FAIL "inconclusive: e2e runs on push to main
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
@@ -130,6 +134,12 @@ heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "main-only without verify clause" verdict FAIL "inconclusive: main only: docker build
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "old main-only wording" verdict FAIL "inconclusive: runs on main only; verify on the first main run
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "not run, free words, no inconclusive" verdict FAIL "docker build: not run, the job runs on push to main only
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "skipped, default branch" verdict FAIL "e2e skipped: runs on the default branch
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "canonical form beside a second phrase" verdict FAIL "inconclusive: main only: a; verify on the first main run; e2e only on main too
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "short sha" verdict FAIL "heinzelwerk: validated 0123456"
 t "sha not last" verdict FAIL "heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567

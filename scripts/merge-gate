@@ -1,25 +1,59 @@
 #!/usr/bin/env bash
 # heinzelwerk auto-merge gate. Deterministic: decides from the PR + policy, nothing else. Off unless enabled.
-# Usage: merge-gate <pr-number>   (run inside the repo; prints MERGED or MERGE SKIP: <reasons>; exit 0 either way)
+# Usage: merge-gate [-C <repo dir>] [<owner/repo>#]<pr-number>   (run inside the repo, or name it with -C first; with
+#        owner/repo the gate checks that the dir is that repo; prints MERGED or MERGE SKIP: <reasons>, a usage error
+#        included; exit 0 either way; a PR already merged into main prints MERGED … (already merged by <login>), a
+#        closed one MERGE SKIP: PR closed)
 # Lives in the plugin's scripts/, so no PR can change it. Policy: docs/agents/heinzelwerk/merge-policy.json as on main
 # on GitHub, never the branch's copy. A PR that touches a heinzelwerk policy file, the project's Claude Code settings,
 # or a workflow always waits for a human. A PR stacked on another PR's branch is retargeted to main once that PR merged.
+# A PR whose body says `Depends on <PR>[, <PR> and <PR>]` (`owner/repo#N`, `#N`, or a pull URL; to the sentence's end, or
+# a list below a bare `Depends on:`) waits until every such PR is merged into main.
+# Markers (validated, accepted main-only) count only in comments and reviews by the gh user running the gate.
 # Waits up to MERGE_GATE_WAIT seconds (default 450) for CI and, when the policy names a `review_bot`, for its review of the
 # head sha (`review-gate`, same budget): run it with a ten-minute Bash timeout. `bot_review: required` → an open, pending, or
 # unavailable bot review is a skip reason; `best-effort` → open threads skip, pending or unavailable merge with a note line.
+# Each validator verdict of the head (a body with a stand-alone `heinzelwerk: validated <sha>` line naming it) may hold
+# `inconclusive: main only: <check>; …` lines (a CI job that runs on main only): each needs tech-lead's line `heinzelwerk: accepted main-only <check> @ <sha>`
+# naming the head, like the validated line.
 # Needs: gh only (its built-in --jq). Globs: bash patterns on the repo-relative path; * also matches /.
 set -euo pipefail
 # a gh or network failure still ends in a verdict line (no -E: an inherited trap inside $(...) would swallow the error)
 trap 'echo "MERGE SKIP: gate error (line $LINENO)"; exit 0' ERR
-pr=${1:?pr number}
+here=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)   # before any cd: review-gate sits next to this script
+usage() { echo "MERGE SKIP: usage: merge-gate [-C <repo dir>] [<owner/repo>#]<pr-number>"; exit 0; }
+# -C <repo dir>: gate a PR of that repo from anywhere (workspace mode runs from the workspace root)
+if [ "${1:-}" = -C ]; then
+  [ $# -ge 2 ] && [ -n "$2" ] || usage
+  CDPATH='' cd -- "$2" 2>/dev/null || { echo "MERGE SKIP: no repo dir $2"; exit 0; }; shift 2
+fi
+[ $# -eq 1 ] || usage
+want=""
+if [[ $1 =~ ^([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#([0-9]+)$ ]]; then want=${BASH_REMATCH[1]}; pr=${BASH_REMATCH[2]}
+elif [[ $1 =~ ^[0-9]+$ ]]; then pr=$1
+else usage; fi
+if [ -n "$want" ]; then
+  # a wrong -C with a matching PR number would gate another repo's PR
+  is=$(gh repo view --json nameWithOwner --jq .nameWithOwner 2>/dev/null) || { echo "MERGE SKIP: $(pwd) is no GitHub repo (wanted $want)"; exit 0; }
+  [ "$(tr '[:upper:]' '[:lower:]' <<<"$is")" = "$(tr '[:upper:]' '[:lower:]' <<<"$want")" ] || { echo "MERGE SKIP: $(pwd) is $is, not $want"; exit 0; }
+fi
 raw() { gh api -H 'Accept: application/vnd.github.raw+json' "repos/{owner}/{repo}/contents/$1?ref=main" "${@:2}"; }
 pol() { raw docs/agents/heinzelwerk/merge-policy.json --jq "$1"; }
 pv() { gh pr view "$pr" --json "$1" --jq "$2"; }
 # a check run's conclusion is "" until it completes, so branch on status; a commit status carries state directly
 checks() { pv statusCheckRollup '.statusCheckRollup[]? | if .__typename == "CheckRun" then (if .status == "COMPLETED" then .conclusion else "PENDING" end) else (.state // "PENDING") end'; }
 # the bot-review verdict comes from the sibling script review-gate (plugin scripts/, so no PR can change it)
-bot_review_verdict() { "$(dirname "$0")/review-gate" "$pr" | head -1; }   # e.g. "BOT REVIEW: clean <sha>"
+bot_review_verdict() { "$here/review-gate" "$pr" | head -1; }   # e.g. "BOT REVIEW: clean <sha>"
 bot_review_pending() { bot_review_verdict | grep -q "^BOT REVIEW: pending"; }
+# a rerun of the merge task meets PRs an earlier round merged: done, not a skip, but only once on main; the merger is named
+# so a human's merge reads as one. A closed PR is never touched (the retarget below would reopen it)
+state=$(pv state .state)
+if [ "$state" = MERGED ]; then
+  mbase=$(pv baseRefName .baseRefName); by=$(pv mergedBy '.mergedBy.login // "unknown"')
+  [ "$mbase" = main ] || { echo "MERGE SKIP: merged into $mbase, not main (by $by)"; exit 0; }
+  echo "MERGED: PR $pr (already merged by $by)"; exit 0
+fi
+[ "$state" = CLOSED ] && { echo "MERGE SKIP: PR closed"; exit 0; }
 enabled=$(pol '.enabled // false' 2>/dev/null) || { echo "MERGE SKIP: no docs/agents/heinzelwerk/merge-policy.json on main"; exit 0; }
 [ "$enabled" = true ] || { echo "MERGE SKIP: auto-merge off"; exit 0; }
 
@@ -43,16 +77,64 @@ reasons=()
 # GitHub recomputes mergeability after every merge to main; UNKNOWN means it is still at it
 m=$(pv mergeable .mergeable); for _ in 1 2 3 4 5 6; do [ "$m" = UNKNOWN ] || break; sleep 5; m=$(pv mergeable .mergeable); done
 [ "$m" = MERGEABLE ] || reasons+=("mergeable: $m (needs a rebase)")
-# the validator's pass must name the commit being merged; a push after validation needs a new pass
+head=$(pv headRefOid .headRefOid)
+# markers count only in the user's own comments and reviews: every role posts under the user's login, and anyone can
+# comment on a public repo. @ME@ and @HEAD@ are filled in below (a login is [A-Za-z0-9-], a sha hex: safe in a jq string)
+trusted_jq='[(.comments[], .reviews[]) | select(.author.login == "@ME@") | .body // ""]'
+# every trusted verdict of the head: a body with a stand-alone validated line naming it (a footer below changes nothing)
+verdict_jq=$trusted_jq' | map(select([scan("(?m)^heinzelwerk: validated ([0-9a-f]{7,40})[ \t\r]*$") | .[0]] | any(. as $s | "@HEAD@" | startswith($s)))) | .[]'
+me=$(gh api user --jq .login)
+[[ $me =~ ^[A-Za-z0-9-]+$ && $head =~ ^[0-9a-f]{40}$ ]] || { echo "MERGE SKIP: unreadable login ($me) or head ($head)"; exit 0; }
+bodies_prog="${trusted_jq//@ME@/$me} | .[]"; verdict_prog=${verdict_jq//@ME@/$me}; verdict_prog=${verdict_prog//@HEAD@/$head}
+bodies=$(pv comments,reviews "$bodies_prog"); bodies=${bodies//$'\r'/}
+# a marker names the head: the full sha, or a prefix of 7+ hex chars that matches it
+names_head() { [[ ${#1} -ge 7 && $head == "$1"* ]]; }
+# the validator's pass must name the commit being merged; a push after validation needs a new pass. Only a line that is
+# the marker and nothing else counts: a posted skip reason quoting it is no pass
 if [ "$(pol '.require_validation // true')" = true ]; then
-  head=$(pv headRefOid .headRefOid); vok=no
-  # the validator should post the full sha; a prefix of 7+ hex chars that matches the head is accepted too
-  for v in $(pv comments,reviews '.comments[].body, .reviews[].body' | grep -oE 'heinzelwerk: validated [0-9a-f]{7,40}' | awk '{print $3}' || true); do
-    [[ $head == "$v"* ]] && vok=yes
+  vok=no
+  for v in $(grep -E '^heinzelwerk: validated [0-9a-f]{7,40}[[:space:]]*$' <<<"$bodies" | awk '{print $3}' || true); do
+    names_head "$v" && vok=yes
   done
   [ $vok = yes ] || reasons+=("no \"heinzelwerk: validated $head\" on the PR")
 fi
-pv body '.body' | grep -qE '^[[:space:]]*[-*] \[ \]' && reasons+=("unchecked item in PR body (needs a human)")
+# a check validator could not see (its job runs on main only) merges only with tech-lead's acceptance of this head.
+# The checks come from every trusted verdict of this head ($verdict_jq), so a later body that validates the head never
+# erases one; a comment quoting the form demands nothing. Names are plain strings, backticks and bold aside
+verdict=$(pv comments,reviews "$verdict_prog"); verdict=${verdict//$'\r'/}
+accepted=$(grep -E '^heinzelwerk: accepted main-only .+ @ [0-9a-f]{7,40}[[:space:]]*$' <<<"$bodies" | sed -E 's/^heinzelwerk: accepted main-only //; s/[`*]//g; s/[[:space:]]+$//' || true)
+while IFS= read -r c; do
+  [ -n "$c" ] || continue; aok=no
+  while IFS= read -r a; do
+    [[ -n $a && ${a% @ *} == "$c" ]] && names_head "${a##* @ }" && aok=yes
+  done <<<"$accepted"
+  [ $aok = yes ] || reasons+=("main-only check $c not accepted for this head (needs \"heinzelwerk: accepted main-only $c @ $head\", tech-lead)")
+done < <(grep -oiE 'inconclusive: main[ -]only: [^;]+' <<<"$verdict" | sed -E 's/^[^:]*: [^:]*:[[:space:]]*//; s/[`*]//g; s/[[:space:]]+$//' | sort -u || true)
+body=$(pv body '.body'); body=${body//$'\r'/}
+grep -qE '^[[:space:]]*[-*] \[ \]' <<<"$body" && reasons+=("unchecked item in PR body (needs a human)")
+# Depends on: every named PR merged first (a cross-repo consumer never lands before its provider). Every ref from the
+# phrase to the end of its sentence counts (`Depends on a/b#1 (the contract), and on c/d#2, which …`), and a bare
+# `Depends on:` takes the list items below it; so `Closes #140. Depends on …` or "depends on the config" add nothing
+# before the phrase or past the sentence. Bold, backticks, a markdown link around the ref, and `PR #N` are read through.
+# A ref too many is a skip a human reads; a ref missed would merge early, so the rule errs wide
+ref='(https://github\.com/)?[A-Za-z0-9-]+/[A-Za-z0-9_.-]+(#|/pull/)[0-9]+|#[0-9]+'
+dbody=$(sed -E 's/(\*\*|`)//g; s/\[([^]]*)\]\([^)]*\)/\1/g; s/PR[[:space:]]+#/#/g' <<<"$body")
+deps=$(awk '
+  inlist && /^[[:space:]]*$/ { next }
+  inlist && /^[[:space:]]*([-*+]|[0-9]+[.)])[[:space:]]/ { print; next }
+  { inlist = 0; i = index(tolower($0), "depends on"); if (!i) next
+    seg = substr($0, i + 10) " "; if (match(seg, /\.[[:space:]]/)) seg = substr(seg, 1, RSTART - 1)
+    print seg; t = seg; gsub(/[:*[:space:]]/, "", t); if (t == "") inlist = 1 }' <<<"$dbody" | grep -oE "$ref" \
+  | sed -E 's#^https://github\.com/##; s#/pull/#\##' | sort -u || true)
+own=""; [ -z "$deps" ] || own=$(gh repo view --json nameWithOwner --jq .nameWithOwner 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
+while IFS= read -r d; do
+  [ -n "$d" ] || continue
+  [ "$d" = "#$pr" ] || [ "$(tr '[:upper:]' '[:lower:]' <<<"$d")" = "$own#$pr" ] && continue   # the PR itself
+  # done means merged into main, the same rule as the early exit above
+  if [[ $d == \#* ]]; then ds=$(gh pr view "${d#\#}" --json state,baseRefName --jq '.state + " into " + .baseRefName' 2>/dev/null || echo "no readable PR (an issue, or no access)")
+  else ds=$(gh pr view "${d##*#}" -R "${d%#*}" --json state,baseRefName --jq '.state + " into " + .baseRefName' 2>/dev/null || echo "no readable PR (an issue, or no access)"); fi
+  [ "$ds" = "MERGED into main" ] || reasons+=("depends on $d, which is ${ds/OPEN into */OPEN} (merge it into main first)")
+done <<<"$deps"
 # optional size cap: only when the policy sets max_changed_lines
 max=$(pol '.max_changed_lines // empty')
 if [[ -n $max && $max =~ ^[0-9]+$ ]]; then
@@ -94,5 +176,6 @@ case $bot_verdict in
 esac
 
 if (( ${#reasons[@]} )); then echo "MERGE SKIP:"; printf '  - %s\n' "${reasons[@]}"; exit 0; fi
-if out=$(gh pr merge "$pr" "--$(pol '.merge_method // "squash"')" 2>&1); then echo "MERGED: PR $pr"; [ -z "$merge_note" ] || echo "  - note: $merge_note"
+# --match-head-commit: a push after the head was read (a bot's autofix) makes GitHub refuse, never merge an unread head
+if out=$(gh pr merge "$pr" "--$(pol '.merge_method // "squash"')" --match-head-commit "$head" 2>&1); then echo "MERGED: PR $pr"; [ -z "$merge_note" ] || echo "  - note: $merge_note"
 else echo "MERGE SKIP:"; echo "  - merge failed: ${out//$'\n'/ }"; fi

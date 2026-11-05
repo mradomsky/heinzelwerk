@@ -44,7 +44,21 @@ t "no Checks entry in team.md" note PASS "$good" --team "$tmp/empty-team.md"
 t "optional fields" note PASS "$good
 term: Anomaly
 learning: flaky test x" --checks 3
+t "ci token counts as a check" note PASS "$(sed 's/^checks:.*/checks: 0 0 ci/' <<<"$good")" --team "$tmp/team.md"
+t "ci only" note PASS "$(sed 's/^checks:.*/checks: ci ci ci/' <<<"$good")" --checks 3
+t "CI upper case, commas" note PASS "$(sed 's/^checks:.*/checks: 0, CI, 0/' <<<"$good")" --checks 3
+t "CRLF after ci" note PASS "$(printf '%s\r\n' "$(sed 's/^checks:.*/checks: 0 0 ci/' <<<"$good")")" --checks 3
+t "tab-separated" note PASS "$(sed "s/^checks:.*/checks: 0$(printf '\t')0$(printf '\t')ci/" <<<"$good")" --checks 3
+t "trailing comma" note PASS "$(sed 's/^checks:.*/checks: 0, 0, 0,/' <<<"$good")" --checks 3
 echo "--- note: must fail"
+t "leading comma" note FAIL "$(sed 's/^checks:.*/checks: ,0 0 0/' <<<"$good")" --checks 3
+t "semicolons" note FAIL "$(sed 's/^checks:.*/checks: 0;0;0/' <<<"$good")" --checks 3
+t "ci short of team.md" note FAIL "$(sed 's/^checks:.*/checks: 0 ci/' <<<"$good")" --team "$tmp/team.md"
+t "ci inside a word is no token" note FAIL "$(sed 's/^checks:.*/checks: 0 0 cicd/' <<<"$good")" --checks 3
+t "0/ci is no token" note FAIL "$(sed 's|^checks:.*|checks: 0 0/ci|' <<<"$good")" --checks 3
+t "ci2 is no code" note FAIL "$(sed 's/^checks:.*/checks: 0 0 ci2/' <<<"$good")" --checks 3
+t "prose with ci" note FAIL "$(sed 's/^checks:.*/checks: 0 0 skipped in ci/' <<<"$good")" --checks 3
+t "prose after codes" note FAIL "$(sed 's/^checks:.*/checks: 0 0 0 (all green)/' <<<"$good")" --checks 3
 t "missing session" note FAIL "$(grep -v '^session' <<<"$good")" --checks 3
 t "checks count short" note FAIL "$good" --checks 4
 t "checks count vs team.md" note FAIL "$(sed 's/^checks:.*/checks: 0 0/' <<<"$good")" --team "$tmp/team.md"
@@ -74,7 +88,59 @@ heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "file:line:col is not a time" verdict PASS "smell at src/a.ts:120:45 (Mysterious Name)
 — heinzelwerk
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main-only in canonical form" verdict PASS "docker build: inconclusive: main only: docker build; verify on the first main run
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main.go path is no main-only" verdict PASS "inconclusive: Windows path handling in cmd/main.go; verify on Windows
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "src/main/java is no main-only" verdict PASS "inconclusive: needs a JDK for src/main/java; verify on a machine with Java 21
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "domain and maintainer are no main" verdict PASS "inconclusive: domain cert needs the maintainer's key; verify on the host
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "domain only is no main-only" verdict PASS "inconclusive: custom domain only resolves in prod; verify on prod
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main thread is no main-only" verdict PASS "inconclusive: race only on main thread under load; verify on a device
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main's startup is no main-only" verdict PASS "inconclusive: crash on main's startup path; verify on Android
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main in review prose is free" verdict PASS "Standards: rebased on main, the default branch, after merge of #12
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "two canonical checks on one line" verdict PASS "inconclusive: main only: a; verify on the first main run, inconclusive: main only: b; verify on the first main run
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 echo "--- verdict: must fail"
+t "runs on push to main" verdict FAIL "inconclusive: e2e runs on push to main
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "only on backticked main" verdict FAIL "inconclusive: deploy job only on \`main\`
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "not triggered for pull requests" verdict FAIL "inconclusive: arm64 build not triggered for pull requests
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "post-merge only" verdict FAIL "inconclusive: smoke test is post-merge
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main's beside a real phrase" verdict FAIL "inconclusive: contract job runs on main's push only; verify later
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main process beside push-only" verdict FAIL "inconclusive: arm64 buildx is push-only (main process image)
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "only after merge" verdict FAIL "inconclusive: e2e only runs after merge
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "not run on PRs" verdict FAIL "inconclusive: smoke job not run on PRs
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "merge to main" verdict FAIL "inconclusive: triggers on merge to main
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main-only hyphenated" verdict FAIL "inconclusive: main-only: docker build; verify on the first main run
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "default branch wording" verdict FAIL "inconclusive: job runs only on the default branch
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main-only in free words" verdict FAIL "docker: inconclusive: job runs only on main
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main-only without verify clause" verdict FAIL "inconclusive: main only: docker build
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "old main-only wording" verdict FAIL "inconclusive: runs on main only; verify on the first main run
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "not run, free words, no inconclusive" verdict FAIL "docker build: not run, the job runs on push to main only
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "skipped, default branch" verdict FAIL "e2e skipped: runs on the default branch
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "canonical form beside a second phrase" verdict FAIL "inconclusive: main only: a; verify on the first main run; e2e only on main too
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "short sha" verdict FAIL "heinzelwerk: validated 0123456"
 t "sha not last" verdict FAIL "heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567
 thanks"

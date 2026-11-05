@@ -31,7 +31,7 @@ claude --plugin-dir ~/heinzelwerk --model opus --strict-mcp-config
 | Windows hook shell | `bash --version` works from the terminal that runs `claude`; ask Claude to run `git push origin main`: blocked | install Git Bash |
 | Guard hook | ask Claude to run `git push origin main`, `terraform apply x`, `git push --force origin x` | fix `hooks.json` / `${CLAUDE_PLUGIN_ROOT}` |
 | Task chain | team of 2: one creates `#1 backend implement: test`, claims it, writes a done note into its details, completes it, creates `#1 validate backend: test`; the other claims that, reads the first task's details, completes it. Both see the same list; `TaskGet` returns the details | list not shared or details lost → rethink the `phased-workflow` lifecycle |
-| Team config | a teammate reads `~/.claude/teams/<team>/config.json` and names the members | no config (Claude desktop app) → hand-back mode (team-modes); unreadable → coordinator sends a roster in each spawn prompt |
+| Team config | a teammate reads `~/.claude/teams/<team>/config.json` and names the members | unreadable → coordinator sends a roster in each spawn prompt |
 | Plugin agents as teammates | spawn `backend` as teammate; ask its model and effort | `model:` / `effort:` ignored → name them in the spawn prompt |
 | Plugin `scripts/` on PATH in a teammate | that teammate runs `command -v merge-gate` (SessionStart PATH hook verified headless 2026-10-26 for main session + subagent) | not on PATH → spawn prompts carry `${CLAUDE_PLUGIN_ROOT}/scripts` (substituted in agent content) |
 | Guard without jq | session with `jq` and `node` off `PATH`: `git push origin main` still blocked, `ls` still allowed | fallback parser broken → fix `guard.sh` |

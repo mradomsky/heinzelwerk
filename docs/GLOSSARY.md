@@ -25,11 +25,11 @@ The teammate that runs checks and the two-axis review, posts verdicts, runs slic
 _Avoid_: reviewer, QA, tester
 
 **Teammate**:
-Any agent-team member other than coordinator. Spawned by coordinator as `heinzelwerk:<role>`, named `<role>` or `<role>-N`. In hand-back mode it is a background subagent of the main session that reports by hand-back and is resumed by name.
+Any agent-team member other than coordinator. Spawned by coordinator as `heinzelwerk:<role>`, named `<role>` or `<role>-N`.
 _Avoid_: agent (too wide: subagents and the user's own sessions are agents too), worker, bot
 
 **Subagent**:
-A short-lived agent a role spawns in the foreground for one report (an Opus critique, a Haiku search). Hands back to its spawner, or to coordinator by platform accident. A **hand-back** is that report, delivered through the host's hand-back tool where it has one; hand-back mode makes it every teammate's only channel to coordinator.
+A short-lived agent a role spawns in the foreground for one report (an Opus critique, a Haiku search). Hands back to its spawner, or to coordinator by platform accident.
 _Avoid_: helper, child, sub-task
 
 ## Work
@@ -113,10 +113,6 @@ _Avoid_: checkout, clone, branch (a worktree holds a branch), sandbox
 **Workspace mode**:
 A run started from a folder of sibling repos with a `CLAUDE.workspace.md`; one repo (`meta`) holds tickets and workspace docs.
 _Avoid_: monorepo, multi-repo (as a noun), multi-mode
-
-**Hand-back mode**:
-A run whose host spawns teammates as background subagents of the main session (the Claude desktop app): no team config, no task tools. Each teammate's final message is its message to coordinator; the plan comment stands in for the task list.
-_Avoid_: subagent mode, no-team mode, fallback mode
 
 **Merge gate**:
 `merge-gate`, the plugin script that merges a PR only when `merge-policy.json` on main, the validated line, CI, and mergeability all allow it.

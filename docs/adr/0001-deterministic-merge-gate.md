@@ -10,5 +10,5 @@ Agents open PRs; the only thing that merges one is `scripts/merge-gate`, which r
 
 ## Consequences
 
-- The validated line is a protocol marker, not an authorization: any role could post it. Acceptable while `main` is not production; the README says so.
+- The validated line is a protocol marker, not an authorization: any role could post it. Acceptable while `main` is not production; the README says so. The same holds for tech-lead's `heinzelwerk: accepted main-only <check> @ <sha>`, which the gate requires for each `inconclusive: main only: <check>` and, like the validated line, matches against the head.
 - Policy files, `.claude/settings*.json`, and workflows always wait for a human, whatever the policy says.

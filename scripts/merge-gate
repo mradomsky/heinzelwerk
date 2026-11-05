@@ -1,27 +1,35 @@
 #!/usr/bin/env bash
 # heinzelwerk auto-merge gate. Deterministic: decides from the PR + policy, nothing else. Off unless enabled.
-# Usage: merge-gate [-C <repo dir>] <pr-number>   (run inside the repo, or name it with -C; prints MERGED or
-#        MERGE SKIP: <reasons>; exit 0 either way)
+# Usage: merge-gate [-C <repo dir>] <pr-number>   (run inside the repo, or name it with -C first; prints MERGED or
+#        MERGE SKIP: <reasons>, a usage error included; exit 0 either way)
 # Lives in the plugin's scripts/, so no PR can change it. Policy: docs/agents/heinzelwerk/merge-policy.json as on main
 # on GitHub, never the branch's copy. A PR that touches a heinzelwerk policy file, the project's Claude Code settings,
 # or a workflow always waits for a human. A PR stacked on another PR's branch is retargeted to main once that PR merged.
 # Waits up to MERGE_GATE_WAIT seconds (default 450) for CI and, when the policy names a `review_bot`, for its review of the
 # head sha (`review-gate`, same budget): run it with a ten-minute Bash timeout. `bot_review: required` → an open, pending, or
 # unavailable bot review is a skip reason; `best-effort` → open threads skip, pending or unavailable merge with a note line.
+# A verdict line `inconclusive: main only: <check>; …` (a CI job that runs on main only) needs, per check, tech-lead's
+# `heinzelwerk: accepted main-only <check> @ <sha>` naming the head, like the validated line.
 # Needs: gh only (its built-in --jq). Globs: bash patterns on the repo-relative path; * also matches /.
 set -euo pipefail
 # a gh or network failure still ends in a verdict line (no -E: an inherited trap inside $(...) would swallow the error)
 trap 'echo "MERGE SKIP: gate error (line $LINENO)"; exit 0' ERR
+here=$(cd "$(dirname "$0")" && pwd)   # before any cd: review-gate sits next to this script
+usage() { echo "MERGE SKIP: usage: merge-gate [-C <repo dir>] <pr-number>"; exit 0; }
 # -C <repo dir>: gate a PR of that repo from anywhere (workspace mode runs from the workspace root)
-if [ "${1:-}" = -C ]; then cd "${2:?repo dir}" || { echo "MERGE SKIP: no repo dir ${2}"; exit 0; }; shift 2; fi
-pr=${1:?pr number}
+if [ "${1:-}" = -C ]; then
+  [ $# -ge 2 ] || usage
+  cd "$2" 2>/dev/null || { echo "MERGE SKIP: no repo dir $2"; exit 0; }; shift 2
+fi
+{ [ $# -eq 1 ] && [[ $1 =~ ^[0-9]+$ ]]; } || usage
+pr=$1
 raw() { gh api -H 'Accept: application/vnd.github.raw+json' "repos/{owner}/{repo}/contents/$1?ref=main" "${@:2}"; }
 pol() { raw docs/agents/heinzelwerk/merge-policy.json --jq "$1"; }
 pv() { gh pr view "$pr" --json "$1" --jq "$2"; }
 # a check run's conclusion is "" until it completes, so branch on status; a commit status carries state directly
 checks() { pv statusCheckRollup '.statusCheckRollup[]? | if .__typename == "CheckRun" then (if .status == "COMPLETED" then .conclusion else "PENDING" end) else (.state // "PENDING") end'; }
 # the bot-review verdict comes from the sibling script review-gate (plugin scripts/, so no PR can change it)
-bot_review_verdict() { "$(dirname "$0")/review-gate" "$pr" | head -1; }   # e.g. "BOT REVIEW: clean <sha>"
+bot_review_verdict() { "$here/review-gate" "$pr" | head -1; }   # e.g. "BOT REVIEW: clean <sha>"
 bot_review_pending() { bot_review_verdict | grep -q "^BOT REVIEW: pending"; }
 enabled=$(pol '.enabled // false' 2>/dev/null) || { echo "MERGE SKIP: no docs/agents/heinzelwerk/merge-policy.json on main"; exit 0; }
 [ "$enabled" = true ] || { echo "MERGE SKIP: auto-merge off"; exit 0; }
@@ -46,20 +54,28 @@ reasons=()
 # GitHub recomputes mergeability after every merge to main; UNKNOWN means it is still at it
 m=$(pv mergeable .mergeable); for _ in 1 2 3 4 5 6; do [ "$m" = UNKNOWN ] || break; sleep 5; m=$(pv mergeable .mergeable); done
 [ "$m" = MERGEABLE ] || reasons+=("mergeable: $m (needs a rebase)")
+bodies=$(pv comments,reviews '.comments[].body, .reviews[].body'); bodies=${bodies//$'\r'/}
+head=$(pv headRefOid .headRefOid)
+# a marker names the head: the full sha, or a prefix of 7+ hex chars that matches it
+names_head() { [[ ${#1} -ge 7 && $head == "$1"* ]]; }
 # the validator's pass must name the commit being merged; a push after validation needs a new pass
 if [ "$(pol '.require_validation // true')" = true ]; then
-  head=$(pv headRefOid .headRefOid); vok=no
-  # the validator should post the full sha; a prefix of 7+ hex chars that matches the head is accepted too
-  for v in $(pv comments,reviews '.comments[].body, .reviews[].body' | grep -oE 'heinzelwerk: validated [0-9a-f]{7,40}' | awk '{print $3}' || true); do
-    [[ $head == "$v"* ]] && vok=yes
+  vok=no
+  for v in $(grep -oE 'heinzelwerk: validated [0-9a-f]{7,40}' <<<"$bodies" | awk '{print $3}' || true); do
+    names_head "$v" && vok=yes
   done
   [ $vok = yes ] || reasons+=("no \"heinzelwerk: validated $head\" on the PR")
 fi
-# a check validator could not see (its job runs on main only) merges only with tech-lead's recorded acceptance
-bodies=$(pv comments,reviews '.comments[].body, .reviews[].body')
-if grep -qiE 'inconclusive: runs on main only' <<<"$bodies" && ! grep -qE '^heinzelwerk: accepted main-only ' <<<"$bodies"; then
-  reasons+=("inconclusive main-only check without \"heinzelwerk: accepted main-only <check> @ <sha>\" (tech-lead)")
-fi
+# a check validator could not see (its job runs on main only) merges only with tech-lead's acceptance of this head
+# check names are compared as plain strings, never as patterns
+accepted=$(grep -E '^heinzelwerk: accepted main-only .+ @ [0-9a-f]{7,40}[[:space:]]*$' <<<"$bodies" | sed -E 's/^heinzelwerk: accepted main-only //; s/[[:space:]]+$//' || true)
+while IFS= read -r c; do
+  [ -n "$c" ] || continue; aok=no
+  while IFS= read -r a; do
+    [[ -n $a && ${a% @ *} == "$c" ]] && names_head "${a##* @ }" && aok=yes
+  done <<<"$accepted"
+  [ $aok = yes ] || reasons+=("main-only check $c not accepted for this head (needs \"heinzelwerk: accepted main-only $c @ $head\", tech-lead)")
+done < <(grep -oiE 'inconclusive: main only: [^;]+' <<<"$bodies" | sed -E 's/^[^:]*: [^:]*: //; s/[[:space:]]+$//' | sort -u || true)
 pv body '.body' | grep -qE '^[[:space:]]*[-*] \[ \]' && reasons+=("unchecked item in PR body (needs a human)")
 # optional size cap: only when the policy sets max_changed_lines
 max=$(pol '.max_changed_lines // empty')

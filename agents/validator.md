@@ -10,10 +10,10 @@ You are validator. Follow the `heinzelwerk:phased-workflow` and `heinzelwerk:tea
 **Claim and set up.** Claim any pending `#N validate <role>: <what>` task. Work in your own detached worktree of the PR's head: `git -C <repo> fetch origin && git -C <repo> worktree add <repo>/.claude/worktrees/heinzelwerk/val-<ticket>-<role> origin/<branch> --detach`, then run the **Worktree setup** command from `team.md`. Remove the worktree after the verdict.
 
 ## 1. Checks
-First `gh pr view <PR> --json body -q .body | check-note note --team docs/agents/heinzelwerk/team.md`: it checks the done note's fields and that `checks:` holds one exit code per `team.md` check. It prints anything → fail with its output and stop here.
+First `gh pr view <PR> --json body -q .body | check-note note --team docs/agents/heinzelwerk/team.md`: it checks the done note's fields and that `checks:` holds one token, an exit code or `ci`, per `team.md` check. It prints anything → fail with its output and stop here.
 Run every check from `docs/agents/heinzelwerk/team.md` and record exit codes. Then:
 - A check that fails once and passes on one rerun counts as passed; note `learning: flaky <check>` in your done note.
-- A check marked `CI only` or `unverified locally` in `team.md` is read from the PR's CI run (`gh pr checks`), not run here. A `ci` in the done note's `checks:` line changes nothing: you run every check you can, whatever the note says. No CI result for a check you cannot run → fail, unless the workflow runs that job only on main (its `if:` or trigger excludes pull requests): then `inconclusive: runs on main only; verify on the first main run`, and tech-lead accepts or rejects it before the merge (tech-lead §4).
+- A check marked `CI only` or `unverified locally` in `team.md` is read from the PR's CI run (`gh pr checks`), not run here. A `ci` in the done note's `checks:` line changes nothing: you run every check you can, whatever the note says. No CI result for a check you cannot run → fail, unless the workflow runs that job only on main (its `if:` or trigger excludes pull requests): then write exactly `inconclusive: main only: <check>; verify on the first main run` (`check-note verdict` rejects any other wording about main, and the gate reads this one), and tech-lead accepts or rejects it before the merge (tech-lead §4).
 - A check that is red on `origin/main` as well is not this PR's fail. Confirm by rerunning the check in a detached worktree of `origin/main`, or by reading main's latest CI. Then continue, write `red on main: <check>` in the verdict, and message tech-lead; tech-lead opens one fix task whose PR merges first.
 - Any other red → fail, stop here.
 
@@ -61,7 +61,7 @@ Anything else → fail: create `#N tech-lead fix <k>: docs` with the reason. Pas
 Tech-lead creates it once diagnose finds no gap and the merge policy on main is enabled. Its details list the PRs in merge order (`owner/repo#PR` in workspace mode): docs PRs last, infra PRs left out.
 
 **Per PR.** Run `merge-gate <PR number>` from the repo's main checkout (the script only reads it), or in workspace mode `merge-gate -C <repo dir> <PR number>` from the workspace root, in exactly that form: the project allows that exact command, and the script runs from the plugin, so no PR can change it. Use a ten-minute Bash timeout, because the gate waits up to eight minutes for CI.
-- The gate prints `MERGE SKIP` → leave out the PRs stacked on the skipped one (their base is its branch), every PR whose body says `Depends on <the skipped PR>`, the closing PR, and the docs PRs, which describe code that is not on main yet; gate the rest.
+- The gate prints `MERGE SKIP` → hold back every PR that depends on the skipped one, directly or through another held-back PR (it is stacked on its branch, or its body says `Depends on` it), plus the closing PR and the docs PRs, which describe code that is not on main yet; gate the rest.
 - Gate the docs PRs last, and only once every code PR has merged.
 - The output has no `MERGED` or `MERGE SKIP` line at all (timeout, tool error) → run the gate once more; still none → treat the PR as `MERGE SKIP: gate error`.
 

@@ -48,7 +48,11 @@ t "ci token counts as a check" note PASS "$(sed 's/^checks:.*/checks: 0 0 ci/' <
 t "ci only" note PASS "$(sed 's/^checks:.*/checks: ci ci ci/' <<<"$good")" --checks 3
 t "CI upper case, commas" note PASS "$(sed 's/^checks:.*/checks: 0, CI, 0/' <<<"$good")" --checks 3
 t "CRLF after ci" note PASS "$(printf '%s\r\n' "$(sed 's/^checks:.*/checks: 0 0 ci/' <<<"$good")")" --checks 3
+t "tab-separated" note PASS "$(sed "s/^checks:.*/checks: 0$(printf '\t')0$(printf '\t')ci/" <<<"$good")" --checks 3
+t "trailing comma" note PASS "$(sed 's/^checks:.*/checks: 0, 0, 0,/' <<<"$good")" --checks 3
 echo "--- note: must fail"
+t "leading comma" note FAIL "$(sed 's/^checks:.*/checks: ,0 0 0/' <<<"$good")" --checks 3
+t "semicolons" note FAIL "$(sed 's/^checks:.*/checks: 0;0;0/' <<<"$good")" --checks 3
 t "ci short of team.md" note FAIL "$(sed 's/^checks:.*/checks: 0 ci/' <<<"$good")" --team "$tmp/team.md"
 t "ci inside a word is no token" note FAIL "$(sed 's/^checks:.*/checks: 0 0 cicd/' <<<"$good")" --checks 3
 t "0/ci is no token" note FAIL "$(sed 's|^checks:.*|checks: 0 0/ci|' <<<"$good")" --checks 3
@@ -84,7 +88,15 @@ heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "file:line:col is not a time" verdict PASS "smell at src/a.ts:120:45 (Mysterious Name)
 — heinzelwerk
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main-only in canonical form" verdict PASS "docker build: inconclusive: main only: docker build; verify on the first main run
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 echo "--- verdict: must fail"
+t "main-only in free words" verdict FAIL "docker: inconclusive: job runs only on main
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main-only without verify clause" verdict FAIL "inconclusive: main only: docker build
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "old main-only wording" verdict FAIL "inconclusive: runs on main only; verify on the first main run
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "short sha" verdict FAIL "heinzelwerk: validated 0123456"
 t "sha not last" verdict FAIL "heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567
 thanks"

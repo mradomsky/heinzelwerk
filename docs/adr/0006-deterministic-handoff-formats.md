@@ -11,5 +11,5 @@ Done notes and verdicts keep their prose shape (`did:`, `evidence:`, `checks:`, 
 ## Consequences
 
 - A done note gains a `session:` line (the transcript path) so retro and the hand-back fallback can find the conversation; transcripts are never copied into a repo.
-- The `checks:` line is exit codes only (or `ci` for a check that runs only in CI); what a check said moves to `evidence:`.
+- The `checks:` line holds one token per check, its exit code or `ci` for a check not run here and left to CI; what a check said moves to `evidence:`.
 - Free topic words in branch names are gone; the slug comes from the ticket title, and a resumed run reads the recorded name before inventing one.

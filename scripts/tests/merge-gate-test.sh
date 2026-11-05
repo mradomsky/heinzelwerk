@@ -31,12 +31,15 @@ case "$*" in
   *merge-policy.json*)                       echo "" ;;
   "pr view "*"--json baseRefName"*)          echo main ;;
   "pr view "*"--json statusCheckRollup"*)    echo SUCCESS ;;
-  "pr view "*"--json state"*)                echo OPEN ;;
+  "pr view 7 --json state"*)                 echo "${FAKE_STATE:-OPEN}" ;;
+  "pr view "*"--json state"*)                [ "${FAKE_DEP_STATE:-MERGED}" = FAIL ] && exit 1; echo "${FAKE_DEP_STATE:-MERGED}" ;;
   "pr view "*"--json isDraft"*)              echo false ;;
   "pr view "*"--json mergeable"*)            echo MERGEABLE ;;
   "pr view "*"--json headRefOid"*)           echo "$HEAD_SHA" ;;
+  "pr view "*"--json comments,reviews"*last*) cat "$FAKE_VERDICT_FILE" ;;
   "pr view "*"--json comments,reviews"*)     cat "$FAKE_BODIES_FILE" ;;
-  "pr view "*"--json body"*)                 echo "## Done note" ;;
+  "pr view "*"--json body"*)                 printf '%s\n' "${FAKE_BODY:-## Done note}" ;;
+  "repo view"*)                              echo "${FAKE_REPO:-owner/repo}" ;;
   "pr view "*"--json files"*)                echo README.md ;;
   "pr merge "*)                              exit 0 ;;
   *)                                         echo "fake gh: unexpected call: $*" >&2; exit 1 ;;
@@ -45,12 +48,14 @@ FAKE_GH
 chmod +x "$workdir/bin/gh"
 export PATH="$workdir/bin:$PATH" MERGE_GATE_WAIT=0
 export HEAD_SHA=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa OLD_SHA=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-export FAKE_BODIES_FILE="$workdir/bodies.txt"
+export FAKE_BODIES_FILE="$workdir/bodies.txt" FAKE_VERDICT_FILE="$workdir/verdict.txt"
 
-# expect <case name> <expected substring> <comment and review bodies> [merge-gate args…]; runs from $workdir
+# expect <case name> <expected substring> <comment and review bodies> [merge-gate args…]; runs from $workdir.
+# The newest verdict the gate asks for is FAKE_VERDICT when set, else all the bodies
 expect() {
   local name="$1" expected="$2" bodies="$3"; shift 3
   printf '%s\n' "$bodies" >"$FAKE_BODIES_FILE"
+  printf '%s\n' "${FAKE_VERDICT-$bodies}" >"$FAKE_VERDICT_FILE"
   local output
   output=$(cd "$workdir" && bash plugin/merge-gate "$@" 2>&1)
   cases=$((cases + 1))
@@ -72,12 +77,24 @@ expect "-C after the PR" "MERGE SKIP: usage" "$validated" 7 -C repo
 expect "no arguments" "MERGE SKIP: usage" "$validated"
 expect "PR not a number" "MERGE SKIP: usage" "$validated" abc
 expect "extra argument" "MERGE SKIP: usage" "$validated" 7 8
+expect "-C empty value" "MERGE SKIP: usage" "$validated" -C "" 7
+expect "owner/repo#N in the right repo" "MERGED: PR 7" "$validated" owner/repo#7
+expect "owner/repo#N, case differs" "MERGED: PR 7" "$validated" Owner/Repo#7
+expect "owner/repo#N in another repo" "is owner/repo, not other/repo" "$validated" other/repo#7
+FAKE_REPO=owner/other expect "-C dir is the wrong repo" "is owner/other, not owner/repo" "$validated" -C repo owner/repo#7
+expect "owner/repo# without a number" "MERGE SKIP: usage" "$validated" owner/repo#
+FAKE_STATE=MERGED expect "already merged is done, not a skip" "MERGED: PR 7 (already merged)" "" 7
+FAKE_STATE=CLOSED expect "closed PR skips" "PR not open" "$validated" 7
 
 echo "--- validated line"
 expect "validated head merges" "MERGED: PR 7" "$validated" 7
 expect "7-char prefix merges" "MERGED: PR 7" "heinzelwerk: validated ${HEAD_SHA:0:7}" 7
 expect "old sha skips" "no \"heinzelwerk: validated $HEAD_SHA\"" "heinzelwerk: validated $OLD_SHA" 7
 expect "CRLF bodies still match" "MERGED: PR 7" "$validated"$'\r' 7
+expect "posted skip line quoting the marker is no pass" "no \"heinzelwerk: validated $HEAD_SHA\"" "heinzelwerk: validated $OLD_SHA
+MERGE SKIP:
+  - no \"heinzelwerk: validated $HEAD_SHA\" on the PR" 7
+expect "marker with trailing text is no pass" "no \"heinzelwerk: validated" "heinzelwerk: validated $HEAD_SHA (pending CI)" 7
 
 echo "--- main-only acceptance"
 expect "main-only without acceptance skips" "main-only check docker build not accepted" "$main_only" 7
@@ -103,5 +120,19 @@ heinzelwerk: accepted main-only docker build @ $HEAD_SHA
 heinzelwerk: accepted main-only e2e @ $HEAD_SHA" 7
 expect "acceptance not at line start ignored" "main-only check docker build not accepted" "$main_only
 note: heinzelwerk: accepted main-only docker build @ $HEAD_SHA" 7
+
+echo "--- main-only lines come from the newest verdict"
+FAKE_VERDICT="$validated" expect "quoted form in another comment demands nothing" "MERGED: PR 7" "tech-lead: 'inconclusive: main only: docker build' is fine
+$validated" 7
+expect "hyphenated main-only still needs acceptance" "main-only check docker build not accepted" "inconclusive: main-only: docker build; verify on the first main run
+$validated" 7
+
+echo "--- depends on"
+FAKE_BODY="Depends on owner/provider#60" expect "provider merged" "MERGED: PR 7" "$validated" 7
+FAKE_BODY="Depends on owner/provider#60" FAKE_DEP_STATE=OPEN expect "provider open skips" "depends on owner/provider#60, which is OPEN" "$validated" 7
+FAKE_BODY="Depends on https://github.com/owner/provider/pull/61" FAKE_DEP_STATE=OPEN expect "pull URL form" "depends on owner/provider#61, which is OPEN" "$validated" 7
+FAKE_BODY="depends on #12 (same repo)" FAKE_DEP_STATE=OPEN expect "same-repo #N form" "depends on #12, which is OPEN" "$validated" 7
+FAKE_BODY="Depends on owner/provider#60" FAKE_DEP_STATE=FAIL expect "unreadable provider skips" "which is no readable PR" "$validated" 7
+FAKE_BODY="Refs owner/meta#140" FAKE_DEP_STATE=OPEN expect "Refs line is no dependency" "MERGED: PR 7" "$validated" 7
 
 echo "$cases cases, $failures bad"; [ $failures -eq 0 ]

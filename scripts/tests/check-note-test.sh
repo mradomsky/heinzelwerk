@@ -90,7 +90,17 @@ t "file:line:col is not a time" verdict PASS "smell at src/a.ts:120:45 (Mysterio
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "main-only in canonical form" verdict PASS "docker build: inconclusive: main only: docker build; verify on the first main run
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main.go path is no main-only" verdict PASS "inconclusive: Windows path handling in cmd/main.go; verify on Windows
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "src/main/java is no main-only" verdict PASS "inconclusive: needs a JDK for src/main/java; verify on a machine with Java 21
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "domain and maintainer are no main" verdict PASS "inconclusive: domain cert needs the maintainer's key; verify on the host
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 echo "--- verdict: must fail"
+t "main-only hyphenated" verdict FAIL "inconclusive: main-only: docker build; verify on the first main run
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "default branch wording" verdict FAIL "inconclusive: job runs only on the default branch
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "main-only in free words" verdict FAIL "docker: inconclusive: job runs only on main
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "main-only without verify clause" verdict FAIL "inconclusive: main only: docker build

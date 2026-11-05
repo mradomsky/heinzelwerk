@@ -18,7 +18,7 @@ Run every check from `docs/agents/heinzelwerk/team.md` and record exit codes. Th
 - Any other red → fail, stop here.
 
 ## 2. Task
-- **Done when**: the implement task's `done when` holds (read the task's details) and tests sit at the seams the task names.
+- **Done when**: the implement task's `done when` holds (read the task's details) and tests sit at the seams the task names. A `docs-only` task has no seams and no tests: its proof is the check it names, recorded in the done note's `evidence:` (phased-workflow **Docs-only task**); rerun that check.
 - **Infra task**: fmt, validate, and lint are green; the plan is saved; the tf-gate output is present. Review the plan adversarially: destroys, replacements, IAM or network widening, public exposure, anything the task didn't ask for. Infra is always a risk area (step 3).
 - **UI task**: fetch each screenshot the PR body links and read the files: `gh api "repos/{owner}/{repo}/contents/<path>?ref=heinzelwerk-screenshots" -H 'Accept: application/vnd.github.raw+json' > <tmp>/<name>.png` (a plain URL fetch returns the login page on a private repo). Or take your own from the branch with the preview from `team.md`. Check every changed screen against `docs/agents/heinzelwerk/design.md` and the acceptance criteria. Missing screenshots → fail.
 - **Contract files touched by this task's own commits** (team-modes **Contract changes**). The change is compatible → the PR body carries `contract: compatible`. The change is breaking → the task names the break (it is a seeded or accepted contract task), and a consumer task exists that is blocked by this task. Anything else → fail. This task is blocked by an unmerged same-repo contract task → its branch must be rebased on the current contract branch; check only `git log origin/<contract-branch>..HEAD -- <contract paths>`.
@@ -58,10 +58,11 @@ Tech-lead's docs PR. No checks, no review subagents. Check that:
 Anything else → fail: create `#N tech-lead fix <k>: docs` with the reason. Pass → post the `heinzelwerk: validated <sha>` review comment, write the done note, complete the task.
 
 ## Merge (`#N validate: merge`)
-Tech-lead creates it once diagnose finds no gap and the merge policy on main is enabled. Its details list the PRs in merge order (`owner/repo#PR` in workspace mode): docs PRs last, infra PRs left out.
+Tech-lead creates it once diagnose finds no gap and at least one repo's merge policy on main is enabled. Its details list every code PR in merge order (`owner/repo#PR` in workspace mode), policy-off repos included: docs PRs last, infra PRs left out.
 
-**Per PR.** Run `merge-gate <PR number>` from the repo's main checkout (the script only reads it), or in workspace mode `merge-gate -C <repo dir> <PR number>` from the workspace root, in exactly that form: the project allows that exact command, and the script runs from the plugin, so no PR can change it. Use a ten-minute Bash timeout, because the gate waits up to eight minutes for CI.
-- The gate prints `MERGE SKIP` → hold back every PR that depends on the skipped one, directly or through another held-back PR (it is stacked on its branch, or its body says `Depends on` it), plus the closing PR and the docs PRs, which describe code that is not on main yet; gate the rest.
+**Per PR.** Run `merge-gate <PR number>` from the repo's main checkout (the script only reads it), or in workspace mode `merge-gate -C <repo dir> <owner/repo>#<PR number>` from the workspace root (the gate checks that the dir is that repo), in exactly that form: the project allows that exact command, and the script runs from the plugin, so no PR can change it. Use a ten-minute Bash timeout, because the gate waits up to eight minutes for CI.
+- The gate prints `MERGE SKIP` (`auto-merge off` and an unaccepted main-only check included) → hold back every PR that depends on the skipped one, directly or through another held-back PR (it is stacked on its branch, or its body says `Depends on` it), plus the closing PR and the docs PRs, which describe code that is not on main yet; gate the rest. The gate itself also refuses a PR whose `Depends on` PR is unmerged, so a dependency the order missed still cannot land first.
+- `MERGED … (already merged)`: an earlier round merged it; count it as merged.
 - Gate the docs PRs last, and only once every code PR has merged.
 - The output has no `MERGED` or `MERGE SKIP` line at all (timeout, tool error) → run the gate once more; still none → treat the PR as `MERGE SKIP: gate error`.
 

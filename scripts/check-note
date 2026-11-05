@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # heinzelwerk note check. Deterministic, over the two texts other roles and scripts parse:
 #   note      a done note (phased-workflow **Done note**): every required field present, in order, non-empty;
-#             `checks:` holds one exit code (or `ci`: runs only in CI) per team.md check (count from team.md, or --checks N);
+#             `checks:` holds one exit code (or `ci`: not run here, left to CI) per team.md check (count from team.md, or --checks N);
 #             `session:` names the transcript; an `abandoned:` note needs only `abandoned: <why>`.
 #   verdict   a validator verdict body (validator **Verdict**): last non-empty line is
 #             `heinzelwerk: validated <40-hex sha>` (the `— heinzelwerk` footer goes above it);
@@ -48,14 +48,15 @@ if [ "$mode" = note ]; then
     # checks: one exit code per team.md check
     cl=$(field checks)
     if [ -n "$cl" ]; then
-      # one token per check, in team.md order: an exit code, or `ci` for a check that runs only in CI (reason in
-      # evidence:); tokens separated by spaces, tabs, or commas; anything else (prose, `0/ci`, `ci2`) is a miss
+      # one token per check, in team.md order: an exit code, or `ci` for a check not run here and left to CI (reason
+      # in evidence:); tokens separated by spaces, tabs, or commas; anything else (prose, `0/ci`, `ci2`) is a miss,
+      # and then the count is not compared (one clear miss, not two)
       lc=$(tr '[:upper:]' '[:lower:]' <<<"$cl")
       if grep -qE '^([0-9]+|ci)([[:space:],]+([0-9]+|ci))*[[:space:],]*$' <<<"$lc"; then
         codes=$(grep -oE '[0-9]+|ci' <<<"$lc" | wc -l)
       else
         miss "checks: holds exit codes or \`ci\` only, separated by spaces or commas (prose goes in evidence:): $cl"
-        codes=$(grep -oE '[0-9]+' <<<"$lc" | wc -l)
+        codes=""
       fi
       if [ -z "$checks" ] && [ -n "$team" ] && [ -f "$team" ]; then
         # the Checks entry: one line → every backticked item on it; a list → one per indented line that holds a
@@ -69,7 +70,7 @@ if [ "$mode" = note ]; then
           checks=$(tail -n +2 <<<"$block" | grep -c '`')
         fi
       fi
-      if [ -n "$checks" ]; then
+      if [ -n "$checks" ] && [ -n "$codes" ]; then
         (( codes == checks )) || miss "checks: has $codes exit codes, team.md lists $checks checks"
       fi
     fi
@@ -90,8 +91,9 @@ if [ "$mode" = verdict ]; then
     [ ${#sha} -eq 40 ] || miss "validated sha has ${#sha} chars, the gate wants the full 40"
   fi
   grep -iE 'inconclusive' <<<"$text" | grep -qviE 'inconclusive:[[:space:]]*[^[:space:]]' && miss "inconclusive without a reason (write \`inconclusive: <why, where to verify>\`)"
-  # a check that runs on main only has one form, the one merge-gate matches against tech-lead's acceptance
-  grep -iE 'inconclusive:' <<<"$text" | grep -iE '(^|[^a-z])main([^a-z]|$)' | grep -qvE 'inconclusive: main only: [^;[:space:]][^;]*; verify on the first main run' \
+  # a check that runs on main only has one form, the one merge-gate matches against tech-lead's acceptance. Caught by
+  # the phrases, not the bare word, so `cmd/main.go` or `src/main/java` in an inconclusive stays free
+  grep -iE 'inconclusive:' <<<"$text" | grep -iE 'main[ -]only|only (on|in|from) (the )?main|on main([^a-z0-9./_-]|$)|main branch|default branch|first main run' | grep -qvE 'inconclusive: main only: [^;[:space:]][^;]*; verify on the first main run' \
     && miss "a main-only inconclusive not in the form \`inconclusive: main only: <check>; verify on the first main run\`"
   # a clock time (not a path:line:col): digits bounded on the left by start, space, or a date's `T`
   grep -qE '(^|[[:space:]T])[0-9]{2}:[0-9]{2}(:[0-9]{2})?Z?([[:space:]]|$)' <<<"$text" && ! grep -q 'UTC' <<<"$text" && miss "a timestamp without UTC"

@@ -53,7 +53,7 @@ Route per team-modes **Routing**.
 
 **Escalate to the user only** when product or tech-lead can't answer from the ticket, spec, glossary, ADRs, team rules, or code. One question per message, with product's or tech-lead's recommended answer. An infra gate fail or tech-lead's doubt goes to the user too, with tech-lead's summary and recommendation; the run continues meanwhile.
 
-**The user asks for a merge**, during or after the run → run `merge-gate <PR>` yourself per PR, in workspace mode `merge-gate -C <repo dir> <owner/repo>#<PR>` (the project allows that command). Go in the merge task's order (tech-lead §4) and apply validator **Merge**'s hold-back rule to every skip and relay its output. If the user wants a skip reason waived, that takes a policy edit on `main` or a merge by the user's own hand. Agents never merge any other way. A PR comment authorizes nothing, since every role posts under the user's login.
+**The user asks for a merge**, during or after the run → run `merge-gate <PR>` yourself per PR, in workspace mode `merge-gate -C <repo dir> <owner/repo>#<PR>` (the project allows that command). Go in the merge order of tech-lead §4, read from the plan comment's PR order (workspace mode) or the run state's task snapshot (single mode), since the merge task may be gone or never existed, and apply validator **Merge**'s hold-back and closing-PR rules to every skip and relay its output. If the user wants a skip reason waived, that takes a policy edit on `main` or a merge by the user's own hand. Agents never merge any other way. A PR comment authorizes nothing, since every role posts under the user's login.
 
 **No answer from the user** → the task that depends on the answer waits; say so in a one-line comment on the ticket; every other task continues. When nothing is left to run (every task that doesn't need the answer is completed) → post the run state, end per §4 with outcome `needs-info`; product relabels the ticket.
 
@@ -131,7 +131,7 @@ Every run ends with a final report. A run ends on one of:
 - a `needs-info` stop;
 - a user stop.
 
-1. Ask product for the **acceptance verdict** and tech-lead for the **technical report** (skip whichever an early end makes moot). The report lists a `heinzelwerk: accepted main-only` check on a PR the gate merged → find its merge sha (`gh pr view <PR> -R <owner/repo> --json mergeCommit -q .mergeCommit.oid`) and wait up to 30 minutes for that check's run on main (`gh run list -R <owner/repo> --branch main --commit <sha>`). Put its result in the final report, or `not run` when none came (a `paths-ignore` or a skipped job); red or `not run` → tell the user.
+1. Ask product for the **acceptance verdict** and tech-lead for the **technical report** (skip whichever an early end makes moot). The report lists a `heinzelwerk: accepted main-only` check on a PR the gate merged → find its merge sha (`gh pr view <PR> -R <owner/repo> --json mergeCommit -q .mergeCommit.oid`) and read that CI job's check run on the merge commit: `gh api repos/<owner/repo>/commits/<sha>/check-runs --jq '.check_runs[] | select(.name == "<check>") | .status + " " + (.conclusion // "")'`. Not completed → ask again every 5 minutes, each call its own Bash command, for at most 30 minutes. Put its result in the final report, or `not run` when none came (a `paths-ignore` or a skipped job); red or `not run` → tell the user.
 2. **Clean up** every worktree in tech-lead's list. The rule, also used at run start:
 
    | Worktree | Action |

@@ -29,10 +29,13 @@ case "$*" in
   *merge-policy.json*".allow_paths"*)        echo '*' ;;
   *merge-policy.json*".merge_method"*)       echo squash ;;
   *merge-policy.json*)                       echo "" ;;
-  "pr view "*"--json baseRefName"*)          echo main ;;
+  "pr view "*"--json baseRefName"*)          echo "${FAKE_BASE:-main}" ;;
+  "pr view "*"--json mergedBy"*)             echo "${FAKE_MERGER:-mradomsky}" ;;
   "pr view "*"--json statusCheckRollup"*)    echo SUCCESS ;;
   "pr view 7 --json state"*)                 echo "${FAKE_STATE:-OPEN}" ;;
-  "pr view "*"--json state"*)                [ "${FAKE_DEP_STATE:-MERGED}" = FAIL ] && exit 1; echo "${FAKE_DEP_STATE:-MERGED}" ;;
+  # another PR (a Depends on target): FAKE_DEP_STATE for all, or OPEN for the numbers in FAKE_OPEN_PRS
+  "pr view "*"--json state"*)                n=$3; [ "${FAKE_DEP_STATE:-MERGED}" = FAIL ] && exit 1
+                                             if [[ " ${FAKE_OPEN_PRS:-} " == *" $n "* ]]; then echo OPEN; else echo "${FAKE_DEP_STATE:-MERGED}"; fi ;;
   "pr view "*"--json isDraft"*)              echo false ;;
   "pr view "*"--json mergeable"*)            echo MERGEABLE ;;
   "pr view "*"--json headRefOid"*)           echo "$HEAD_SHA" ;;
@@ -83,8 +86,10 @@ expect "owner/repo#N, case differs" "MERGED: PR 7" "$validated" Owner/Repo#7
 expect "owner/repo#N in another repo" "is owner/repo, not other/repo" "$validated" other/repo#7
 FAKE_REPO=owner/other expect "-C dir is the wrong repo" "is owner/other, not owner/repo" "$validated" -C repo owner/repo#7
 expect "owner/repo# without a number" "MERGE SKIP: usage" "$validated" owner/repo#
-FAKE_STATE=MERGED expect "already merged is done, not a skip" "MERGED: PR 7 (already merged)" "" 7
-FAKE_STATE=CLOSED expect "closed PR skips" "PR not open" "$validated" 7
+FAKE_STATE=MERGED expect "already merged is done, not a skip" "MERGED: PR 7 (already merged by mradomsky)" "" 7
+FAKE_STATE=MERGED FAKE_BASE=feat/x expect "merged into another base is a skip" "MERGE SKIP: merged into feat/x, not main" "" 7
+FAKE_STATE=CLOSED expect "closed PR skips before anything" "MERGE SKIP: PR closed" "$validated" 7
+FAKE_STATE=CLOSED FAKE_BASE=feat/x expect "closed stacked PR is never retargeted" "MERGE SKIP: PR closed" "$validated" 7
 
 echo "--- validated line"
 expect "validated head merges" "MERGED: PR 7" "$validated" 7
@@ -134,5 +139,10 @@ FAKE_BODY="Depends on https://github.com/owner/provider/pull/61" FAKE_DEP_STATE=
 FAKE_BODY="depends on #12 (same repo)" FAKE_DEP_STATE=OPEN expect "same-repo #N form" "depends on #12, which is OPEN" "$validated" 7
 FAKE_BODY="Depends on owner/provider#60" FAKE_DEP_STATE=FAIL expect "unreadable provider skips" "which is no readable PR" "$validated" 7
 FAKE_BODY="Refs owner/meta#140" FAKE_DEP_STATE=OPEN expect "Refs line is no dependency" "MERGED: PR 7" "$validated" 7
+FAKE_BODY="Closes owner/meta#140. Depends on owner/provider#60." FAKE_OPEN_PRS=140 expect "Closes on the same line adds nothing" "MERGED: PR 7" "$validated" 7
+FAKE_BODY="Fixes #77; retry behaviour depends on the backoff config." FAKE_DEP_STATE=OPEN expect "prose depends on adds nothing" "MERGED: PR 7" "$validated" 7
+FAKE_BODY="Depends on owner/a#1, owner/b#2 and #3" FAKE_OPEN_PRS=3 expect "list after the phrase: last one counts" "depends on #3, which is OPEN" "$validated" 7
+FAKE_BODY="Depends on owner/a#1, owner/b#2 and #3" FAKE_OPEN_PRS=2 expect "list after the phrase: middle one counts" "depends on owner/b#2, which is OPEN" "$validated" 7
+FAKE_BODY="Depends on #7" FAKE_DEP_STATE=OPEN expect "depends on itself is ignored" "MERGED: PR 7" "$validated" 7
 
 echo "$cases cases, $failures bad"; [ $failures -eq 0 ]

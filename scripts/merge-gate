@@ -2,15 +2,17 @@
 # heinzelwerk auto-merge gate. Deterministic: decides from the PR + policy, nothing else. Off unless enabled.
 # Usage: merge-gate [-C <repo dir>] [<owner/repo>#]<pr-number>   (run inside the repo, or name it with -C first; with
 #        owner/repo the gate checks that the dir is that repo; prints MERGED or MERGE SKIP: <reasons>, a usage error
-#        included; exit 0 either way; an already merged PR prints MERGED … (already merged))
+#        included; exit 0 either way; a PR already merged into main prints MERGED … (already merged by <login>), a
+#        closed one MERGE SKIP: PR closed)
 # Lives in the plugin's scripts/, so no PR can change it. Policy: docs/agents/heinzelwerk/merge-policy.json as on main
 # on GitHub, never the branch's copy. A PR that touches a heinzelwerk policy file, the project's Claude Code settings,
 # or a workflow always waits for a human. A PR stacked on another PR's branch is retargeted to main once that PR merged.
-# A PR whose body says `Depends on <PR>` (`owner/repo#N`, `#N`, or a pull URL) waits until every such PR is merged.
+# A PR whose body says `Depends on <PR>[, <PR> and <PR>]` (`owner/repo#N`, `#N`, or a pull URL) waits until every such PR
+# is merged.
 # Waits up to MERGE_GATE_WAIT seconds (default 450) for CI and, when the policy names a `review_bot`, for its review of the
 # head sha (`review-gate`, same budget): run it with a ten-minute Bash timeout. `bot_review: required` → an open, pending, or
 # unavailable bot review is a skip reason; `best-effort` → open threads skip, pending or unavailable merge with a note line.
-# The newest validator verdict (a body ending in `heinzelwerk: validated <sha>`) may hold `inconclusive: main only: <check>; …`
+# The newest validator verdict of the head (a body with a stand-alone `heinzelwerk: validated <sha>` line naming it) may hold `inconclusive: main only: <check>; …`
 # lines (a CI job that runs on main only): each needs tech-lead's line `heinzelwerk: accepted main-only <check> @ <sha>`
 # naming the head, like the validated line.
 # Needs: gh only (its built-in --jq). Globs: bash patterns on the repo-relative path; * also matches /.
@@ -42,8 +44,15 @@ checks() { pv statusCheckRollup '.statusCheckRollup[]? | if .__typename == "Chec
 # the bot-review verdict comes from the sibling script review-gate (plugin scripts/, so no PR can change it)
 bot_review_verdict() { "$here/review-gate" "$pr" | head -1; }   # e.g. "BOT REVIEW: clean <sha>"
 bot_review_pending() { bot_review_verdict | grep -q "^BOT REVIEW: pending"; }
-# a rerun of the merge task meets PRs an earlier round merged: done, not a skip
-[ "$(pv state .state)" = MERGED ] && { echo "MERGED: PR $pr (already merged)"; exit 0; }
+# a rerun of the merge task meets PRs an earlier round merged: done, not a skip, but only once on main; the merger is named
+# so a human's merge reads as one. A closed PR is never touched (the retarget below would reopen it)
+state=$(pv state .state)
+if [ "$state" = MERGED ]; then
+  mbase=$(pv baseRefName .baseRefName); by=$(pv mergedBy '.mergedBy.login // "unknown"')
+  [ "$mbase" = main ] || { echo "MERGE SKIP: merged into $mbase, not main (by $by)"; exit 0; }
+  echo "MERGED: PR $pr (already merged by $by)"; exit 0
+fi
+[ "$state" = CLOSED ] && { echo "MERGE SKIP: PR closed"; exit 0; }
 enabled=$(pol '.enabled // false' 2>/dev/null) || { echo "MERGE SKIP: no docs/agents/heinzelwerk/merge-policy.json on main"; exit 0; }
 [ "$enabled" = true ] || { echo "MERGE SKIP: auto-merge off"; exit 0; }
 
@@ -81,8 +90,10 @@ if [ "$(pol '.require_validation // true')" = true ]; then
   [ $vok = yes ] || reasons+=("no \"heinzelwerk: validated $head\" on the PR")
 fi
 # a check validator could not see (its job runs on main only) merges only with tech-lead's acceptance of this head.
-# The checks come from the newest verdict alone (a comment quoting the form demands nothing); names are plain strings
-verdict=$(pv comments,reviews '[(.comments[] | {t: .createdAt, b: .body}), (.reviews[] | {t: .submittedAt, b: .body})] | map(select(.b | test("(^|\n)heinzelwerk: validated [0-9a-f]{7,40}\\s*$"))) | sort_by(.t) | (last // {b: ""}) | .b')
+# The checks come from the newest verdict of this head alone: a body with a stand-alone validated line naming the head
+# (the same rule as above, so a footer below the line changes nothing); a comment quoting the form demands nothing.
+# Names are plain strings. $head is hex from gh, safe inside the jq string
+verdict=$(pv comments,reviews '[(.comments[] | {t: .createdAt, b: .body}), (.reviews[] | {t: .submittedAt, b: .body})] | map(select([(.b // "") | scan("(?m)^heinzelwerk: validated ([0-9a-f]{7,40})[ \t\r]*$") | .[0]] | any(. as $s | "'"$head"'" | startswith($s)))) | sort_by(.t) | (last // {b: ""}) | .b')
 verdict=${verdict//$'\r'/}
 accepted=$(grep -E '^heinzelwerk: accepted main-only .+ @ [0-9a-f]{7,40}[[:space:]]*$' <<<"$bodies" | sed -E 's/^heinzelwerk: accepted main-only //; s/[[:space:]]+$//' || true)
 while IFS= read -r c; do
@@ -94,13 +105,15 @@ while IFS= read -r c; do
 done < <(grep -oiE 'inconclusive: main[ -]only: [^;]+' <<<"$verdict" | sed -E 's/^[^:]*: [^:]*:[[:space:]]*//; s/[[:space:]]+$//' | sort -u || true)
 body=$(pv body '.body'); body=${body//$'\r'/}
 grep -qE '^[[:space:]]*[-*] \[ \]' <<<"$body" && reasons+=("unchecked item in PR body (needs a human)")
-# Depends on: every named PR merged first (a cross-repo consumer never lands before its provider)
-deps=$(grep -iE 'depends on' <<<"$body" | grep -oE '(https://github\.com/)?[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(#|/pull/)[0-9]+|(^|[^A-Za-z0-9_/])#[0-9]+' \
-  | sed -E 's#^https://github\.com/##; s#/pull/#\##; s/^[^#A-Za-z0-9]+//' | sort -u || true)
+# Depends on: every named PR merged first (a cross-repo consumer never lands before its provider). Only the refs right
+# after the phrase count (`Depends on a/b#1, c/d#2 and #3`), so `Closes …#140` or "depends on the config" add nothing
+ref='(https://github\.com/)?[A-Za-z0-9-]+/[A-Za-z0-9_.-]+(#|/pull/)[0-9]+|#[0-9]+'
+deps=$(grep -oiE "depends on:?[[:space:]]+($ref)([[:space:]]*(,|and|&)[[:space:]]*($ref))*" <<<"$body" | grep -oE "$ref" \
+  | sed -E 's#^https://github\.com/##; s#/pull/#\##' | sort -u || true)
 while IFS= read -r d; do
-  [ -n "$d" ] || continue
-  if [[ $d == \#* ]]; then ds=$(gh pr view "${d#\#}" --json state --jq .state 2>/dev/null || echo "no readable PR")
-  else ds=$(gh pr view "${d##*#}" -R "${d%#*}" --json state --jq .state 2>/dev/null || echo "no readable PR"); fi
+  [ -n "$d" ] && [ "$d" != "#$pr" ] || continue
+  if [[ $d == \#* ]]; then ds=$(gh pr view "${d#\#}" --json state --jq .state 2>/dev/null || echo "no readable PR (an issue, or no access)")
+  else ds=$(gh pr view "${d##*#}" -R "${d%#*}" --json state --jq .state 2>/dev/null || echo "no readable PR (an issue, or no access)"); fi
   [ "$ds" = MERGED ] || reasons+=("depends on $d, which is $ds (merge it first)")
 done <<<"$deps"
 # optional size cap: only when the policy sets max_changed_lines

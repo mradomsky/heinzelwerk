@@ -96,7 +96,21 @@ t "src/main/java is no main-only" verdict PASS "inconclusive: needs a JDK for sr
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "domain and maintainer are no main" verdict PASS "inconclusive: domain cert needs the maintainer's key; verify on the host
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "domain only is no main-only" verdict PASS "inconclusive: custom domain only resolves in prod; verify on prod
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main thread is no main-only" verdict PASS "inconclusive: race only on main thread under load; verify on a device
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "main's startup is no main-only" verdict PASS "inconclusive: crash on main's startup path; verify on Android
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 echo "--- verdict: must fail"
+t "runs on push to main" verdict FAIL "inconclusive: e2e runs on push to main
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "only on backticked main" verdict FAIL "inconclusive: deploy job only on \`main\`
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "not triggered for pull requests" verdict FAIL "inconclusive: arm64 build not triggered for pull requests
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "post-merge only" verdict FAIL "inconclusive: smoke test is post-merge
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "main-only hyphenated" verdict FAIL "inconclusive: main-only: docker build; verify on the first main run
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "default branch wording" verdict FAIL "inconclusive: job runs only on the default branch

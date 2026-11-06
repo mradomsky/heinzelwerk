@@ -59,7 +59,7 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 
 ### 4. Spawn both sub-agents in parallel
 
-Issue both sub-agent calls together, in the foreground, and aggregate the reports they return.
+Issue both sub-agent calls together, then stop and wait: each report arrives as your next message or as the coordinator's `[team-lead] hand-back for you:` forward (phased-workflow **Subagents**). Aggregate once both are in.
 
 **Standards sub-agent prompt** should include:
 

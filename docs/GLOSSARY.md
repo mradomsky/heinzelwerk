@@ -29,7 +29,7 @@ Any agent-team member other than coordinator. Spawned by coordinator as `heinzel
 _Avoid_: agent (too wide: subagents and the user's own sessions are agents too), worker, bot
 
 **Subagent**:
-A short-lived agent a role spawns in the foreground for one report (an Opus critique, a Haiku search). Hands back to its spawner, or to coordinator by platform accident.
+A short-lived agent a role spawns in the background for one report (an Opus critique, a Haiku search). Hands back to its spawner when the harness delivers it, otherwise to coordinator, who forwards it; the forward is the usual case.
 _Avoid_: helper, child, sub-task
 
 ## Work

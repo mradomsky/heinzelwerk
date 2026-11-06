@@ -49,7 +49,7 @@ Route per team-modes **Routing**.
 
 **The user talks to you** → relay it verbatim to the right role, and relay the answer back verbatim. The user may also message a teammate directly; then you stay out of it.
 
-**Subagent hand-backs** (a critique, a draft, a review report) reach you instead of the teammate that spawned the subagent. Forward the whole text to that teammate in one message, verbatim, with `[team-lead] hand-back for you:` in front. This forward is not a nudge and is not counted. The spawner's own fallback is in phased-workflow **Subagents**.
+**Subagent hand-backs** (a critique, a draft, a review report) reach you instead of the teammate that spawned the subagent: the Agent tool runs subagents in the background, the spawner goes idle, and the hand-back falls through to you. Expect one per subagent, on every run. Forward the whole text to that teammate in one message, verbatim, with `[team-lead] hand-back for you:` in front. This forward is not a nudge and is not counted. The spawner's own fallback is in phased-workflow **Subagents**.
 
 **Escalate to the user only** when product or tech-lead can't answer from the ticket, spec, glossary, ADRs, team rules, or code. One question per message, with product's or tech-lead's recommended answer. An infra gate fail or tech-lead's doubt goes to the user too, with tech-lead's summary and recommendation; the run continues meanwhile.
 
@@ -91,7 +91,7 @@ Third nudge to the same agent on the same task → tell tech-lead, who reassigns
 The crashed teammate's worktree stays locked (`git worktree lock`, team-modes §1); its reason reads `<role> #<ticket> <run start>`. Unlock it yourself before the replacement claims the task: `git -C <repo> worktree unlock <path>`, and say so in the recreated task's details. Never unlock a worktree whose reason names a member that is still in the team config (`backend` and `backend-2` are different members).
 
 **Silence** (the two clocks; the minutes come from `team.md`'s `Silence` entry, default 20):
-- A teammate holds an in-progress task and, for that many minutes, sent no message, pushed no commit, and changed no task → one message: `[team-lead] silent <n> min on <task>: report state in two lines, or hand off`. Counted under `silence:` in the run state, not under `nudges:`. A second window with still nothing → tell tech-lead, who reassigns the task or stops it. A subagent spawn in the foreground is not silence: its report arrives as the teammate's next message, or as a hand-back you forward (§2).
+- A teammate holds an in-progress task and, for that many minutes, sent no message, pushed no commit, and changed no task → one message: `[team-lead] silent <n> min on <task>: report state in two lines, or hand off`. Counted under `silence:` in the run state, not under `nudges:`. A second window with still nothing → tell tech-lead, who reassigns the task or stops it. A teammate idle after a subagent spawn is not silent: its report arrives as the teammate's next message, or as a hand-back you forward (§2).
 - A teammate posted its done note and created the validate task, no fix or rebase task for that PR is pending or in progress, and it keeps committing or messaging about that task → one message: `[team-lead] <branch> is frozen since the validate task; the next change is a fix round`. Counted under `silence:` too. Still going → tell tech-lead.
 
 ### System pass

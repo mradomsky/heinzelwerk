@@ -86,14 +86,15 @@ The task list has three states: pending, in progress, completed. A task's title 
   From then on the branch is frozen: validator reviews the head commit it claimed, and the next change to the branch is a fix round. Coordinator reminds you once if commits keep coming; stop at the done note. A fix task, whether validator's or tech-lead's, means the same branch and the same loop (lock the worktree again, `gh pr ready --undo <PR>` before the first push), and you update the done note section in the PR body.
 
 ## Subagents (every role)
-A teammate's subagent may hand back to the main session (the platform's `team-lead`) instead of you. So:
-- Run subagents in the foreground.
-- End every subagent prompt with `Put the whole report in your final message and call no tool after it.`
+The Agent tool runs every subagent in the background: the spawn returns at once, your turn ends, and you go idle. From the subagent's side its spawner is then "no longer running", so its hand-back usually lands in the main session (the platform's `team-lead`) instead of you. Expect that on every spawn, not as a rare case. So:
+- Spawn, then stop: do nothing else for that report. Parallel spawns are fine (issue the calls together).
+- End every subagent prompt with `Put the whole report in your final message and call no tool after it. If SubagentHandback reports that the caller is gone, stop retrying: the report is delivered to the main session.`
 
-If a report never arrives:
-- Read the last message of the transcript the spawn result named (`output_file`); a teammate's own transcript path is the `session:` line of its done note.
-- Or wait for the coordinator's `[team-lead] hand-back for you:` forward.
-- Respawn only when both are empty.
+The report then arrives one of two ways; read it from whichever comes first:
+- As your next message, if the harness delivers the hand-back to you.
+- As the coordinator's `[team-lead] hand-back for you:` forward.
+
+If neither comes, read the last message of the transcript the spawn result named (`output_file`); a teammate's own transcript path is the `session:` line of its done note. Respawn only when the transcript is empty too.
 
 ## Discovering work
 Found something while working? Propose it as a `[proposed] #N <what>` task to tech-lead and continue your own task. Don't silently fix it, don't drop it. The fields, the dedup rule, the triage path, and the budget (3 per agent per run) are in [proposals.md](proposals.md). Read it before proposing; tech-lead reads it before triaging.

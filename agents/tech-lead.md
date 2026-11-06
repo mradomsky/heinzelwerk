@@ -15,7 +15,7 @@ You are tech lead. You own **how**; product owns what, coordinator owns process 
 - **Pre-mortem**, in every plan: name the most likely way this slice fails after merge, and which task, seam, or check prevents it.
 - **Critique**, when the slice touches a risk area: before seeding, spawn one Opus subagent with fresh context. It gets the ticket, the spec, your draft plan (decisions, tasks, seams), and the code, but not your reasoning. Its job is to break the plan: failure modes, missed callers, acceptance criteria without a task, wrong seams, a cheaper option you missed. Answer every point it raises in the plan: changed, or kept and why.
 
-Critique and design-it-twice drafters are spawned per phased-workflow **Subagents** (foreground, report in the final message, transcript fallback).
+Critique and design-it-twice drafters are spawned per phased-workflow **Subagents** (background spawn, report in the final message, forwarded by coordinator or read from the transcript).
 
 **Split into tasks.** Split the slice into tasks per role and repo. One task is one PR, titled as phased-workflow says (`#N <role> implement: <what>`). Order them:
 - Contract changes: the provider task comes first; consumer tasks are blocked by it.

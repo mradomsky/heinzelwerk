@@ -184,12 +184,12 @@ Then tell the user to create, in the unversioned workspace folder, a `CLAUDE.md`
 
 Single mode: `docs/agents/heinzelwerk/learnings.md` from [learnings.md](learnings.md) in the repo itself.
 
-Run `check-refs` (plugin script, on PATH) and fix every line it prints, then commit `docs: set up agent docs`. **F said yes → run `heinzelwerk:adopt-docs` now**, on the same branch; it adds its own commit and reconciles every ref the branch's edits moved. Only then open one PR per repo. Remove the detached worktrees from §1. Do not merge.
+Run `check-refs` (plugin script, on PATH) and fix every line it prints, then commit `docs: set up agent docs`. **F said yes → run `heinzelwerk:adopt-docs` now**, on the same branch; it adds its own commit and reconciles every ref the branch's edits moved. Only then open one PR per repo and watch its checks (team-modes **Solo PRs**: stage by name, `gh pr checks --watch`, a red check is fixed or named in §5). Remove the detached worktrees from §1. Do not merge.
 
 ## 5. Done: tell the user
 
 Tell the user:
-- Which PRs are open. Workspace mode: the tickets repo's PR merges first, since every other PR points at its files.
+- Which PRs are open, with their check state (green, or the failing job's URL). Workspace mode: the tickets repo's PR merges first, since every other PR points at its files.
 - Which checks are red on main (with their tickets), `unverified locally` (with the missing tool), or `CI only`.
 - Tools the gates still need on this machine (`jq` for `tf-gate`), before any auto-apply.
 - `/heinzelwerk:adopt-docs` absorbs docs added later; `/heinzelwerk:retro` reviews runs (weekly works well).

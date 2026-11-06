@@ -13,7 +13,7 @@ Claude Code plugin: a lean autonomous dev team (coordinator / product / tech-lea
 - **Phases, not pipelines.** Every task carries one phase: analyze / implement / validate. Any agent may create work in any phase; every task leaves a handoff.
 - **Tickets are durable, tasks are disposable.** Everything the next run needs lives on GitHub.
 - **Pointers, not imports.** `CLAUDE.md` holds a short `## Agent skills (heinzelwerk)` block; agents read `docs/agents/heinzelwerk/*` when the pointer fires.
-- **Draft until validated.** Every agent PR opens as a draft and turns ready only when the validator passes its head; a fix round turns it back. GitHub's "ready for review" therefore means "heinzelwerk validated this", and a review bot that skips drafts reviews only validated heads, so what it still finds is what the validator missed.
+- **Draft until validated.** Every PR a team run opens is a draft and turns ready only when the validator passes its head; a fix round turns it back. GitHub's "ready for review" therefore means "heinzelwerk validated this", and a review bot that skips drafts reviews only validated heads, so what it still finds is what the validator missed.
 - **Humans merge, unless a deterministic gate allows it.** Agents open PRs and never push main. `merge-gate` lives in the plugin's `scripts/`, so no PR can change it. It merges a PR only when `merge-policy.json` on main allows it, which means all of:
   - the validator's `heinzelwerk: validated <sha>` line names the PR's current head
   - every changed file is allowed by the policy

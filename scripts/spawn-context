@@ -51,7 +51,14 @@ newest() {
 plan=$(newest '.body | test("(^|\n)Decisions\n") and test("\nTasks\n")') || fail "comments fetch failed"
 if [ -n "$plan" ]; then section "Plan comment (tech-lead)"; printf '%s\n' "$plan" | cap 80; fi
 state=$(newest '.body | startswith("## Heinzelwerk run state")') || fail "comments fetch failed"
-if [ -n "$state" ]; then section "Run state (an earlier run on this ticket)"; printf '%s\n' "$state" | cap 80; fi
+if [ -n "$state" ]; then
+  # coordinator's own run state carries `run start: <ts>` (coordinator §1.1); any other is an earlier run's. Markdown
+  # around it (list dash, bold, backticks, a table row), letter case, and a trailing UTC do not matter
+  norm() { tr '[:upper:]' '[:lower:]' | sed -E 's/[*`|]//g; s/[[:space:]]+/ /g; s/^[- ]+//; s/ +$//; s/ utc$//; s/^run start:? /run start: /'; }
+  if [ -n "$start" ] && grep -qxF -- "run start: $(norm <<<"$start")" <<<"$(norm <<<"$state")"; then
+    label="this run"; else label="an earlier run on this ticket"; fi
+  section "Run state ($label)"; printf '%s\n' "$state" | cap 80
+fi
 
 # team rules: the entries every role reads before coding or validating, with their indented continuation lines
 team=docs/agents/heinzelwerk/team.md

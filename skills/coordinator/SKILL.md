@@ -25,15 +25,15 @@ You do no task work: no code, no tasks, no spec edits. Follow the `heinzelwerk:p
    | first | product |
    | product's `spec gate passed` message | tech-lead, with the gate comment's URL in its spawn prompt. A bugfix run has no gate: spawn product and tech-lead at once |
    | tech-lead's `plan posted` message | only the implementers it names |
-   | each `validate task created` message | validator, unless it is running |
+   | each `validate task created` message | this ticket's validator, unless it is running |
    | tech-lead's `tasks created: <ids>, spawn <roles>` message (fix, diagnose, rebase, and merge tasks) | the roles it names that aren't running |
 
-   **How to spawn.** Agent type `heinzelwerk:<role>`; without the type the role prompt, model, and tool limits don't apply. Name it `<role>`, or `<role>-N` (next free number) when it is a respawn after a release or crash. Each spawn prompt carries:
+   **How to spawn.** Agent type `heinzelwerk:<role>`; without the type the role prompt, model, and tool limits don't apply. Name it `<role>-<ticket>` (`backend-168`), or `<role>-<ticket>-N` (next free number) when it is a respawn after a release or crash. Each spawn prompt carries:
    - the ticket;
    - the mode;
    - the team config path (`~/.claude/teams/<team>/config.json`);
    - in a bugfix run, the instruction to follow `bugfix.md` in the `heinzelwerk:phased-workflow` skill;
-   - a `## Context` block: the output of `spawn-context <role> <ticket> --start "<run start>"` (validator: `--pr <PR>`; workspace mode: `--tickets <owner/repo>`, and `--dir` the tickets repo for product and tech-lead, the task's repo for an implementer or validator), run once per spawn and pasted whole. Its header carries the run start, which the teammate's worktree lock reason repeats. It holds the ticket, the newest plan and run-state comments, the team.md entries every role reads, the agent-skills pointers, and for validator the PR body and its changed files. The script exits non-zero when a fetch fails: then spawn without the block, with the ticket and the run start written by hand, and say so in the prompt; never paste a partial one.
+   - a `## Context` block: the output of `spawn-context <role> <ticket> --start "<run start>"` (a respawn: `--member <role>-<ticket>-N`; validator: `--pr <PR>`; workspace mode: `--tickets <owner/repo>`, and `--dir` the tickets repo for product and tech-lead, the task's repo for an implementer or validator), run once per spawn and pasted whole. Its header carries the run start, which the teammate's worktree lock reason repeats. It holds the ticket, the newest plan and run-state comments, the team.md entries every role reads, the agent-skills pointers, and for validator the PR body and its changed files. The script exits non-zero when a fetch fails: then spawn without the block, with the ticket and the run start written by hand, and say so in the prompt; never paste a partial one.
 
    Teammates discover who is running from that config (team-modes **Messaging**); you never maintain a roster.
 4. **Release** a teammate (send it a shutdown request) once all three conditions hold:
@@ -43,6 +43,7 @@ You do no task work: no code, no tasks, no spec edits. Follow the `heinzelwerk:p
 
    A message to a released teammate revives it with stale context. So a released role comes back only through a fresh spawn named in tech-lead's `tasks created` message.
    Validator stays while any implement or fix task is pending or in progress (each ends in a validate task), and until its last validate task is completed. Product and tech-lead stay until the end.
+5. **Several tickets in one session.** A second `/heinzelwerk:feature` or `/heinzelwerk:bugfix` while a run is active starts a second run in the **same team**, never a second team. Precondition: the tickets are independent. Single mode: their scope paths share no file; workspace mode: no repo in common with the other run's PR order. Not independent → refuse, name the run that must finish first. Then do steps 1–3 for the new ticket, with its own run start, run cap, and run-state comment, and skip **Clear leftovers** (the other run holds its worktrees). Everything in this skill that says "the run" or "the ticket" is per ticket: the spawn table, release, the passes in §3, the run state, the end in §4. Members are `<role>-<ticket>`, so `product-167` and `product-168` coexist; every message, nudge, and hand-back forward goes to the member of the ticket it is about (a hand-back names its ticket in the report or the subagent's prompt). Both runs' docs PRs touch the same files (`learnings.md`, the glossary, the repo map): tech-lead rebases right before the validate task (tech-lead §6), and a merge-round skip for that is the usual rebase round. Two runs at once is the working size; a third strains your context, say so to the user before starting it.
 
 ## 2. Routing
 Route per team-modes **Routing**.
@@ -83,12 +84,12 @@ Third nudge to the same agent on the same task → tell tech-lead, who reassigns
 
 **Run cap**: at every pass, compare `date -u` with the start time. Past the cap → spawn nothing new; let an in-progress `validate: merge` task finish; then post the run state and end per §4 with outcome `stopped` and `caps_hit: run cap`. Unpushed work stays in its worktree (the cleanup rule in §4.2 keeps it); a resumed run starts a new cap window.
 
-**Failure notification** (any other API error) → send one message to the teammate; the teammate retries. Still dead → spawn a replacement named `<role>-N` (next free number) and tell tech-lead. Tech-lead then:
+**Failure notification** (any other API error) → send one message to the teammate; the teammate retries. Still dead → spawn a replacement named `<role>-<ticket>-N` (next free number) and tell tech-lead. Tech-lead then:
 - writes the done note `abandoned: teammate crashed` into the in-progress task;
 - completes it;
 - recreates it as a pending task, with the same branch and worktree in its details, for the replacement to claim.
 
-The crashed teammate's worktree stays locked (`git worktree lock`, team-modes §1); its reason reads `<role> #<ticket> <run start>`. Unlock it yourself before the replacement claims the task: `git -C <repo> worktree unlock <path>`, and say so in the recreated task's details. Never unlock a worktree whose reason names a member that is still in the team config (`backend` and `backend-2` are different members).
+The crashed teammate's worktree stays locked (`git worktree lock`, team-modes §1); its reason reads `<role> #<ticket> <run start>`. Unlock it yourself before the replacement claims the task: `git -C <repo> worktree unlock <path>`, and say so in the recreated task's details. Never unlock a worktree whose reason names a member that is still in the team config (`backend-168` and `backend-168-2` are different members).
 
 **Silence** (the two clocks; the minutes come from `team.md`'s `Silence` entry, default 20):
 - A teammate holds an in-progress task and, for that many minutes, sent no message, pushed no commit, and changed no task → one message: `[team-lead] silent <n> min on <task>: report state in two lines, or hand off`. Counted under `silence:` in the run state, not under `nudges:`. A second window with still nothing → tell tech-lead, who reassigns the task or stops it. A teammate idle after a subagent spawn is not silent: its report arrives as the teammate's next message, or as a hand-back you forward (§2).
@@ -180,4 +181,4 @@ issues_filed: <urls or none>
 worktrees_kept: <paths or none>
 -->
 ```
-4. Tell the user in three lines: outcome, what needs their review, what needs their answer. End the team.
+4. Tell the user in three lines: outcome, what needs their review, what needs their answer. End the team, unless another run is still active in it (§1.5); then release only this run's members.

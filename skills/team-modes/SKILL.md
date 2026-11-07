@@ -21,9 +21,9 @@ Coordinator does this first and tells the team; tech-lead confirms it in the pla
 Only coordinator talks to the user.
 
 ## Messaging
-- Every message starts with a tag: `[<repo>@<branch>]` from an implementer, `[<role>]` from everyone else.
-- Member names: coordinator is `team-lead` (the platform's name for the main session); every other role is its own name (`tech-lead`, `product`, …; a respawn after a release or crash: `<role>-N`). Never confuse `team-lead` with `tech-lead`.
-- Coordinator, product, and tech-lead always run: message them without checking.
+- Every message starts with a tag: `[<repo>@<branch>]` from an implementer, `[<role> #<ticket>]` from everyone else.
+- Member names: coordinator is `team-lead` (the platform's name for the main session). Every other member is `<role>-<ticket>` (`tech-lead-168`, `backend-168`; a respawn after a release or crash: `<role>-<ticket>-N`, so `backend-168-2`). One team may run several tickets at once (coordinator §1.5); the suffix keeps the runs apart. Wherever these docs say "message tech-lead" or "spawn validator", they mean the member of that role **for your ticket**; its exact name is in the team config, and your own is in your spawn prompt's `## Context` header. Never confuse `team-lead` with `tech-lead`.
+- Coordinator and your ticket's product and tech-lead always run: message them without checking.
 - Any other role → message it **only if it is running**. To check, first read the `members` array in the team config; its path is in your spawn prompt (`~/.claude/teams/<team>/config.json`). Replying to a message you received is always allowed. A message to a stopped teammate revives it with stale context; only coordinator spawns.
 - Target not running → message **tech-lead** instead, saying who you meant and why. Tech-lead decides whether that role is needed (then coordinator spawns it) or whether the matter becomes a task or proposal.
 - Messages vanish when the run ends; which things go on GitHub instead is in phased-workflow **Ticket vs task**.
@@ -43,7 +43,7 @@ Contracts are the paths under **Contracts** in `docs/agents/heinzelwerk/team.md`
   git -C <repo> worktree add <repo>/.claude/worktrees/heinzelwerk/<branch> -b <branch> origin/main
   git -C <repo> worktree lock <repo>/.claude/worktrees/heinzelwerk/<branch> --reason "<role> #<ticket> <run start>"
   ```
-  `<role>` is your member name (`backend`, `backend-2`); `<ticket>` and `<run start>` (UTC) come from your spawn prompt's `## Context` header. The lock says who holds the worktree. `worktree add` refuses a path that exists → never remove it; read `git worktree list --porcelain` for its lock reason and message coordinator with it. Coordinator unlocks only worktrees whose owner is gone (coordinator §3, §4.2). Unlock your own worktree (`git worktree unlock <path>`) as the last step of phased-workflow **Done**; a fix round locks it again.
+  `<role>` is your member name (`backend-168`, `backend-168-2`); it, `<ticket>`, and `<run start>` (UTC) come from your spawn prompt's `## Context` header. The lock says who holds the worktree. `worktree add` refuses a path that exists → never remove it; read `git worktree list --porcelain` for its lock reason and message coordinator with it. Coordinator unlocks only worktrees whose owner is gone (coordinator §3, §4.2). Unlock your own worktree (`git worktree unlock <path>`) as the last step of phased-workflow **Done**; a fix round locks it again.
   Then run the **Worktree setup** command from `team.md` inside the new worktree (e.g. `npm ci`): a fresh worktree has no dependencies. Work only inside that path. One task = one branch = one worktree = one PR.
   Temp files go in your own scratchpad directory; `/tmp` is shared with every agent on the machine. Unfinished work waits as a WIP commit on your branch, not in the stash: the stash is one per repo, shared by every worktree and by the user.
 - **Branch name**: `<type>/<ticket-number>-<slug>[-<role>]`, deterministic, so a second run on the same ticket lands on the same branch:

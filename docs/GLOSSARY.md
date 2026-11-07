@@ -25,7 +25,7 @@ The teammate that runs checks and the two-axis review, posts verdicts, runs slic
 _Avoid_: reviewer, QA, tester
 
 **Teammate**:
-Any agent-team member other than coordinator. Spawned by coordinator as `heinzelwerk:<role>`, named `<role>` or `<role>-N`.
+Any agent-team member other than coordinator. Spawned by coordinator as `heinzelwerk:<role>`, named `<role>-<ticket>` (a respawn: `<role>-<ticket>-N`); one team may run several tickets at once.
 _Avoid_: agent (too wide: subagents and the user's own sessions are agents too), worker, bot
 
 **Subagent**:

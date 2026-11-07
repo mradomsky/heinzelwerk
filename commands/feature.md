@@ -9,4 +9,4 @@ Precondition: a slice ticket labelled `ready-for-agent`.
 - Label missing → ask the user before starting.
 - The ticket is a spec issue → stop and suggest `/heinzelwerk:shape <issue>`.
 
-Create an agent team; spawn roles on demand per the `heinzelwerk:coordinator` skill. Stop when the final report is posted.
+Create an agent team; spawn roles on demand per the `heinzelwerk:coordinator` skill. A run is already active in this session → no new team: start a second run in it (coordinator §1.5). Stop when the final report is posted.

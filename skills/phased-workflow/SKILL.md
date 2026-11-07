@@ -43,7 +43,7 @@ Roles say WHO, phases say WHAT KIND of work. A task is not done until its handof
 ## Task lifecycle
 The task list has three states: pending, in progress, completed. A task's title never changes after creation. A new state means a new task, never a retitled one.
 
-- **Open** = pending with a role in the title. Tech-lead's seeded tasks start here, with blockers set as task dependencies. The owner claims it, which sets it to in progress. **Claim only tasks whose title names your role**, never the next free task. Every `validate` task is validator's, whatever role its title also names.
+- **Open** = pending with a role in the title. Tech-lead's seeded tasks start here, with blockers set as task dependencies. The owner claims it, which sets it to in progress. **Claim only tasks whose title names your role and your ticket** (`#<ticket>`; another run's tasks share the list), never the next free task. Every `validate` task is validator's, whatever role its title also names.
 - **Implement task done**, in this order:
   1. PR open, as a draft (team-modes **Draft until validated**).
   2. Done note written into the task's details (`TaskUpdate`).

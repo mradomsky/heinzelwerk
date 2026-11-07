@@ -80,7 +80,7 @@ Collect `term:`, `adr:`, `learning:`, `risk:` lines from the done notes in the P
 - new risk areas in `docs/agents/heinzelwerk/team.md`;
 - rows for `docs/agents/heinzelwerk/out-of-scope.md`: your rejected proposals (§2) and product's `out` scope decisions, each with a `revisit when` condition.
 
-Write them yourself, one worktree per repo whose docs change, on branch `docs/agent-docs-<ticket>`. Commit `docs: update agent docs (#<ticket>)`, open a PR whose body says `Refs #<ticket>`, then create `#N validate tech-lead: docs` so the gate can merge the PR. Nothing to add → skip the PR. Either way, end with `[tech-lead] docs PR: <url | none>` to coordinator.
+Write them yourself, one worktree per repo whose docs change, on branch `docs/agent-docs-<ticket>`. Commit `docs: update agent docs (#<ticket>)`, open a PR whose body says `Refs #<ticket>`, rebase it on `origin/main` right before the next step (a parallel run's docs PR may have landed on the same files meanwhile), then create `#N validate tech-lead: docs` so the gate can merge the PR. Nothing to add → skip the PR. Either way, end with `[tech-lead] docs PR: <url | none>` to coordinator.
 
 ## 7. Technical report (when coordinator asks)
 Contents: PRs and their state, discovered tasks and issues, every `left:` line from the PR bodies' done notes, worktrees created (path and branch), caps hit, diagnose rounds, suggested role-prompt changes.

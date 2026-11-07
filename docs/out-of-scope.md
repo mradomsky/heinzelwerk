@@ -21,3 +21,4 @@ Features and designs heinzelwerk itself has turned down, for reasons that still 
 | a `triage` skill for `needs-triage` issues | 2026-10-30 | not designed yet; retro files `needs-triage` candidates and a human triages | the `needs-triage` backlog outgrows the weekly retro |
 | stack-tagged example lines in the setup templates | 2026-10-30 | the evidence rule (every line from the verified map, `path:line`) stopped the verbatim copies; examples are examples | a setup run on a non-Node repo copies a Node example again |
 | tagged JSON copies of done notes and verdicts | 2026-10-30 | `check-note` validates the prose fields; a second copy drifts on fix rounds | retro or the gate needs a field the prose check cannot read reliably |
+| a second agent team for a second ticket in one session | 2026-11-07 | the platform gives a session one team; two runs share it, kept apart by `<role>-<ticket>` member names (ADR 0007) | the platform lets one session hold several teams |

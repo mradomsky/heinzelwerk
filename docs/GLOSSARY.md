@@ -25,7 +25,7 @@ The teammate that runs checks and the two-axis review, posts verdicts, runs slic
 _Avoid_: reviewer, QA, tester
 
 **Teammate**:
-Any agent-team member other than coordinator. Spawned by coordinator as `heinzelwerk:<role>`, named `<role>` or `<role>-N`.
+Any agent-team member other than coordinator. Spawned by coordinator as `heinzelwerk:<role>`, named `<role>-<ticket>` (a respawn: `<role>-<ticket>-N`); one team may run several tickets at once.
 _Avoid_: agent (too wide: subagents and the user's own sessions are agents too), worker, bot
 
 **Subagent**:
@@ -129,8 +129,8 @@ _Avoid_: firewall, sandbox, policy (that is the gates' input)
 ## Time
 
 **Run**:
-One `/heinzelwerk:feature` or `/heinzelwerk:bugfix` invocation on one slice, from spawn to final report.
-_Avoid_: session (the Claude Code process; a run is one session, a session can hold a shaping conversation instead), sprint, job, iteration
+One `/heinzelwerk:feature` or `/heinzelwerk:bugfix` invocation on one slice, from spawn to final report. A session holds one team; the team may hold several runs on independent tickets (ADR 0007).
+_Avoid_: session (the Claude Code process; a session holds one or more runs, a session can hold a shaping conversation instead), sprint, job, iteration
 
 **Run cap**:
 The wall-clock limit per run from `team.md`. Past it coordinator spawns nothing new and ends the run as `stopped`.

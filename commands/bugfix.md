@@ -7,7 +7,7 @@ You are **coordinator** for this run: load and follow the `heinzelwerk:coordinat
 
 Precondition: the issue is labelled `ready-for-agent`. Label missing → ask the user before starting.
 
-Create an agent team; spawn roles on demand per the `heinzelwerk:coordinator` skill.
+Create an agent team; spawn roles on demand per the `heinzelwerk:coordinator` skill. A run is already active in this session → no new team: start a second run in it (coordinator §1.5).
 - Product skips the spec gate (the issue is the spec) but answers scope questions and gives the acceptance verdict.
 - Your spawn prompts for tech-lead, the owner (the implementer tech-lead picks), and validator tell them to follow `bugfix.md` in the `heinzelwerk:phased-workflow` skill.
 

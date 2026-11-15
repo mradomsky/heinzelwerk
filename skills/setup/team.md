@@ -3,6 +3,7 @@
 How heinzelwerk agents work in this repo. Mode rules (single repo vs workspace) live in the `heinzelwerk:team-modes` skill. This file holds only what is specific to this repo.
 
 - **Autonomy**: <full | guarded>. Full: agents merge and apply on their own; breakages are learnings. Guarded: humans merge risky changes; agents never read secrets. In both: secrets are never published (name the variable, never the value), and the gate never merges its own policy.
+- **Terse voice** (teammate messages and done notes, see team-modes **Voice**; omit for normal prose): on
 - **Backend paths**: <e.g. services/>
 - **Frontend paths**: <e.g. command-interface/>
 - **E2E** (validator runs it on the integrated slice; omit if none): <e.g. `npm run e2e -- --reporter=dot`, a smoke script>

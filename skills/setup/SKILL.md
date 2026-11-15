@@ -45,7 +45,7 @@ Read whatever exists; don't assume.
 
 Summarise what's present and what's missing. Then take the sections in order: one section, one answer, then the next. Lead each section with the recommended answer so the user can accept it in a word. Skip a section entirely when exploration already settled it.
 
-**A — Mode, tickets, autonomy.**
+**A — Mode, tickets, autonomy, voice.**
 - Single mode: tickets are this repo's issues.
 - Workspace mode: one repo is the **source of truth** for the whole workspace: tickets, `workspace.md`, `GLOSSARY-MAP.md`, workspace-wide ADRs, learnings. Recommend the repo already holding cross-cutting issues (often named `meta`). None exists → propose creating `<org>/meta`, private, with `gh repo create`; ask once, create only on yes, then clone it next to the others.
 - **Autonomy**, one answer per workspace or repo, written into `team.md` (and `workspace.md`):
@@ -53,6 +53,7 @@ Summarise what's present and what's missing. Then take the sections in order: on
   - **guarded**: humans merge risky changes; secrets never reach an agent. Sets G to off, or on with the risk areas in `deny_paths`; C2 to dev/sandbox only, no deletes; stacks whose plan reads secrets are off limits.
   - Kept in both: the gate never merges changes to itself or its policy files; protected resource types stay protected (the user may empty the list); secrets are never published (no value in a PR body, ticket, done note, learning, or doc: name the variable, not the value).
   - Recommend **guarded** for anything that serves users or holds real credentials, **full** for a playground. C2 and G below still show the resulting values, so the user sees what the answer did.
+- **Terse voice**, one yes/no per workspace or repo: should teammate messages and done notes use the terse voice (team-modes **Voice**) to save tokens? Recommended: no. Yes → write `Terse voice: on` into `team.md` (and `workspace.md`); no → omit the line.
 
 **B — Triage labels.** Ask exactly one question: keep the default five (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`)? Recommended: yes. Only if the answer is no: collect overrides, so existing labels are reused instead of duplicated.
 
@@ -130,7 +131,7 @@ Per repo, on a fresh branch `docs/heinzelwerk-setup` cut from `origin/main`:
 - `docs/agents/heinzelwerk/issue-tracker.md` from [issue-tracker-github.md](issue-tracker-github.md): replace every `<tracker>` with the tickets repo (`owner/repo`, workspace mode) or with this repo (single mode; `gh` would infer it, the flag stays so a copy from a worktree or a sibling still lands right); workspace mode keeps its **Workspace** paragraph
 - `docs/agents/heinzelwerk/triage-labels.md` from [triage-labels.md](triage-labels.md); create missing labels with `gh label create` (workspace mode: in the tickets repo only, and the table says so)
 - `docs/agents/heinzelwerk/domain.md` from [domain.md](domain.md)
-- `docs/agents/heinzelwerk/team.md` from [team.md](team.md), including the `Autonomy` line and `Verified against <sha> <date>`
+- `docs/agents/heinzelwerk/team.md` from [team.md](team.md), including the `Autonomy` line, the `Terse voice` line on a yes in A, and `Verified against <sha> <date>`
 - `docs/agents/heinzelwerk/out-of-scope.md` from [out-of-scope.md](out-of-scope.md): the header and an empty table (the example row removed); workspace mode: in the tickets repo only
 - UI found: `docs/agents/heinzelwerk/design.md` as drafted in C3
 - infra found: `docs/agents/heinzelwerk/infra-policy.json` from [infra-policy.json](infra-policy.json) with the answers from C2, and the `.gitignore` lines from C2. Keep only `protected_types` of providers the stacks use; `allowed_delete_types` takes globs, `"*"` for every unprotected type. Then give one verdict per resource type the stacks declare (`grep -h '^resource' **/*.tf | sort -u`): protected, delete-ok, or update-only; a type whose in-place update restarts or re-provisions production (an SSM document that runs bootstrap, a launch template, a task definition) is decided with the user, never left out by omission. `tf-gate` needs `jq` installed on the machine.

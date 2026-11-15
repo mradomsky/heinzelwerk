@@ -11,9 +11,9 @@ Read when your task, or **Contracts** in `docs/agents/heinzelwerk/team.md`, name
   - consumer update in scope → tech-lead accepts the contract task and adds the consumer task, blocked by the contract task. Consumer role not running → tech-lead tells coordinator to spawn it.
   - scope unclear → product rules **in** (previous bullet) or **out** (next bullet).
   - out of scope → product picks one: drop the breaking part (stay compatible), or keep a compatible shim and file a `needs-triage` issue for the consumer update. Tech-lead tells the proposer the choice and rejects the proposed task; the compatible version goes in the proposer's current PR.
-- **Consumer needs a contract change mid-task** (missing endpoint, field, or output) → propose it to tech-lead as a proposed task, with the provider as owner hint; it doesn't count against the proposal budget. Tech-lead accepts it as the contract task and makes your task blocked-by it. Keep working on what doesn't depend on the change. Once the contract PR is open:
-  - same repo → `git fetch origin && git rebase origin/<contract-branch>` in your worktree;
-  - other repo → add `Depends on owner/provider-repo#<PR>` to your PR body.
+- **Consumer needs a contract change mid-task** (missing endpoint, field, or output) → propose it to tech-lead as a proposed task, with the provider as owner hint; it doesn't count against the proposal budget. Tech-lead accepts it as the contract task and makes your task blocked-by it. Keep working on what doesn't depend on the change. Once the contract PR is open, build on it without waiting for its merge ([stacked.md](stacked.md)):
+  - same repo → `git fetch origin && git rebase origin/<contract-branch>` in your worktree, open your PR against that branch, and add `Depends on #<PR>, last snapshot <sha>` to its body;
+  - other repo → add `Depends on owner/provider-repo#<PR>, last snapshot <sha>` to your PR body.
 
   Provider: when the contract PR opens, message the consumer task's owner (or tech-lead if that owner isn't running).
 - Never break a consumer that has no task in this run.

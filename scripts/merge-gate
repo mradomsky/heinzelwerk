@@ -9,6 +9,9 @@
 # or a workflow always waits for a human. A PR stacked on another PR's branch is retargeted to main once that PR merged.
 # A PR whose body says `Depends on <PR>[, <PR> and <PR>]` (`owner/repo#N`, `#N`, or a pull URL; to the sentence's end, or
 # a list below a bare `Depends on:`) waits until every such PR is merged into main.
+# A PR built on an unmerged PR (team-modes stacked.md) names it as `Depends on <PR>, last snapshot <sha>`: the sibling
+# script `stack-check` compares each snapshot with that PR's head; a moved head (STALE), a stacked PR without the line
+# (MISSING), and a failed lookup (ERROR) are skip reasons.
 # Markers (validated, accepted main-only) count only in comments and reviews by the gh user running the gate.
 # Waits up to MERGE_GATE_WAIT seconds (default 450) for CI and, when the policy names a `review_bot`, for its review of the
 # head sha (`review-gate`, same budget): run it with a ten-minute Bash timeout. `bot_review: required` → an open, pending, or
@@ -56,6 +59,10 @@ fi
 [ "$state" = CLOSED ] && { echo "MERGE SKIP: PR closed"; exit 0; }
 enabled=$(pol '.enabled // false' 2>/dev/null) || { echo "MERGE SKIP: no docs/agents/heinzelwerk/merge-policy.json on main"; exit 0; }
 [ "$enabled" = true ] || { echo "MERGE SKIP: auto-merge off"; exit 0; }
+
+# built on another PR: is each snapshot the body names still that PR's head? Read before the retarget below, while a
+# stacked PR still shows its base (stack-check needs it to demand the line). The lines become skip reasons further down
+stack_lines=$(bash "$here/stack-check" "$pr" 2>&1 || true)
 
 # stacked on another PR's branch: once that PR is merged, retarget to main (GitHub recomputes diff and mergeability)
 base=$(pv baseRefName .baseRefName)
@@ -135,6 +142,12 @@ while IFS= read -r d; do
   else ds=$(gh pr view "${d##*#}" -R "${d%#*}" --json state,baseRefName --jq '.state + " into " + .baseRefName' 2>/dev/null || echo "no readable PR (an issue, or no access)"); fi
   [ "$ds" = "MERGED into main" ] || reasons+=("depends on $d, which is ${ds/OPEN into */OPEN} (merge it into main first)")
 done <<<"$deps"
+# snapshots: a dependency that moved after this PR was built on it means a rebase and a new validation first
+while IFS= read -r stack_line; do
+  case $stack_line in
+    "STACK STALE: "* | "STACK MISSING: "* | "STACK ERROR: "*) reasons+=("stack ${stack_line#STACK }") ;;
+  esac
+done <<<"$stack_lines"
 # optional size cap: only when the policy sets max_changed_lines
 max=$(pol '.max_changed_lines // empty')
 if [[ -n $max && $max =~ ^[0-9]+$ ]]; then

@@ -59,8 +59,20 @@ A `[proposed] #N <what>` task for work someone discovered. Nobody claims it; tec
 _Avoid_: suggestion, idea, finding (that word is retro's)
 
 **Fix round**:
-One validator fail and the fix task it opens, on the same branch and PR. Capped at three per PR.
+One validator fail and the fix task it opens, on the same branch and PR. Capped at three per PR; a rebase round does not count.
 _Avoid_: iteration, retry, loop, needs-work cycle
+
+**Rebase round**:
+The fix round a stale snapshot opens (`#N <role> fix <k>: rebase on #<PR>`): the owner rebases its own commits onto the dependency's new head with `git rebase --onto`, updates the snapshot line, and validator looks again.
+_Avoid_: restack, sync, catch-up
+
+**Queue**:
+Every ticket one session builds: the tickets a command names, a parent ticket's sub-issues, tickets added later. Independent tickets run in parallel; a ticket that builds on another starts once that ticket's PRs are open.
+_Avoid_: batch, backlog, pipeline, epic run
+
+**Builds on**:
+The edge between two tickets of a queue: B builds on A when A is an open blocker of B, or when they touch the same files (single mode) or repo (workspace mode). B's tasks are then stacked on, or depend on, A's PRs.
+_Avoid_: blocked by (that is the tracker's edge, and it ends at "closed"; builds-on ends at "PR open"), follows, child of
 
 **Out-of-scope row**:
 A line in `docs/agents/heinzelwerk/out-of-scope.md`: a proposal turned down for a reason that outlives one run, with the condition under which to revisit it.
@@ -79,6 +91,14 @@ _Avoid_: review (the two-axis review is one input to it), approval, result
 **Validated line**:
 `heinzelwerk: validated <40-hex sha>`, the last line of a pass verdict. A protocol marker the merge gate matches against the PR head; not an authorization.
 _Avoid_: approval, sign-off, LGTM
+
+**Stacked PR**:
+A PR whose base is the branch of another, unmerged PR in the same repo, because its task was built on that PR. The merge gate retargets it to main once the PR below is merged.
+_Avoid_: child PR, chained PR, dependent PR (a PR that depends on one in another repo is not stacked: its base is main)
+
+**Snapshot**:
+The head sha of a dependency PR at the moment a task branched from it or last rebased onto it, kept in the PR body as `Depends on <PR>, last snapshot <sha>`. `stack-check` compares it with the dependency's head; a difference is a stale snapshot and opens a rebase round.
+_Avoid_: pin, base sha, fork point (the snapshot serves as one, but names the dependency's commit), version
 
 **Plan comment**:
 Tech-lead's comment on the ticket: decisions, pre-mortem, critique answers, the task table with branches and worktrees.
@@ -115,7 +135,7 @@ A run started from a folder of sibling repos with a `CLAUDE.workspace.md`; one r
 _Avoid_: monorepo, multi-repo (as a noun), multi-mode
 
 **Merge gate**:
-`merge-gate`, the plugin script that merges a PR only when `merge-policy.json` on main, the validated line, CI, and mergeability all allow it.
+`merge-gate`, the plugin script that merges a PR only when `merge-policy.json` on main, the validated line, CI, mergeability, and the snapshots of the PRs it was built on all allow it.
 _Avoid_: auto-merge (the setting is called that; the actor is the gate), merger, bot merge
 
 **Infra gate**:
@@ -129,7 +149,7 @@ _Avoid_: firewall, sandbox, policy (that is the gates' input)
 ## Time
 
 **Run**:
-One `/heinzelwerk:feature` or `/heinzelwerk:bugfix` invocation on one slice, from spawn to final report. A session holds one team; the team may hold several runs on independent tickets (ADR 0007).
+One `/heinzelwerk:feature` or `/heinzelwerk:bugfix` invocation on one slice, from spawn to final report. A session holds one team; the team may hold several runs, one per ticket of the queue (ADR 0007, ADR 0008).
 _Avoid_: session (the Claude Code process; a session holds one or more runs, a session can hold a shaping conversation instead), sprint, job, iteration
 
 **Run cap**:

@@ -2,6 +2,8 @@
 
 A session has one agent team for its whole life. A second `/heinzelwerk:feature` or `/heinzelwerk:bugfix` while a run is active starts a second run inside that team, on an independent ticket (no shared file in single mode, no shared repo in workspace mode). Every member is named `<role>-<ticket>` (`tech-lead-168`; a respawn `<role>-<ticket>-N`), in a one-run session as much as in a two-run one, so the docs can keep saying "message tech-lead" and mean the member for your ticket.
 
+_Since v0.45 (ADR 0008) the tickets need not be independent: a ticket that is not builds on the other one's open PRs, and coordinator §1.5 became the `heinzelwerk:queue` skill._
+
 ## Considered Options
 
 1. **One ticket per session, parallel work in parallel sessions** — rejected. It is what the docs implied from v0.40 to v0.43 and what the coordinator of 2026-11-07 enforced, but the October stagehopper runs (#205+#206, #251+#252, #253+#261 and more) had already shown two runs under one coordinator working, on improvised `-2`/`-3` names. One user channel for both runs is what those sessions were used for.

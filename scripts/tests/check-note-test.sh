@@ -104,6 +104,8 @@ t "main's startup is no main-only" verdict PASS "inconclusive: crash on main's s
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "main in review prose is free" verdict PASS "Standards: rebased on main, the default branch, after merge of #12
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
+t "stacked PR: CI after the retarget" verdict PASS "inconclusive: stacked: e2e; CI runs after the retarget
+heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 t "two canonical checks on one line" verdict PASS "inconclusive: main only: a; verify on the first main run, inconclusive: main only: b; verify on the first main run
 heinzelwerk: validated 0123456789abcdef0123456789abcdef01234567"
 echo "--- verdict: must fail"

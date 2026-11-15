@@ -19,7 +19,9 @@ trap 'rm -rf "$workdir"' EXIT
 mkdir -p "$workdir/bin" "$workdir/plugin" "$workdir/repo"
 cp "$src" "$workdir/plugin/merge-gate"
 printf '#!/usr/bin/env bash\necho "BOT REVIEW: off"\n' >"$workdir/plugin/review-gate"
-chmod +x "$workdir/plugin/merge-gate" "$workdir/plugin/review-gate"
+# a fake stack-check prints FAKE_STACK_LINES (its own suite is stack-check-test.sh)
+printf '#!/usr/bin/env bash\nprintf "%%s\\n" "${FAKE_STACK_LINES:-STACK NONE}"\n' >"$workdir/plugin/stack-check"
+chmod +x "$workdir/plugin/merge-gate" "$workdir/plugin/review-gate" "$workdir/plugin/stack-check"
 
 cat >"$workdir/bin/gh" <<'FAKE_GH'
 #!/usr/bin/env bash
@@ -173,6 +175,16 @@ FAKE_BODY="Depends on owner/a#1 (the contract) and owner/b#2" FAKE_OPEN_PRS=2 ex
 FAKE_BODY="Depends on owner/a#1 and on owner/b#2" FAKE_OPEN_PRS=2 expect "and on" "depends on owner/b#2, which is OPEN" "$validated" 7
 FAKE_BODY="Depends on owner/a#1, which adds the endpoint, and owner/b#2." FAKE_OPEN_PRS=2 expect "ref after a clause" "depends on owner/b#2, which is OPEN" "$validated" 7
 FAKE_BODY="Depends on owner/a#1. See #140 for context" FAKE_OPEN_PRS=140 expect "next sentence adds nothing" "MERGED: PR 7" "$validated" 7
+
+echo "--- snapshots (stack-check lines)"
+stale_line="STACK STALE: #170 snapshot $OLD_SHA, head $HEAD_SHA (git rebase --onto origin/feat/170-base $OLD_SHA, then update the line)"
+FAKE_STACK_LINES="STACK OK: #170 @ $OLD_SHA" expect "snapshot is the dependency's head" "MERGED: PR 7" "$validated" 7
+FAKE_STACK_LINES="STACK MERGED: #170 @ $OLD_SHA" expect "dependency merged at the snapshot" "MERGED: PR 7" "$validated" 7
+FAKE_STACK_LINES="$stale_line" expect "dependency moved skips" "stack STALE: #170 snapshot $OLD_SHA, head $HEAD_SHA" "$validated" 7
+FAKE_STACK_LINES="STACK MISSING: stacked on #170 (base feat/170-base), but the PR body has no line" expect "stacked without the line skips" "stack MISSING: stacked on #170" "$validated" 7
+FAKE_STACK_LINES="STACK ERROR: #170 is no readable PR" expect "failed lookup skips" "stack ERROR: #170 is no readable PR" "$validated" 7
+FAKE_STACK_LINES="STACK OK: owner/provider#12 @ $OLD_SHA
+$stale_line" expect "two dependencies, one moved skips" "stack STALE: #170" "$validated" 7
 
 echo "--- markers by the gate's own user only, names without markdown"
 FAKE_ME="" expect "unreadable login skips" "MERGE SKIP: unreadable login" "$validated" 7

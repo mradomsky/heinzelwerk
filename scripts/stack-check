@@ -1,0 +1,191 @@
+#!/usr/bin/env bash
+# heinzelwerk stack check.
+#
+# Deterministic: reads a pull request's base and body, and the head of every pull request the body says it
+# was built on, then prints one line per dependency. Dependent work starts before its dependency is merged
+# (team-modes stacked.md); this script answers "is what this PR was built on still what is there?".
+#
+# The PR body names each dependency on a line of its own, with the dependency's head sha at the time:
+#   Depends on #170, last snapshot <sha>             same repo; the PR is stacked (its base is #170's branch)
+#   Depends on owner/repo#12, last snapshot <sha>    another repo; the PR's base is main
+#
+# Output:
+#   STACK OK: <dep> @ <sha>                          the dependency is open and its head is the snapshot
+#   STACK MERGED: <dep> @ <sha>                      the dependency was merged at the snapshot
+#   STACK STALE: <dep> snapshot <sha>, head <sha> (<what to do>)
+#                                                    the dependency moved after the snapshot was taken
+#   STACK STALE: <dep> snapshot <sha> is not in this PR's history (<what to do>)
+#                                                    the line was updated without the rebase
+#   STACK CLOSED: <dep> (closed without a merge)
+#   STACK MISSING: stacked on <dep> (base <branch>), …  the base is another PR's branch and no line names it
+#   STACK ERROR: <why>                               a usage error or a gh failure
+#   STACK NONE                                       the base is main and the body names no snapshot
+#
+# Usage: stack-check [-C <repo dir>] [<owner/repo>#]<pr-number>
+#   Run inside the repo, or name it with -C first (workspace mode runs from the workspace root); with
+#   owner/repo the script checks that the dir is that repo. Exit 0 always. merge-gate reads the lines:
+#   STALE, MISSING, and ERROR are skip reasons there.
+#
+# Needs: gh only (its built-in --jq).
+set -uo pipefail
+
+usage() {
+  echo "STACK ERROR: usage: stack-check [-C <repo dir>] [<owner/repo>#]<pr-number>"
+  exit 0
+}
+
+lowercase() { tr '[:upper:]' '[:lower:]' <<<"$1"; }
+
+# --- arguments ----------------------------------------------------------------------------------------
+
+if [ "${1:-}" = -C ]; then
+  [ $# -ge 2 ] && [ -n "$2" ] || usage
+  CDPATH='' cd -- "$2" 2>/dev/null || { echo "STACK ERROR: no repo dir $2"; exit 0; }
+  shift 2
+fi
+[ $# -eq 1 ] || usage
+
+wanted_repo=""
+if [[ $1 =~ ^([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#([0-9]+)$ ]]; then
+  wanted_repo=${BASH_REMATCH[1]}
+  pr_number=${BASH_REMATCH[2]}
+elif [[ $1 =~ ^[0-9]+$ ]]; then
+  pr_number=$1
+else
+  usage
+fi
+
+own_repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner 2>/dev/null) \
+  || { echo "STACK ERROR: $(pwd) is no GitHub repo"; exit 0; }
+if [ -n "$wanted_repo" ] && [ "$(lowercase "$own_repo")" != "$(lowercase "$wanted_repo")" ]; then
+  echo "STACK ERROR: $(pwd) is $own_repo, not $wanted_repo"
+  exit 0
+fi
+
+# --- the pull request ---------------------------------------------------------------------------------
+# one call; the answer's first line is the base branch, the second the head sha, the rest the body
+
+pr_fields=$(gh pr view "$pr_number" --json baseRefName,headRefOid,body --jq '.baseRefName, .headRefOid, .body' 2>/dev/null) \
+  || { echo "STACK ERROR: PR $pr_number is not readable"; exit 0; }
+pr_fields=${pr_fields//$'\r'/}
+base_branch=$(sed -n 1p <<<"$pr_fields")
+pr_head_sha=$(sed -n 2p <<<"$pr_fields")
+pr_body=$(sed -n '3,$p' <<<"$pr_fields")
+
+# --- the snapshot lines of the body -------------------------------------------------------------------
+# A PR ref is `#N`, `owner/repo#N`, or a pull URL. Bold, backticks, a markdown link around the ref, and
+# `PR #N` are read through, as merge-gate does for its own `Depends on` rule.
+
+pr_ref_pattern='(https://github\.com/)?[A-Za-z0-9-]+/[A-Za-z0-9_.-]+(#|/pull/)[0-9]+|#[0-9]+'
+snapshot_line_pattern="depends on:?[[:space:]]+($pr_ref_pattern)[,;]?[[:space:]]+last snapshot:?[[:space:]]+[0-9a-f]{7,40}"
+
+plain_body=$(sed -E 's/(\*\*|`)//g; s/\[([^]]*)\]\([^)]*\)/\1/g; s/PR[[:space:]]+#/#/g' <<<"$pr_body")
+snapshot_lines=$(grep -oiE "$snapshot_line_pattern" <<<"$plain_body" || true)
+
+normalize_ref() {   # normalize_ref <ref as written>: prints `#N` for this repo, `owner/repo#N` for another
+  local ref=$1
+  ref=${ref#https://github.com/}
+  ref=${ref/\/pull\//#}
+  if [[ $ref == */*#* ]] && [ "$(lowercase "${ref%#*}")" = "$(lowercase "$own_repo")" ]; then
+    ref="#${ref##*#}"
+  fi
+  printf '%s\n' "$ref"
+}
+
+# --- one dependency -----------------------------------------------------------------------------------
+
+lines_printed=0
+say() {
+  echo "$1"
+  lines_printed=$(( lines_printed + 1 ))
+}
+
+dependency_fields_jq='.state + " " + .headRefOid + " " + .headRefName'
+
+check_dependency() {   # check_dependency <dep ref> <snapshot sha>: prints one STACK line
+  local dependency=$1 snapshot_sha=$2
+  local dependency_number=${dependency##*#}
+  local dependency_repo=${dependency%#*}   # empty for `#N`: this repo
+
+  local fields
+  if [ -n "$dependency_repo" ]; then
+    fields=$(gh pr view "$dependency_number" -R "$dependency_repo" --json state,headRefOid,headRefName --jq "$dependency_fields_jq" 2>/dev/null)
+  else
+    fields=$(gh pr view "$dependency_number" --json state,headRefOid,headRefName --jq "$dependency_fields_jq" 2>/dev/null)
+  fi
+  if [ -z "$fields" ]; then
+    say "STACK ERROR: $dependency is no readable PR (an issue, or no access)"
+    return
+  fi
+
+  local state head_sha branch
+  read -r state head_sha branch <<<"$fields"
+
+  if [ "$state" = CLOSED ]; then
+    say "STACK CLOSED: $dependency (closed without a merge)"
+    return
+  fi
+
+  # the dependency moved: its head is no longer the commit this PR was built on
+  if [[ $head_sha != "$snapshot_sha"* ]]; then
+    local advice
+    if [ -n "$dependency_repo" ]; then
+      advice="read what changed in $dependency_repo between the two, adapt, then update the line"
+    elif [ "$state" = MERGED ]; then
+      advice="git rebase --onto origin/main $snapshot_sha, then update the line"
+    else
+      advice="git rebase --onto origin/$branch $snapshot_sha, then update the line"
+    fi
+    say "STACK STALE: $dependency snapshot $snapshot_sha, head $head_sha ($advice)"
+    return
+  fi
+
+  if [ "$state" = MERGED ]; then
+    say "STACK MERGED: $dependency @ $head_sha"
+    return
+  fi
+
+  # open and in this repo: the snapshot must be an ancestor of this PR's head, or the line was updated
+  # without the rebase. (Once the dependency is merged the PR may sit on main instead, so no check then.)
+  if [ -z "$dependency_repo" ]; then
+    local relation
+    relation=$(gh api "repos/{owner}/{repo}/compare/$head_sha...$pr_head_sha" --jq .status 2>/dev/null)
+    case $relation in
+      ahead | identical) ;;
+      "") say "STACK ERROR: could not compare $dependency's head with this PR's head"
+          return ;;
+      *)  say "STACK STALE: $dependency snapshot $snapshot_sha is not in this PR's history (git rebase --onto origin/$branch <the commit this branch forked from>)"
+          return ;;
+    esac
+  fi
+
+  say "STACK OK: $dependency @ $head_sha"
+}
+
+# --- every dependency the body names ------------------------------------------------------------------
+
+checked_dependencies=" "
+while IFS= read -r snapshot_line; do
+  [ -n "$snapshot_line" ] || continue
+  dependency=$(normalize_ref "$(grep -oE "$pr_ref_pattern" <<<"$snapshot_line" | head -1)")
+  snapshot_sha=${snapshot_line##* }
+  checked_dependencies+="$dependency "
+  check_dependency "$dependency" "$snapshot_sha"
+done <<<"$snapshot_lines"
+
+# --- a stacked PR must name its base's PR -------------------------------------------------------------
+# Without the line nobody can tell whether the base moved after this PR was built.
+
+if [ "$base_branch" != main ]; then
+  base_pr_number=$(gh pr view "$base_branch" --json number --jq .number 2>/dev/null)
+  if [ -z "$base_pr_number" ]; then
+    say "STACK ERROR: base $base_branch is not main and has no PR"
+  elif [[ $checked_dependencies != *" #$base_pr_number "* ]]; then
+    say "STACK MISSING: stacked on #$base_pr_number (base $base_branch), but the PR body has no line \`Depends on #$base_pr_number, last snapshot <sha>\`"
+  fi
+fi
+
+if (( lines_printed == 0 )); then
+  echo "STACK NONE"
+fi
+exit 0

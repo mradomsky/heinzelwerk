@@ -22,7 +22,7 @@ Only coordinator talks to the user.
 
 ## Messaging
 - Every message starts with a tag: `[<repo>@<branch>]` from an implementer, `[<role> #<ticket>]` from everyone else.
-- Member names: coordinator is `team-lead` (the platform's name for the main session). Every other member is `<role>-<ticket>` (`tech-lead-168`, `backend-168`; a respawn after a release or crash: `<role>-<ticket>-N`, so `backend-168-2`). One team may run several tickets at once (coordinator §1.5); the suffix keeps the runs apart. Wherever these docs say "message tech-lead" or "spawn validator", they mean the member of that role **for your ticket**; its exact name is in the team config, and your own is in your spawn prompt's `## Context` header. Never confuse `team-lead` with `tech-lead`.
+- Member names: coordinator is `team-lead` (the platform's name for the main session). Every other member is `<role>-<ticket>` (`tech-lead-168`, `backend-168`; a respawn after a release or crash: `<role>-<ticket>-N`, so `backend-168-2`). One team may run several tickets at once (`heinzelwerk:queue`); the suffix keeps the runs apart. Wherever these docs say "message tech-lead" or "spawn validator", they mean the member of that role **for your ticket**; its exact name is in the team config, and your own is in your spawn prompt's `## Context` header. Never confuse `team-lead` with `tech-lead`.
 - Coordinator and your ticket's product and tech-lead always run: message them without checking.
 - Any other role → message it **only if it is running**. To check, first read the `members` array in the team config; its path is in your spawn prompt (`~/.claude/teams/<team>/config.json`). Replying to a message you received is always allowed. A message to a stopped teammate revives it with stale context; only coordinator spawns.
 - Target not running → message **tech-lead** instead, saying who you meant and why. Tech-lead decides whether that role is needed (then coordinator spawns it) or whether the matter becomes a task or proposal.
@@ -44,6 +44,7 @@ Contracts are the paths under **Contracts** in `docs/agents/heinzelwerk/team.md`
   git -C <repo> worktree lock <repo>/.claude/worktrees/heinzelwerk/<branch> --reason "<role> #<ticket> <run start>"
   ```
   `<role>` is your member name (`backend-168`, `backend-168-2`); it, `<ticket>`, and `<run start>` (UTC) come from your spawn prompt's `## Context` header. The lock says who holds the worktree. `worktree add` refuses a path that exists → never remove it; read `git worktree list --porcelain` for its lock reason and message coordinator with it. Coordinator unlocks only worktrees whose owner is gone (coordinator §3, §4.2). Unlock your own worktree (`git worktree unlock <path>`) as the last step of phased-workflow **Done**; a fix round locks it again.
+  A task whose plan row names a `base` other than `main` branches from `origin/<base>` instead and opens its PR against that branch: [stacked.md](stacked.md).
   Then run the **Worktree setup** command from `team.md` inside the new worktree (e.g. `npm ci`): a fresh worktree has no dependencies. Work only inside that path. One task = one branch = one worktree = one PR.
   Temp files go in your own scratchpad directory; `/tmp` is shared with every agent on the machine. Unfinished work waits as a WIP commit on your branch, not in the stash: the stash is one per repo, shared by every worktree and by the user.
 - **Branch name**: `<type>/<ticket-number>-<slug>[-<role>]`, deterministic, so a second run on the same ticket lands on the same branch:
@@ -59,7 +60,7 @@ Contracts are the paths under **Contracts** in `docs/agents/heinzelwerk/team.md`
   - whenever validator reports a conflict;
   - whenever a merged PR touched your files.
 
-  If your task is blocked-by a **same-repo** contract task whose PR isn't merged, rebase onto `origin/<contract-branch>` instead. If that contract task is in another repo, stay on `origin/main`.
+  A task built on an unmerged PR (its plan row names a `base` other than `main`, or a `Depends on` PR) follows that PR instead: [stacked.md](stacked.md) has the commands, the snapshot line, and `stack-check`.
   Resolve conflicts **by intent**: read the other side's PR and ticket; keep both behaviours unless the specs say otherwise; never drop the other side's change silently. Can't tell what the other side intended → ask tech-lead. Run all checks after resolving. Push your own branch with `--force-with-lease` only; plain `--force` is blocked.
 - Worktrees are disposable: the branch lives on the remote. Coordinator removes them at run end (coordinator §4). A later fix on an existing PR recreates the worktree from the remote branch: `git -C <repo> fetch origin && git -C <repo> worktree add <path> -B <branch> origin/<branch>`, then locks it as above. The path still exists → the rule above: read the lock, message coordinator, never `-B` over a worktree someone holds.
 
@@ -67,6 +68,8 @@ Contracts are the paths under **Contracts** in `docs/agents/heinzelwerk/team.md`
 Read the file for your mode once, at run start, and keep to it:
 - [single.md](single.md): tickets, ownership by path, parallel work, contract branches, PR bodies, checks, validator.
 - [workspace.md](workspace.md): tickets repo, ownership by repo, shared branch name, one task per repo, cross-repo contracts, PR bodies, per-repo checks, integration, docs placement.
+
+Read [stacked.md](stacked.md) when your task builds on a PR that is not merged yet (a `base` other than `main` or a `Depends on` PR in its plan row, or a blocked-by task with an open PR): where to branch from, the `Depends on <PR>, last snapshot <sha>` line, `stack-check`, the rebase round when that PR moves.
 
 ## 3. Tech-lead's plan comment (both modes)
 ```
@@ -76,6 +79,6 @@ Decisions
 Pre-mortem: <most likely failure after merge> → prevented by <task / seam / check>
 Critique (risk-area slices): <point> → changed: <how> | kept: <why>
 Tasks
-#<task> phase | owner | repo | branch | worktree path | blocked-by
+#<task> phase | owner | repo | branch | base | worktree path | blocked-by
 ```
-In workspace mode the comment also lists: shared branch name, PR order, which PR closes the ticket.
+`base` is `main`, or the branch of the unmerged PR the task is stacked on; a dependency in another repo goes into blocked-by as `Depends on <owner/repo>#<PR>` ([stacked.md](stacked.md)). In workspace mode the comment also lists: shared branch name, PR order, which PR closes the ticket.

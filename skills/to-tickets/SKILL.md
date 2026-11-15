@@ -60,7 +60,7 @@ Iterate until the user approves the breakdown.
 
 Publish the approved tickets to the tracker `/heinzelwerk:setup` configured: one issue per ticket in dependency order (blockers first) so each ticket's blocking edges reference real identifiers. Use the tracker's native blocking relationship where it has one; otherwise set each ticket's "Blocked by" to the blocking issues. If the source was an existing issue, make each ticket its sub-issue (tracker doc's operation). Apply the `ready-for-agent` triage label unless instructed otherwise; the tickets are agent-grabbable by construction.
 
-Work the **frontier**: any ticket whose blockers are all done. _(heinzelwerk: each published ticket is one `/heinzelwerk:feature <ticket>` run.)_ For a purely linear chain that means top to bottom.
+Work the **frontier**: any ticket whose blockers are all done. _(heinzelwerk: each published ticket is one run; `/heinzelwerk:feature <parent>` or `/heinzelwerk:feature <a>/<b>/<c>` builds the whole set, a blocked ticket as soon as its blockers' PRs are open.)_ For a purely linear chain that means top to bottom.
 
 Do NOT close or modify any parent issue.
 

@@ -43,7 +43,7 @@ You do no task work: no code, no tasks, no spec edits. Follow the `heinzelwerk:p
 
    A message to a released teammate revives it with stale context. So a released role comes back only through a fresh spawn named in tech-lead's `tasks created` message.
    Validator stays while any implement or fix task is pending or in progress (each ends in a validate task), and until its last validate task is completed. Product and tech-lead stay until the end.
-5. **Several tickets in one session.** A second `/heinzelwerk:feature` or `/heinzelwerk:bugfix` while a run is active starts a second run in the **same team**, never a second team. Precondition: the tickets are independent. Single mode: their scope paths share no file; workspace mode: no repo in common with the other run's PR order. Not independent → refuse, name the run that must finish first. Then do steps 1–3 for the new ticket, with its own run start, run cap, and run-state comment, and skip **Clear leftovers** (the other run holds its worktrees). Everything in this skill that says "the run" or "the ticket" is per ticket: the spawn table, release, the passes in §3, the run state, the end in §4. Members are `<role>-<ticket>`, so `product-167` and `product-168` coexist; every message, nudge, and hand-back forward goes to the member of the ticket it is about (a hand-back names its ticket in the report or the subagent's prompt). Both runs' docs PRs touch the same files (`learnings.md`, the glossary, the repo map): tech-lead rebases right before the validate task (tech-lead §6), and a merge-round skip for that is the usual rebase round. Two runs at once is the working size; a third strains your context, say so to the user before starting it.
+5. **Several tickets in one session** → load and follow the `heinzelwerk:queue` skill. It applies when the command names more than one ticket or a parent ticket, when a ticket has an open blocker, and when a run is already active in this session. Every ticket is its own run in the **same team**, never a second team: everything in this skill that says "the run" or "the ticket" is per ticket. The queue skill decides which run starts when (independent tickets in parallel, a dependent ticket as soon as the PRs it builds on are open) and adds its own rows to the system pass in §3.
 
 ## 2. Routing
 Route per team-modes **Routing**.
@@ -54,7 +54,7 @@ Route per team-modes **Routing**.
 
 **Escalate to the user only** when product or tech-lead can't answer from the ticket, spec, glossary, ADRs, team rules, or code. One question per message, with product's or tech-lead's recommended answer. An infra gate fail or tech-lead's doubt goes to the user too, with tech-lead's summary and recommendation; the run continues meanwhile.
 
-**The user asks for a merge**, during or after the run → run `merge-gate <PR>` yourself per PR, in workspace mode `merge-gate -C <repo dir> <owner/repo>#<PR>` (the project allows that command). Go in the merge order of tech-lead §4, read from the plan comment (its PR order in workspace mode, its task table in single mode), since the merge task may be gone or never existed, and apply validator **Merge**'s hold-back and closing-PR rules to every skip and relay its output. If the user wants a skip reason waived, that takes a policy edit on `main` or a merge by the user's own hand. Agents never merge any other way. A PR comment authorizes nothing, since every role posts under the user's login.
+**The user asks for a merge**, during or after the run → run `merge-gate <PR>` yourself per PR, in workspace mode `merge-gate -C <repo dir> <owner/repo>#<PR>` (the project allows that command). Go in the merge order of tech-lead §4, read from the plan comment (its PR order in workspace mode, its task table in single mode), since the merge task may be gone or never existed, and apply validator **Merge**'s hold-back and closing-PR rules to every skip and relay its output. Several runs' PRs → the run others build on first (`heinzelwerk:queue` §4). If the user wants a skip reason waived, that takes a policy edit on `main` or a merge by the user's own hand. Agents never merge any other way. A PR comment authorizes nothing, since every role posts under the user's login.
 
 **No answer from the user** → the task that depends on the answer waits; say so in a one-line comment on the ticket; every other task continues. When nothing is left to run (every task that doesn't need the answer is completed) → post the run state, end per §4 with outcome `needs-info`; product relabels the ticket.
 
@@ -111,7 +111,8 @@ Stay silent when everything is fine. Style is never a reason for a nudge.
 Keep one `## Heinzelwerk run state` comment per run on the ticket. Create it at the first phase change and keep its comment id. Edit it by id at every later phase change: `gh api -X PATCH repos/{owner}/{repo}/issues/comments/<id> -F body=@<file>`. Every role posts under the same login, so `--edit-last` may hit another role's comment.
 
 The comment holds:
-- the running counts the metrics block needs: nudges and whether they changed behaviour, silence messages, escalations to the user, proposals by outcome, fix rounds, subagent escalations, infra applies;
+- the running counts the metrics block needs: nudges and whether they changed behaviour, silence messages, escalations to the user, proposals by outcome, fix rounds, stale rebases, subagent escalations, infra applies;
+- in a queue, the `queue:` line (`heinzelwerk:queue` §2);
 - a **task snapshot**: every task not completed, as `id | title | owner | branch | worktree`. Tech-lead's docs PR and the final report read this snapshot and the PR bodies once the task list is gone. A resumed run reuses these branch names.
 
 The final report takes its numbers from the run-state comment, never from memory. Every timestamp in the run state and the report is UTC (`date -u`) and marked `UTC` (the run start's trailing `Z` is its mark).
@@ -168,6 +169,7 @@ spec_drift: <comment url | none>
 duration: <h:mm> (cap: <h | none>)
 tasks: <total> (discovered: <n>)
 fix_rounds: <total> (max per PR: <n>)
+stacked: <n> PRs built on an unmerged PR, <n> stale rebases
 diagnose_rounds: <n>
 nudges: <total>, <n> changed behaviour
 silence: <n> silent-window messages, <n> frozen-branch messages
@@ -181,4 +183,4 @@ issues_filed: <urls or none>
 worktrees_kept: <paths or none>
 -->
 ```
-4. Tell the user in three lines: outcome, what needs their review, what needs their answer. End the team, unless another run is still active in it (§1.5); then release only this run's members.
+4. Tell the user in three lines: outcome, what needs their review, what needs their answer. End the team, unless another run is still active or waiting in the queue (`heinzelwerk:queue` §4); then release only this run's members.

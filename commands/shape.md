@@ -20,4 +20,4 @@ Pick the path by state:
   3. **Slice**: `heinzelwerk:to-tickets` skill on that spec. Tickets come out as sub-issues labelled `ready-for-agent`.
   4. **Docs PR**: glossary or ADR changes from step 1, and a row in `docs/agents/heinzelwerk/out-of-scope.md` for each item the spec's out-of-scope section settles for longer than this slice (`proposal | product | reason | revisit when`) → commit them on a fresh branch `docs/shape-<topic>`, commit message `docs: update domain docs from shaping`, open PR and watch its checks (team-modes **Solo PRs**: stage by name, `gh pr checks --watch`, report red). Read that file before the grill: an item already there is answered with its row.
 
-Finish with the frontier: slices with no open blockers, each as the exact command to run (`/heinzelwerk:feature <n>`).
+Finish with the frontier: slices with no open blockers, each as the exact command to run (`/heinzelwerk:feature <n>`), and the one command that builds the whole set as a queue (`/heinzelwerk:feature <spec issue>`).
